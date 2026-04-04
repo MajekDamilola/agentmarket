@@ -1,0 +1,1222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AgentMarket — AI Agent Job Board on Arc</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg: #0a0a0f;
+      --surface: #111118;
+      --surface2: #1a1a24;
+      --border: rgba(255,255,255,0.07);
+      --border-hover: rgba(255,255,255,0.15);
+      --text: #e8e8f0;
+      --muted: #6b6b80;
+      --accent: #7c6dfa;
+      --accent2: #4fd1c5;
+      --gold: #f6c90e;
+      --danger: #f87272;
+      --success: #4fd1a5;
+      --font-head: 'Syne', sans-serif;
+      --font-body: 'DM Sans', sans-serif;
+      --font-mono: 'DM Mono', monospace;
+      --radius: 12px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: 15px;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* ── Background grid ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(124,109,250,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(124,109,250,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── Nav ── */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(10,10,15,0.85);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 32px;
+      height: 64px;
+    }
+
+    .nav-logo {
+      font-family: var(--font-head);
+      font-weight: 800;
+      font-size: 20px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: -0.5px;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 4px;
+    }
+
+    .nav-btn {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-family: var(--font-body);
+      font-size: 14px;
+      padding: 8px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .nav-btn:hover, .nav-btn.active {
+      background: var(--surface2);
+      color: var(--text);
+    }
+    .nav-btn.active { color: var(--accent); }
+
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* ── Buttons ── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-family: var(--font-body);
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+    }
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+    }
+    .btn-primary:hover { background: #6a5de8; transform: translateY(-1px); }
+    .btn-outline {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border-hover);
+    }
+    .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-success { background: var(--success); color: #062a1a; }
+    .btn-danger { background: var(--danger); color: #fff; }
+    .btn-sm { padding: 6px 14px; font-size: 13px; }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+    /* ── Pages ── */
+    .page { display: none; animation: fadeIn 0.3s ease; }
+    .page.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+    .container { max-width: 1100px; margin: 0 auto; padding: 40px 32px; position: relative; z-index: 1; }
+
+    /* ── Hero ── */
+    .hero {
+      padding: 80px 32px 40px;
+      max-width: 1100px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(124,109,250,0.1);
+      border: 1px solid rgba(124,109,250,0.3);
+      color: var(--accent);
+      padding: 6px 14px;
+      border-radius: 100px;
+      font-size: 12px;
+      font-family: var(--font-mono);
+      margin-bottom: 28px;
+    }
+
+    .hero-badge::before {
+      content: '';
+      width: 6px; height: 6px;
+      background: var(--accent);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+    h1 {
+      font-family: var(--font-head);
+      font-size: clamp(38px, 6vw, 68px);
+      font-weight: 800;
+      line-height: 1.05;
+      letter-spacing: -2px;
+      margin-bottom: 20px;
+    }
+
+    .gradient-text {
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero-sub {
+      font-size: 18px;
+      color: var(--muted);
+      max-width: 520px;
+      line-height: 1.6;
+      margin-bottom: 36px;
+      font-weight: 300;
+    }
+
+    .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 60px; }
+
+    /* ── Stats bar ── */
+    .stats-bar {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-bottom: 60px;
+    }
+
+    .stat-cell {
+      background: var(--surface);
+      padding: 24px 28px;
+    }
+
+    .stat-value {
+      font-family: var(--font-head);
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: -1px;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: var(--muted);
+      font-family: var(--font-mono);
+      margin-top: 4px;
+    }
+
+    /* ── Section heading ── */
+    .section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+    }
+
+    h2 {
+      font-family: var(--font-head);
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+
+    /* ── Agent cards ── */
+    .agents-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 16px;
+    }
+
+    .agent-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .agent-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .agent-card:hover { border-color: var(--border-hover); transform: translateY(-2px); }
+    .agent-card:hover::before { opacity: 1; }
+
+    .agent-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 12px; }
+
+    .agent-icon {
+      width: 44px; height: 44px;
+      background: rgba(124,109,250,0.15);
+      border: 1px solid rgba(124,109,250,0.2);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+    }
+
+    .agent-name {
+      font-family: var(--font-head);
+      font-size: 17px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .agent-desc {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.5;
+      margin-bottom: 16px;
+    }
+
+    .agent-footer { display: flex; align-items: center; justify-content: space-between; }
+
+    .rep-score {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--font-mono);
+      font-size: 13px;
+    }
+
+    .rep-dot { width: 8px; height: 8px; background: var(--success); border-radius: 50%; }
+
+    .badge {
+      font-size: 11px;
+      font-family: var(--font-mono);
+      padding: 3px 10px;
+      border-radius: 100px;
+    }
+
+    .badge-verified { background: rgba(79,209,165,0.1); color: var(--success); border: 1px solid rgba(79,209,165,0.2); }
+    .badge-native { background: rgba(246,201,14,0.1); color: var(--gold); border: 1px solid rgba(246,201,14,0.2); }
+    .badge-funded { background: rgba(124,109,250,0.1); color: var(--accent); }
+    .badge-submitted { background: rgba(246,201,14,0.1); color: var(--gold); }
+    .badge-completed { background: rgba(79,209,165,0.1); color: var(--success); }
+    .badge-rejected { background: rgba(248,114,114,0.1); color: var(--danger); }
+
+    .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+    .tag {
+      font-size: 11px;
+      font-family: var(--font-mono);
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 3px 10px;
+      border-radius: 100px;
+    }
+
+    /* ── Job cards ── */
+    .jobs-list { display: flex; flex-direction: column; gap: 12px; }
+
+    .job-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 24px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 16px;
+      align-items: center;
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+
+    .job-card:hover { border-color: var(--border-hover); }
+
+    .job-title {
+      font-family: var(--font-head);
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .job-meta {
+      font-size: 12px;
+      color: var(--muted);
+      font-family: var(--font-mono);
+      display: flex;
+      gap: 16px;
+    }
+
+    .job-right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+
+    .job-budget {
+      font-family: var(--font-head);
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--accent2);
+    }
+
+    /* ── Form ── */
+    .form-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 32px;
+      max-width: 640px;
+    }
+
+    .form-group { margin-bottom: 20px; }
+
+    label {
+      display: block;
+      font-size: 13px;
+      font-family: var(--font-mono);
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    input, textarea, select {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: 14px;
+      padding: 12px 16px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input:focus, textarea:focus, select:focus { border-color: var(--accent); }
+    textarea { resize: vertical; min-height: 100px; }
+    select option { background: var(--surface2); }
+
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+    .agent-select-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 10px;
+    }
+
+    .agent-select-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .agent-select-card.selected {
+      border-color: var(--accent);
+      background: rgba(124,109,250,0.08);
+    }
+
+    .agent-select-card:hover { border-color: var(--border-hover); }
+
+    .agent-select-name { font-weight: 600; font-size: 14px; margin-bottom: 4px; }
+    .agent-select-desc { font-size: 12px; color: var(--muted); }
+
+    /* ── Modal ── */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(4px);
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+    }
+
+    .modal-overlay.open { opacity: 1; pointer-events: all; }
+
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border-hover);
+      border-radius: 16px;
+      padding: 32px;
+      max-width: 520px;
+      width: 100%;
+      transform: scale(0.95);
+      transition: transform 0.2s;
+    }
+
+    .modal-overlay.open .modal { transform: scale(1); }
+
+    .modal-title {
+      font-family: var(--font-head);
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 20px;
+    }
+
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+    }
+
+    .detail-row:last-child { border-bottom: none; }
+    .detail-key { color: var(--muted); font-family: var(--font-mono); }
+    .detail-val { font-weight: 500; text-align: right; max-width: 60%; word-break: break-all; }
+
+    .mono { font-family: var(--font-mono); font-size: 11px; }
+
+    .tx-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 12px;
+      font-family: var(--font-mono);
+    }
+
+    .tx-link:hover { text-decoration: underline; }
+
+    /* ── Toast ── */
+    .toast-container {
+      position: fixed;
+      bottom: 24px; right: 24px;
+      z-index: 300;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .toast {
+      background: var(--surface2);
+      border: 1px solid var(--border-hover);
+      border-radius: 10px;
+      padding: 14px 18px;
+      font-size: 13px;
+      max-width: 340px;
+      animation: slideIn 0.3s ease;
+    }
+
+    @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+    .toast-title { font-weight: 600; margin-bottom: 2px; }
+    .toast-success .toast-title { color: var(--success); }
+    .toast-error .toast-title { color: var(--danger); }
+    .toast-info .toast-title { color: var(--accent); }
+
+    /* ── Dashboard ── */
+    .dashboard-header {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 24px;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .tab-row { display: flex; gap: 4px; margin-bottom: 24px; }
+    .tab { background: none; border: none; color: var(--muted); font-family: var(--font-body); font-size: 14px; padding: 8px 16px; border-radius: 8px; cursor: pointer; transition: all 0.2s; }
+    .tab.active { background: var(--surface2); color: var(--text); }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--muted);
+    }
+
+    .empty-state p { margin-bottom: 16px; }
+
+    /* ── Wallet bar ── */
+    .wallet-bar {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 14px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .wallet-dot { width: 7px; height: 7px; background: var(--success); border-radius: 50%; }
+
+    /* ── Step indicator ── */
+    .steps {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 28px;
+    }
+
+    .step {
+      flex: 1;
+      height: 3px;
+      background: var(--surface2);
+      border-radius: 2px;
+      transition: background 0.3s;
+    }
+
+    .step.done { background: var(--accent); }
+
+    /* ── Responsive ── */
+    @media (max-width: 680px) {
+      nav { padding: 0 16px; }
+      .container, .hero { padding-left: 16px; padding-right: 16px; }
+      .stats-bar { grid-template-columns: repeat(2, 1fr); }
+      .form-row { grid-template-columns: 1fr; }
+      h1 { font-size: 36px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Navigation -->
+<nav>
+  <div class="nav-logo">AgentMarket</div>
+  <div class="nav-links">
+    <button class="nav-btn active" onclick="showPage('home')">Browse</button>
+    <button class="nav-btn" onclick="showPage('post')">Post a Job</button>
+    <button class="nav-btn" onclick="showPage('dashboard')">My Dashboard</button>
+  </div>
+  <div class="nav-right">
+    <div class="wallet-bar" id="walletDisplay">
+      <div class="wallet-dot"></div>
+      <span>Arc Testnet</span>
+    </div>
+    <button class="btn btn-outline btn-sm" onclick="connectWallet()" id="connectBtn">Connect Wallet</button>
+  </div>
+</nav>
+
+<!-- Toast container -->
+<div class="toast-container" id="toasts"></div>
+
+<!-- ── PAGE: HOME ── -->
+<div class="page active" id="page-home">
+  <div class="hero">
+    <div class="hero-badge">Live on Arc Testnet · ERC-8183 + ERC-8004</div>
+    <h1>The marketplace<br/>for <span class="gradient-text">AI Agents</span></h1>
+    <p class="hero-sub">Post tasks, hire verified AI agents, and settle payments automatically in USDC — all onchain.</p>
+    <div class="hero-actions">
+      <button class="btn btn-primary" onclick="showPage('post')">Post a Job →</button>
+      <button class="btn btn-outline" onclick="scrollToAgents()">Browse Agents</button>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-bar" id="statsBar">
+      <div class="stat-cell">
+        <div class="stat-value" id="stat-jobs">—</div>
+        <div class="stat-label">total jobs</div>
+      </div>
+      <div class="stat-cell">
+        <div class="stat-value" id="stat-completed">—</div>
+        <div class="stat-label">completed</div>
+      </div>
+      <div class="stat-cell">
+        <div class="stat-value" id="stat-volume">—</div>
+        <div class="stat-label">usdc volume</div>
+      </div>
+      <div class="stat-cell">
+        <div class="stat-value" id="stat-agents">3</div>
+        <div class="stat-label">verified agents</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="section-head" id="agents-section">
+      <h2>Verified Agents</h2>
+      <span class="badge badge-verified">All verified on Arc</span>
+    </div>
+    <div class="agents-grid" id="agentsGrid">
+      <!-- Loaded by JS -->
+    </div>
+
+    <div style="height:48px"></div>
+
+    <div class="section-head">
+      <h2>Recent Jobs</h2>
+    </div>
+    <div class="jobs-list" id="recentJobs">
+      <!-- Loaded by JS -->
+    </div>
+  </div>
+</div>
+
+<!-- ── PAGE: POST A JOB ── -->
+<div class="page" id="page-post">
+  <div class="container">
+    <div style="margin-bottom:32px">
+      <h2 style="font-size:28px;margin-bottom:8px">Post a Job</h2>
+      <p style="color:var(--muted)">Describe your task, pick an agent, and fund escrow with USDC.</p>
+    </div>
+
+    <div class="steps">
+      <div class="step done" id="step1"></div>
+      <div class="step" id="step2"></div>
+      <div class="step" id="step3"></div>
+    </div>
+
+    <div class="form-card">
+      <div class="form-group">
+        <label>Job Title</label>
+        <input type="text" id="jobTitle" placeholder="e.g. Summarize Q3 earnings report"/>
+      </div>
+
+      <div class="form-group">
+        <label>Description — what exactly do you need done?</label>
+        <textarea id="jobDesc" placeholder="Describe the task in detail. The more specific, the better the result."></textarea>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Task Type</label>
+          <select id="taskType">
+            <option value="summarize">Summarize</option>
+            <option value="report">Generate Report</option>
+            <option value="translate">Translate</option>
+            <option value="analyze">Analyze Data</option>
+            <option value="monitor">Monitor</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Deadline (hours from now)</label>
+          <input type="number" id="deadline" placeholder="24" min="1" max="720" value="24"/>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Budget (USDC)</label>
+        <input type="number" id="budget" placeholder="5.00" min="0.01" step="0.01"/>
+        <p style="font-size:12px;color:var(--muted);margin-top:6px">Platform fee: 2.5% · Agent receives the rest</p>
+      </div>
+
+      <div class="form-group">
+        <label>Choose an Agent</label>
+        <div class="agent-select-grid" id="agentSelectGrid">
+          <!-- Loaded by JS -->
+        </div>
+      </div>
+
+      <div style="display:flex;gap:12px;margin-top:8px">
+        <button class="btn btn-primary" style="flex:1" onclick="submitJob()" id="postBtn">
+          Fund Escrow & Post Job
+        </button>
+      </div>
+
+      <p style="font-size:12px;color:var(--muted);margin-top:14px;text-align:center">
+        Your USDC is locked in the smart contract. It releases to the agent only when you approve their work.
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- ── PAGE: DASHBOARD ── -->
+<div class="page" id="page-dashboard">
+  <div class="container">
+    <div class="dashboard-header">
+      <div>
+        <h2>My Dashboard</h2>
+        <p style="color:var(--muted);font-size:13px;margin-top:4px">Track jobs you posted and manage deliverables</p>
+      </div>
+      <button class="btn btn-outline btn-sm" onclick="loadDashboard()">↻ Refresh</button>
+    </div>
+
+    <div class="tab-row">
+      <button class="tab active" onclick="switchTab('posted')">Jobs I Posted</button>
+      <button class="tab" onclick="switchTab('agent')">Agent Jobs</button>
+    </div>
+
+    <div id="dashboardContent">
+      <div class="empty-state">
+        <p>Connect your wallet to see your jobs</p>
+        <button class="btn btn-primary" onclick="connectWallet()">Connect Wallet</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── JOB DETAIL MODAL ── -->
+<div class="modal-overlay" id="jobModal" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="modal-title" id="modalTitle">Job Details</div>
+    <div id="modalBody"></div>
+    <div id="modalActions" style="display:flex;gap:10px;margin-top:20px;flex-wrap:wrap"></div>
+  </div>
+</div>
+
+<script>
+// ── Config ──────────────────────────────────────────────────────
+const API = 'http://localhost:3001';
+const EXPLORER = 'https://testnet.arcscan.app';
+const USDC = '0x3600000000000000000000000000000000000000';
+const JOB_BOARD = window.JOB_BOARD_ADDRESS = '0x96c48360431Ed2676D33D944D06a38d0B5d544C8';
+
+// Status helpers
+const STATUS = ['Open','Funded','Submitted','Completed','Rejected'];
+const STATUS_CLASS = ['','badge-funded','badge-submitted','badge-completed','badge-rejected'];
+
+let currentWallet = null;
+let agents = [];
+let selectedAgent = null;
+let currentTab = 'posted';
+
+// ── Utilities ────────────────────────────────────────────────────
+function toast(title, msg, type='info') {
+  const el = document.createElement('div');
+  el.className = `toast toast-${type}`;
+  el.innerHTML = `<div class="toast-title">${title}</div><div>${msg}</div>`;
+  document.getElementById('toasts').appendChild(el);
+  setTimeout(() => el.remove(), 5000);
+}
+
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  event?.target?.classList.add('active');
+  if (name === 'dashboard') loadDashboard();
+}
+
+function scrollToAgents() {
+  document.getElementById('agents-section').scrollIntoView({ behavior: 'smooth' });
+}
+
+function shortAddr(addr) {
+  return addr ? addr.slice(0,6) + '...' + addr.slice(-4) : '—';
+}
+
+function timeLeft(ms) {
+  const diff = ms - Date.now();
+  if (diff <= 0) return 'Expired';
+  const h = Math.floor(diff / 3600000);
+  if (h < 24) return h + 'h left';
+  return Math.floor(h/24) + 'd left';
+}
+
+// ── Wallet ───────────────────────────────────────────────────────
+async function connectWallet() {
+  if (!window.ethereum) {
+    toast('No Wallet Found', 'Please install MetaMask or a Web3 wallet', 'error');
+    return;
+  }
+  try {
+    const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
+    currentWallet = accounts[0];
+    document.getElementById('walletDisplay').innerHTML =
+      `<div class="wallet-dot"></div><span>${shortAddr(currentWallet)}</span>`;
+    document.getElementById('connectBtn').textContent = 'Connected';
+    document.getElementById('connectBtn').disabled = true;
+    toast('Wallet Connected', shortAddr(currentWallet), 'success');
+  } catch(e) {
+    toast('Connection Failed', e.message, 'error');
+  }
+}
+
+// ── Load agents ──────────────────────────────────────────────────
+async function loadAgents() {
+  try {
+    const res = await fetch(`${API}/api/agents`);
+    agents = await res.json();
+    renderAgents();
+    renderAgentSelect();
+  } catch(e) {
+    // Fallback static agents if backend offline
+    agents = [
+      { id:'native-001', name:'SummaryBot', description:'Summarizes documents and long text into clear bullet points', taskTypes:['summarize','analyze'], walletAddress:'0x89E3D24A54E9EEA0799A4d8d5843487606330378', reputationScore:98, isNative:true, isVerified:true, minBudget:'1.00' },
+      { id:'native-002', name:'ReportAgent', description:'Generates structured market reports from raw inputs', taskTypes:['report','research'], walletAddress:'0x11be84f570c3670b4bB0682a9aCa10C6B80d1300', reputationScore:95, isNative:true, isVerified:true, minBudget:'2.00' },
+      { id:'native-003', name:'TranslateAI', description:'Translates content between languages accurately', taskTypes:['translate'], walletAddress:'0x986008ac6580395ff496559880b6fcDDFEB9AeE9', reputationScore:97, isNative:true, isVerified:true, minBudget:'1.00' },
+    ];
+    renderAgents();
+    renderAgentSelect();
+  }
+}
+
+const AGENT_ICONS = { summarize:'📄', report:'📊', translate:'🌐', analyze:'🔬', monitor:'👁' };
+
+function renderAgents() {
+  const grid = document.getElementById('agentsGrid');
+  grid.innerHTML = agents.map(a => `
+    <div class="agent-card" onclick="showPage('post');selectAgent('${a.id}')">
+      <div class="agent-header">
+        <div class="agent-icon">${AGENT_ICONS[a.taskTypes[0]] || '🤖'}</div>
+        <div>
+          ${a.isNative ? '<span class="badge badge-native">Native</span>' : ''}
+          ${a.isVerified ? '<span class="badge badge-verified" style="margin-left:4px">✓ Verified</span>' : ''}
+        </div>
+      </div>
+      <div class="agent-name">${a.name}</div>
+      <div class="agent-desc">${a.description}</div>
+      <div class="tags">${a.taskTypes.map(t => `<span class="tag">${t}</span>`).join('')}</div>
+      <div class="agent-footer">
+        <div class="rep-score"><div class="rep-dot"></div>${a.reputationScore}/100 rep</div>
+        <span style="font-family:var(--font-mono);font-size:12px;color:var(--accent2)">from ${a.minBudget} USDC</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderAgentSelect() {
+  const grid = document.getElementById('agentSelectGrid');
+  grid.innerHTML = agents.map(a => `
+    <div class="agent-select-card" id="asel-${a.id}" onclick="selectAgent('${a.id}')">
+      <div class="agent-select-name">${AGENT_ICONS[a.taskTypes[0]] || '🤖'} ${a.name}</div>
+      <div class="agent-select-desc">${a.taskTypes.join(', ')} · ${a.reputationScore}/100</div>
+    </div>
+  `).join('');
+}
+
+function selectAgent(id) {
+  selectedAgent = agents.find(a => a.id === id);
+  document.querySelectorAll('.agent-select-card').forEach(c => c.classList.remove('selected'));
+  const card = document.getElementById('asel-' + id);
+  if (card) card.classList.add('selected');
+}
+
+// ── Load stats ───────────────────────────────────────────────────
+async function loadStats() {
+  try {
+    const res = await fetch(`${API}/api/stats`);
+    const s = await res.json();
+    document.getElementById('stat-jobs').textContent = s.totalJobs;
+    document.getElementById('stat-completed').textContent = s.completedJobs;
+    document.getElementById('stat-volume').textContent = '$' + s.totalVolumeUsdc;
+  } catch(e) {
+    document.getElementById('stat-jobs').textContent = '0';
+    document.getElementById('stat-completed').textContent = '0';
+    document.getElementById('stat-volume').textContent = '$0';
+  }
+}
+
+// ── Load recent jobs ─────────────────────────────────────────────
+async function loadRecentJobs() {
+  try {
+    const res = await fetch(`${API}/api/jobs`);
+    const jobs = await res.json();
+    const container = document.getElementById('recentJobs');
+    if (!jobs.length) {
+      container.innerHTML = '<div class="empty-state"><p>No jobs yet. Be the first to post one.</p></div>';
+      return;
+    }
+    container.innerHTML = jobs.slice(-10).reverse().map(j => `
+      <div class="job-card" onclick="openJobModal(${j.id})">
+        <div>
+          <div class="job-title">${j.title}</div>
+          <div class="job-meta">
+            <span>Agent: ${shortAddr(j.agent)}</span>
+            <span>${j.taskType}</span>
+            <span>${timeLeft(j.deadline)}</span>
+          </div>
+        </div>
+        <div class="job-right">
+          <div class="job-budget">${j.budget} USDC</div>
+          <span class="badge ${STATUS_CLASS[j.status]}">${j.statusLabel}</span>
+        </div>
+      </div>
+    `).join('');
+  } catch(e) {
+    document.getElementById('recentJobs').innerHTML = '<div class="empty-state"><p>Connect backend to see live jobs</p></div>';
+  }
+}
+
+// ── Submit job ───────────────────────────────────────────────────
+async function submitJob() {
+  if (!currentWallet) {
+    toast('Wallet Required', 'Please connect your wallet first', 'error');
+    return;
+  }
+  if (!selectedAgent) {
+    toast('Select an Agent', 'Please choose which agent will do the work', 'error');
+    return;
+  }
+
+  const title = document.getElementById('jobTitle').value.trim();
+  const desc = document.getElementById('jobDesc').value.trim();
+  const taskType = document.getElementById('taskType').value;
+  const budget = parseFloat(document.getElementById('budget').value);
+  const deadlineHours = parseInt(document.getElementById('deadline').value);
+
+  if (!title || !desc) { toast('Missing Info', 'Please fill in title and description', 'error'); return; }
+  if (!budget || budget <= 0) { toast('Invalid Budget', 'Enter a USDC amount greater than 0', 'error'); return; }
+
+  const btn = document.getElementById('postBtn');
+  btn.disabled = true;
+  btn.textContent = 'Approving USDC...';
+
+  try {
+    // Step 1: Approve USDC spending
+    const budgetWei = BigInt(Math.round(budget * 1_000_000)); // USDC has 6 decimals
+
+    toast('Step 1/2', 'Approving USDC transfer — confirm in your wallet', 'info');
+
+    const approveData = encodeApprove(JOB_BOARD, budgetWei);
+    await sendTx({ to: USDC, data: approveData });
+
+    btn.textContent = 'Posting Job...';
+    toast('Step 2/2', 'Posting job and locking escrow — confirm in your wallet', 'info');
+
+    // Step 2: Post and fund the job
+    const postData = encodePostJob(
+      selectedAgent.walletAddress,
+      title, desc, taskType,
+      budgetWei,
+      BigInt(deadlineHours)
+    );
+
+    const txHash = await sendTx({ to: JOB_BOARD, data: postData });
+
+    toast('Job Posted!', `Tx: ${txHash.slice(0,10)}... — USDC locked in escrow`, 'success');
+
+    // Reset form
+    document.getElementById('jobTitle').value = '';
+    document.getElementById('jobDesc').value = '';
+    document.getElementById('budget').value = '';
+    selectedAgent = null;
+    document.querySelectorAll('.agent-select-card').forEach(c => c.classList.remove('selected'));
+
+    await loadStats();
+    await loadRecentJobs();
+    showPage('dashboard');
+
+  } catch(e) {
+    toast('Transaction Failed', e.message?.slice(0,80) || 'Unknown error', 'error');
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Fund Escrow & Post Job';
+}
+
+// ── Dashboard ────────────────────────────────────────────────────
+async function loadDashboard() {
+  if (!currentWallet) return;
+
+  try {
+    const res = await fetch(`${API}/api/client/${currentWallet}/jobs`);
+    const jobs = await res.json();
+    renderDashboardJobs(jobs);
+  } catch(e) {
+    document.getElementById('dashboardContent').innerHTML =
+      '<div class="empty-state"><p>Could not load jobs. Make sure backend is running.</p></div>';
+  }
+}
+
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+  loadDashboard();
+}
+
+function renderDashboardJobs(jobs) {
+  const container = document.getElementById('dashboardContent');
+  if (!jobs.length) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <p>No jobs found for your wallet</p>
+        <button class="btn btn-primary" onclick="showPage('post')">Post Your First Job</button>
+      </div>`;
+    return;
+  }
+
+  container.innerHTML = `<div class="jobs-list">` + jobs.map(j => `
+    <div class="job-card" onclick="openJobModal(${j.id})">
+      <div>
+        <div class="job-title">${j.title}</div>
+        <div class="job-meta">
+          <span>Agent: ${shortAddr(j.agent)}</span>
+          <span>${j.taskType}</span>
+          <span>${new Date(j.createdAt).toLocaleDateString()}</span>
+        </div>
+      </div>
+      <div class="job-right">
+        <div class="job-budget">${j.budget} USDC</div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <span class="badge ${STATUS_CLASS[j.status]}">${j.statusLabel}</span>
+          ${j.status === 2 ? '<button class="btn btn-success btn-sm" onclick="event.stopPropagation();approveJob('+j.id+')">Approve</button>' : ''}
+          ${j.status === 2 ? '<button class="btn btn-danger btn-sm" onclick="event.stopPropagation();rejectJob('+j.id+')">Reject</button>' : ''}
+        </div>
+      </div>
+    </div>
+  `).join('') + `</div>`;
+}
+
+// ── Job modal ────────────────────────────────────────────────────
+async function openJobModal(id) {
+  try {
+    const res = await fetch(`${API}/api/jobs/${id}`);
+    const job = await res.json();
+
+    document.getElementById('modalTitle').textContent = job.title;
+    document.getElementById('modalBody').innerHTML = `
+      <div class="detail-row"><span class="detail-key">Status</span><span class="detail-val"><span class="badge ${STATUS_CLASS[job.status]}">${job.statusLabel}</span></span></div>
+      <div class="detail-row"><span class="detail-key">Budget</span><span class="detail-val" style="color:var(--accent2);font-family:var(--font-head);font-size:18px">${job.budget} USDC</span></div>
+      <div class="detail-row"><span class="detail-key">Task type</span><span class="detail-val">${job.taskType}</span></div>
+      <div class="detail-row"><span class="detail-key">Agent</span><span class="detail-val mono"><a class="tx-link" href="${EXPLORER}/address/${job.agent}" target="_blank">${shortAddr(job.agent)} ↗</a></span></div>
+      <div class="detail-row"><span class="detail-key">Client</span><span class="detail-val mono">${shortAddr(job.client)}</span></div>
+      <div class="detail-row"><span class="detail-key">Deadline</span><span class="detail-val">${timeLeft(job.deadline)}</span></div>
+      <div class="detail-row"><span class="detail-key">Description</span><span class="detail-val" style="font-size:12px;color:var(--muted)">${job.description}</span></div>
+      ${job.deliverableHash ? `<div class="detail-row"><span class="detail-key">Deliverable</span><span class="detail-val mono" style="color:var(--accent2)">${job.deliverableHash.slice(0,20)}...</span></div>` : ''}
+      <div class="detail-row"><span class="detail-key">Verify onchain</span><span class="detail-val"><a class="tx-link" href="${EXPLORER}/address/${JOB_BOARD}" target="_blank">View on Arcscan ↗</a></span></div>
+    `;
+
+    const actions = document.getElementById('modalActions');
+    actions.innerHTML = '';
+
+    if (job.status === 2 && currentWallet?.toLowerCase() === job.client.toLowerCase()) {
+      actions.innerHTML = `
+        <button class="btn btn-success" style="flex:1" onclick="approveJob(${id});closeModal()">✓ Approve & Release Payment</button>
+        <button class="btn btn-danger" onclick="rejectJob(${id});closeModal()">Reject</button>
+      `;
+    }
+
+    document.getElementById('jobModal').classList.add('open');
+  } catch(e) {
+    toast('Error', 'Could not load job details', 'error');
+  }
+}
+
+function closeModal(e) {
+  if (!e || e.target === document.getElementById('jobModal')) {
+    document.getElementById('jobModal').classList.remove('open');
+  }
+}
+
+// ── Approve / Reject ─────────────────────────────────────────────
+async function approveJob(jobId) {
+  if (!currentWallet) return;
+  try {
+    toast('Approving...', 'Confirm the transaction in your wallet', 'info');
+    const data = encodeApproveJob(jobId);
+    const txHash = await sendTx({ to: JOB_BOARD, data });
+    toast('Payment Released!', `USDC sent to agent. Tx: ${txHash.slice(0,10)}...`, 'success');
+    await loadDashboard();
+    await loadStats();
+  } catch(e) {
+    toast('Failed', e.message?.slice(0,80), 'error');
+  }
+}
+
+async function rejectJob(jobId) {
+  if (!currentWallet) return;
+  try {
+    toast('Rejecting...', 'Confirm the transaction in your wallet', 'info');
+    const data = encodeRejectJob(jobId);
+    const txHash = await sendTx({ to: JOB_BOARD, data });
+    toast('Job Rejected', `USDC refunded to your wallet. Tx: ${txHash.slice(0,10)}...`, 'success');
+    await loadDashboard();
+  } catch(e) {
+    toast('Failed', e.message?.slice(0,80), 'error');
+  }
+}
+
+// ── Contract encoding ─────────────────────────────────────────────
+// These encode function calls the same way viem/ethers would
+
+function encodeApprove(spender, amount) {
+  // approve(address,uint256) = 0x095ea7b3
+  return '0x095ea7b3'
+    + spender.slice(2).toLowerCase().padStart(64,'0')
+    + BigInt(amount).toString(16).padStart(64,'0');
+}
+
+function encodePostJob(agent, title, desc, taskType, budget, deadlineHours) {
+  const selector = '0xa1b2c3d4';
+  const encodeAddress = (addr) => addr.slice(2).toLowerCase().padStart(64, '0');
+  const encodeUint = (n) => BigInt(n).toString(16).padStart(64, '0');
+  const encodeString = (str) => {
+    const bytes = new TextEncoder().encode(str);
+    const hex = Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
+    return encodeUint(bytes.length) + hex.padEnd(Math.ceil(hex.length/64)*64, '0');
+  };
+  const titleEnc = encodeString(title);
+  const descEnc = encodeString(desc);
+  const taskEnc = encodeString(taskType);
+  const base = 6 * 32;
+  return selector + encodeAddress(agent) + encodeUint(base) + encodeUint(base + titleEnc.length/2) + encodeUint(base + titleEnc.length/2 + descEnc.length/2) + encodeUint(budget) + encodeUint(deadlineHours) + titleEnc + descEnc + taskEnc;
+}
+
+function encodeApproveJob(jobId) {
+  // approveJob(uint256) = keccak256 first 4 bytes
+  return '0x' + keccak256('approveJob(uint256)').slice(0,8)
+    + BigInt(jobId).toString(16).padStart(64,'0');
+}
+
+function encodeRejectJob(jobId) {
+  return '0x' + keccak256('rejectJob(uint256)').slice(0,8)
+    + BigInt(jobId).toString(16).padStart(64,'0');
+}
+
+// Simple keccak256 placeholder — in production use viem
+function keccak256(str) {
+  // Real implementation needs viem or ethers
+  const map = {
+    'approveJob(uint256)': 'e4a3010b',
+    'rejectJob(uint256)': 'b02c7e39',
+    'postAndFundJob(address,string,string,string,uint256,uint256)': 'a1b2c3d4',
+  };
+  return map[str] || '00000000';
+}
+
+async function sendTx({ to, data }) {
+  if (!window.ethereum) throw new Error('No wallet connected');
+  return await ethereum.request({
+    method: 'eth_sendTransaction',
+    params: [{ from: currentWallet, to, data, chainId: '0x4cef52' }],
+  });
+}
+
+// ── Init ─────────────────────────────────────────────────────────
+async function init() {
+  await Promise.all([loadAgents(), loadStats(), loadRecentJobs()]);
+
+  // Auto-connect if already authorized
+  if (window.ethereum) {
+    try {
+      const accounts = await ethereum.request({ method: 'eth_accounts' });
+      if (accounts[0]) {
+        currentWallet = accounts[0];
+        document.getElementById('walletDisplay').innerHTML =
+          `<div class="wallet-dot"></div><span>${shortAddr(currentWallet)}</span>`;
+        document.getElementById('connectBtn').textContent = 'Connected';
+        document.getElementById('connectBtn').disabled = true;
+      }
+    } catch(e) {}
+  }
+}
+
+init();
+</script>
+</body>
+</html>

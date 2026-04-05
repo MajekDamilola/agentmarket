@@ -600,6 +600,7 @@
       h1 { font-size: 36px; }
     }
   </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
 </head>
 <body>
 
@@ -981,21 +982,27 @@ async function submitJob() {
 
     toast('Step 1/2', 'Approving USDC transfer — confirm in your wallet', 'info');
 
-    const approveData = encodeApprove(JOB_BOARD, budgetWei);
-    await sendTx({ to: USDC, data: approveData });
+    const provider = new ethers.BrowserProvider(window.ethereum);
+    const signer = await provider.getSigner();
+    const usdcAbi = ['function approve(address spender, uint256 amount) returns (bool)'];
+    const usdcContract = new ethers.Contract(USDC, usdcAbi, signer);
+    const approveTx = await usdcContract.approve(JOB_BOARD, budgetWei);
+    await approveTx.wait();
 
     btn.textContent = 'Posting Job...';
     toast('Step 2/2', 'Posting job and locking escrow — confirm in your wallet', 'info');
 
     // Step 2: Post and fund the job
-    const postData = encodePostJob(
+    const jobAbi = ['function postAndFundJob(address _agent, string _title, string _description, string _taskType, uint256 _budget, uint256 _deadlineHours) returns (uint256)'];
+    const jobContract = new ethers.Contract(JOB_BOARD, jobAbi, signer);
+    const jobTx = await jobContract.postAndFundJob(
       selectedAgent.walletAddress,
       title, desc, taskType,
       budgetWei,
       BigInt(deadlineHours)
     );
-
-    const txHash = await sendTx({ to: JOB_BOARD, data: postData });
+    const receipt = await jobTx.wait();
+    const txHash = receipt.hash;
 
     toast('Job Posted!', `Tx: ${txHash.slice(0,10)}... — USDC locked in escrow`, 'success');
 
@@ -1145,14 +1152,13 @@ async function rejectJob(jobId) {
 // These encode function calls the same way viem/ethers would
 
 function encodeApprove(spender, amount) {
-  // approve(address,uint256) = 0x095ea7b3
-  return '0x095ea7b3'
-    + spender.slice(2).toLowerCase().padStart(64,'0')
-    + BigInt(amount).toString(16).padStart(64,'0');
+  const addr = spender.slice(2).toLowerCase().padStart(64, '0');
+  const amt = BigInt(amount).toString(16).padStart(64, '0');
+  return '0xa613914d' + addr + amt;
 }
 
 function encodePostJob(agent, title, desc, taskType, budget, deadlineHours) {
-  const selector = '0xa1b2c3d4';
+  const selector = '0x27258c70';
   const encodeAddress = (addr) => addr.slice(2).toLowerCase().padStart(64, '0');
   const encodeUint = (n) => BigInt(n).toString(16).padStart(64, '0');
   const encodeString = (str) => {
@@ -1182,8 +1188,8 @@ function encodeRejectJob(jobId) {
 function keccak256(str) {
   // Real implementation needs viem or ethers
   const map = {
-    'approveJob(uint256)': 'e4a3010b',
-    'rejectJob(uint256)': 'b02c7e39',
+    'approveJob(uint256)': '888a01d7',
+    'rejectJob(uint256)': '6d0f6b1c',
     'postAndFundJob(address,string,string,string,uint256,uint256)': 'a1b2c3d4',
   };
   return map[str] || '00000000';

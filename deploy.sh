@@ -21,14 +21,17 @@ if [ -z "$PRIVATE_KEY" ]; then
   exit 1
 fi
 
+# Normalize private key format for forge
+PRIVATE_KEY=${PRIVATE_KEY#0x}
+
 ARC_RPC="https://rpc.testnet.arc.network"
 
 echo "▸ Compiling contract..."
-forge build --contracts contracts/
+/home/marhkson/.foundry/bin/forge build --contracts contracts/
 
 echo ""
 echo "▸ Deploying AgentJobBoard to Arc Testnet..."
-OUTPUT=$(forge create contracts/AgentJobBoard.sol:AgentJobBoard \
+OUTPUT=$(/home/marhkson/.foundry/bin/forge create contracts/AgentJobBoard.sol:AgentJobBoard \
   --rpc-url $ARC_RPC \
   --private-key $PRIVATE_KEY \
   --broadcast 2>&1)
@@ -63,10 +66,17 @@ else
   sed -i "s|JOB_BOARD_ADDRESS=.*|JOB_BOARD_ADDRESS=$CONTRACT_ADDRESS|" backend/.env
 fi
 
-# Update frontend
-sed -i "s|window.JOB_BOARD_ADDRESS.*|window.JOB_BOARD_ADDRESS = '$CONTRACT_ADDRESS';|" frontend/index.html 2>/dev/null || true
+# Update root .env so frontend and tools can see the deployed address
+if grep -q '^JOB_BOARD_ADDRESS=' .env; then
+  sed -i "s|^JOB_BOARD_ADDRESS=.*|JOB_BOARD_ADDRESS=$CONTRACT_ADDRESS|" .env
+else
+  echo "JOB_BOARD_ADDRESS=$CONTRACT_ADDRESS" >> .env
+fi
 
-echo "  ✓ Address saved to backend/.env"
+# Update frontend fallback address
+sed -i "s|const JOB_BOARD = window.JOB_BOARD_ADDRESS = '.*';|const JOB_BOARD = window.JOB_BOARD_ADDRESS = '$CONTRACT_ADDRESS';|" frontend/index.html 2>/dev/null || true
+
+echo "  ✓ Address saved to backend/.env and .env"
 echo ""
 echo "NEXT STEPS:"
 echo "  1. cd backend && npm install && npm start"

@@ -1,0 +1,298 @@
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  AgentMarket — Arc Testnet Deploy
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+▸ Compiling contract...
+No files changed, compilation skipped
+note[unwrapped-modifier-logic]: wrap modifier logic to reduce code size
+   --> contracts/Clera.sol:115:5
+    |
+115 |     modifier onlyOwner() { require(msg.sender == owner, "Not owner"); _; }
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: wrap modifier logic to reduce code size
+    |
+115 ~     modifier onlyOwner() {
+116 +     _onlyOwner();
+117 +     _;
+118 +     }
+119 + 
+120 +     function _onlyOwner() internal {
+121 +     require(msg.sender == owner, "Not owner");
+122 +     }
+    |
+    = help: https://book.getfoundry.sh/reference/forge/forge-lint#unwrapped-modifier-logic
+
+note[unwrapped-modifier-logic]: wrap modifier logic to reduce code size
+   --> contracts/AgentJobBoard.sol:138:5
+    |
+138 | /     modifier onlyOwner() {
+139 | |         require(msg.sender == owner, "Not platform owner");
+140 | |         _;
+141 | |     }
+    | |_____^
+    |
+help: wrap modifier logic to reduce code size
+    |
+138 ~     modifier onlyOwner() {
+139 +         _onlyOwner();
+140 +         _;
+141 +     }
+142 + 
+143 +     function _onlyOwner() internal {
+144 +         require(msg.sender == owner, "Not platform owner");
+145 +     }
+    |
+    = help: https://book.getfoundry.sh/reference/forge/forge-lint#unwrapped-modifier-logic
+
+note[unwrapped-modifier-logic]: wrap modifier logic to reduce code size
+   --> contracts/AgentJobBoard.sol:143:5
+    |
+143 | /     modifier onlyClient(uint256 jobId) {
+144 | |         require(jobs[jobId].client == msg.sender, "Not the job client");
+145 | |         _;
+146 | |     }
+    | |_____^
+    |
+help: wrap modifier logic to reduce code size
+    |
+143 ~     modifier onlyClient(uint256 jobId) {
+144 +         _onlyClient(jobId);
+145 +         _;
+146 +     }
+147 + 
+148 +     function _onlyClient(uint256 jobId) internal {
+149 +         require(jobs[jobId].client == msg.sender, "Not the job client");
+150 +     }
+    |
+    = help: https://book.getfoundry.sh/reference/forge/forge-lint#unwrapped-modifier-logic
+
+note[unwrapped-modifier-logic]: wrap modifier logic to reduce code size
+   --> contracts/Clera.sol:116:5
+    |
+116 |     modifier onlyClient(uint256 jobId) { require(jobs[jobId].client == msg.sender, "Not client"); _; }
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: wrap modifier logic to reduce code size
+    |
+116 ~     modifier onlyClient(uint256 jobId) {
+117 +      _onlyClient(jobId);
+118 +      _;
+119 +     }
+120 + 
+121 +     function _onlyClient(uint256 jobId) internal {
+122 +      require(jobs[jobId].client == msg.sender, "Not client");
+123 +     }
+    |
+    = help: https://book.getfoundry.sh/reference/forge/forge-lint#unwrapped-modifier-logic
+
+note[unwrapped-modifier-logic]: wrap modifier logic to reduce code size
+   --> contracts/Clera.sol:117:5
+    |
+117 |     modifier onlyWorker(uint256 jobId) { require(jobs[jobId].worker == msg.sender, "Not worker"); _; }
+    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: wrap modifier logic to reduce code size
+    |
+117 ~     modifier onlyWorker(uint256 jobId) {
+118 + _onlyWorker(jobId);
+119 + _;
+120 + }
+121 + 
+122 + function _onlyWorker(uint256 jobId) internal {
+123 + require(jobs[jobId].worker == msg.sender, "Not worker");
+124 + }
+    |
+    = help: https://book.getfoundry.sh/reference/forge/forge-lint#unwrapped-modifier-logic
+
+note[unwrapped-modifier-logic]: wrap modifier logic to reduce code size
+   --> contracts/AgentJobBoard.sol:148:5
+    |
+148 | /     modifier onlyAgent(uint256 jobId) {
+149 | |         require(jobs[jobId].agent == msg.sender, "Not the assigned agent");
+150 | |         _;
+151 | |     }
+    | |_____^
+    |
+help: wrap modifier logic to reduce code size
+    |
+148 ~     modifier onlyAgent(uint256 jobId) {
+149 +         _onlyAgent(jobId);
+150 +         _;
+151 +     }
+152 + 
+153 +     function _onlyAgent(uint256 jobId) internal {
+154 +         require(jobs[jobId].agent == msg.sender, "Not the assigned agent");
+155 +     }
+    |
+    = help: https://book.getfoundry.sh/reference/forge/forge-lint#unwrapped-modifier-logic
+
+note[named-struct-fields]: prefer initializing structs with named fields
+   --> contracts/Clera.sol:131:26
+    |
+131 |           jobs[jobCount] = Job(jobCount, msg.sender, _worker, _title, _description, _category,
+    |  __________________________^
+132 | |             WorkerType(_workerType), _budget, block.timestamp + (_deadlineHours * 1 hours),
+133 | |             JobStatus.Funded, "", block.timestamp, 0, _isUrgent);
+    | |________________________________________________________________^ help: consider using named fields: `Job({ id: jobCount, client: msg.sender, worker: _worker, title: _title, description: _description, category: _category, workerType: WorkerType(_workerType), budget: _budget, deadline: block.timestamp + (_deadlineHours * 1 hours), status: JobStatus.Funded, deliverableHash: "", createdAt: block.timestamp, completedAt: 0, isUrgent: _isUrgent })`
+    |
+    = help: https://book.getfoundry.sh/reference/forge/forge-lint#named-struct-fields
+
+warning[erc20-unchecked-transfer]: ERC20 'transfer' and 'transferFrom' calls should check the return value
+   --> contracts/Clera.sol:154:9
+    |
+154 |         IERC20(USDC).transfer(job.worker, payout);
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = help: https://book.getfoundry.sh/reference/forge/forge-lint#erc20-unchecked-transfer
+
+warning[erc20-unchecked-transfer]: ERC20 'transfer' and 'transferFrom' calls should check the return value
+   --> contracts/AgentJobBoard.sol:262:9
+    |
+262 |         IERC20(USDC).transfer(job.agent, agentPayout);
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = help: https://book.getfoundry.sh/reference/forge/forge-lint#erc20-unchecked-transfer
+
+warning[erc20-unchecked-transfer]: ERC20 'transfer' and 'transferFrom' calls should check the return value
+   --> contracts/Clera.sol:155:22
+    |
+155 |         if (fee > 0) IERC20(USDC).transfer(owner, fee);
+    |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = help: https://book.getfoundry.sh/reference/forge/forge-lint#erc20-unchecked-transfer
+
+warning[erc20-unchecked-transfer]: ERC20 'transfer' and 'transferFrom' calls should check the return value
+   --> contracts/Clera.sol:164:9
+    |
+164 |         IERC20(USDC).transfer(jobs[_jobId].client, jobs[_jobId].budget);
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = help: https://book.getfoundry.sh/reference/forge/forge-lint#erc20-unchecked-transfer
+
+warning[erc20-unchecked-transfer]: ERC20 'transfer' and 'transferFrom' calls should check the return value
+   --> contracts/AgentJobBoard.sol:263:22
+    |
+263 |         if (fee > 0) IERC20(USDC).transfer(owner, fee);
+    |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = help: https://book.getfoundry.sh/reference/forge/forge-lint#erc20-unchecked-transfer
+
+warning[erc20-unchecked-transfer]: ERC20 'transfer' and 'transferFrom' calls should check the return value
+   --> contracts/AgentJobBoard.sol:285:9
+    |
+285 |         IERC20(USDC).transfer(job.agent, agentPayout);
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = help: https://book.getfoundry.sh/reference/forge/forge-lint#erc20-unchecked-transfer
+
+warning[erc20-unchecked-transfer]: ERC20 'transfer' and 'transferFrom' calls should check the return value
+   --> contracts/AgentJobBoard.sol:286:22
+    |
+286 |         if (fee > 0) IERC20(USDC).transfer(owner, fee);
+    |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = help: https://book.getfoundry.sh/reference/forge/forge-lint#erc20-unchecked-transfer
+
+note[named-struct-fields]: prefer initializing structs with named fields
+   --> contracts/Clera.sol:176:32
+    |
+176 |         reviews[reviewCount] = Review(msg.sender, reviewee, _jobId, _rating, _comment, block.timestamp);
+    |                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: consider using named fields: `Review({ reviewer: msg.sender, reviewee: reviewee, jobId: _jobId, rating: _rating, comment: _comment, createdAt: block.timestamp })`
+    |
+    = help: https://book.getfoundry.sh/reference/forge/forge-lint#named-struct-fields
+
+warning[erc20-unchecked-transfer]: ERC20 'transfer' and 'transferFrom' calls should check the return value
+   --> contracts/AgentJobBoard.sol:296:9
+    |
+296 |         IERC20(USDC).transfer(job.client, job.budget);
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = help: https://book.getfoundry.sh/reference/forge/forge-lint#erc20-unchecked-transfer
+
+warning[erc20-unchecked-transfer]: ERC20 'transfer' and 'transferFrom' calls should check the return value
+   --> contracts/AgentJobBoard.sol:307:9
+    |
+307 |         IERC20(USDC).transfer(job.client, job.budget);
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = help: https://book.getfoundry.sh/reference/forge/forge-lint#erc20-unchecked-transfer
+
+note[named-struct-fields]: prefer initializing structs with named fields
+   --> contracts/Clera.sol:185:38
+    |
+185 |         workerProfiles[msg.sender] = WorkerProfile(msg.sender, _name, _bio, _skills, _workerType, 0, 0, 0, 0, false, true);
+    |                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: consider using named fields: `WorkerProfile({ wallet: msg.sender, name: _name, bio: _bio, skills: _skills, workerType: _workerType, totalJobs: 0, totalEarned: 0, totalRating: 0, reviewCount: 0, isVerified: false, isActive: true })`
+    |
+    = help: https://book.getfoundry.sh/reference/forge/forge-lint#named-struct-fields
+
+note[named-struct-fields]: prefer initializing structs with named fields
+   --> contracts/Clera.sol:199:36
+    |
+199 |           campaigns[campaignCount] = Campaign(campaignCount, msg.sender, _title, _description, _category,
+    |  ____________________________________^
+200 | |             _prizePool, _maxParticipants, block.timestamp + (_registrationDays * 1 days),
+201 | |             block.timestamp + ((_registrationDays + _submissionDays) * 1 days),
+202 | |             0, 0, CampaignStatus.Active, block.timestamp, _rewardStructure);
+    | |___________________________________________________________________________^ help: consider using named fields: `Campaign({ id: campaignCount, sponsor: msg.sender, title: _title, description: _description, category: _category, prizePool: _prizePool, maxParticipants: _maxParticipants, registrationDeadline: block.timestamp + (_registrationDays * 1 days), submissionDeadline: block.timestamp + ((_registrationDays + _submissionDays) * 1 days), registeredCount: 0, submissionCount: 0, status: CampaignStatus.Active, createdAt: block.timestamp, rewardStructure: _rewardStructure })`
+    |
+    = help: https://book.getfoundry.sh/reference/forge/forge-lint#named-struct-fields
+
+note[named-struct-fields]: prefer initializing structs with named fields
+   --> contracts/Clera.sol:229:47
+    |
+229 |           campaignSubmissions[_campaignId].push(CampaignSubmission(
+    |  _______________________________________________^
+230 | |             campaignSubmissions[_campaignId].length, _campaignId, msg.sender, _link, _type, block.timestamp, false, 0));
+    | |______________________________________________________________________________________________________________________^ help: consider using named fields: `CampaignSubmission({ id: campaignSubmissions[_campaignId].length, campaignId: _campaignId, participant: msg.sender, submissionLink: _link, submissionType: _type, submittedAt: block.timestamp, isWinner: false, reward: 0 })`
+    |
+    = help: https://book.getfoundry.sh/reference/forge/forge-lint#named-struct-fields
+
+warning[erc20-unchecked-transfer]: ERC20 'transfer' and 'transferFrom' calls should check the return value
+   --> contracts/Clera.sol:243:55
+    |
+243 |         for (uint256 i = 0; i < _winners.length; i++) IERC20(USDC).transfer(_winners[i], _rewards[i]);
+    |                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = help: https://book.getfoundry.sh/reference/forge/forge-lint#erc20-unchecked-transfer
+
+warning[erc20-unchecked-transfer]: ERC20 'transfer' and 'transferFrom' calls should check the return value
+   --> contracts/Clera.sol:245:28
+    |
+245 |         if (remainder > 0) IERC20(USDC).transfer(c.sponsor, remainder);
+    |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = help: https://book.getfoundry.sh/reference/forge/forge-lint#erc20-unchecked-transfer
+
+warning[erc20-unchecked-transfer]: ERC20 'transfer' and 'transferFrom' calls should check the return value
+   --> contracts/Clera.sol:254:9
+    |
+254 |         IERC20(USDC).transfer(c.sponsor, c.prizePool);
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = help: https://book.getfoundry.sh/reference/forge/forge-lint#erc20-unchecked-transfer
+
+
+▸ Deploying AgentJobBoard to Arc Testnet...
+No files changed, compilation skipped
+Deployer: 0xFa8Bb5593551c73D3bec5399D2f189A8c38EEC8C
+Deployed to: 0xBCD7d1502eAD084D7c94a56417b5a8a7cB91d04c
+Transaction hash: 0x6892ef3e658137884b5693f7dfc6d2820766ba60463793f25967a7ad12a961f8
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  ✓ Deployed Successfully!
+
+  Contract: 0xBCD7d1502eAD084D7c94a56417b5a8a7cB91d04c
+  Explorer: https://testnet.arcscan.app/address/0xBCD7d1502eAD084D7c94a56417b5a8a7cB91d04c
+  Tx:       https://testnet.arcscan.app/tx/0x6892ef3e658137884b5693f7dfc6d2820766ba60463793f25967a7ad12a961f8
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+▸ Saving contract address...
+  ✓ Address saved to backend/.env
+
+NEXT STEPS:
+  1. cd backend && npm install && npm start
+  2. Open frontend/index.html in your browser
+  3. Connect MetaMask to Arc Testnet
+

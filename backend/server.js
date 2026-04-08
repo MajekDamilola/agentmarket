@@ -37,13 +37,15 @@ const JOB_BOARD_ABI = [
         { name: "agent", type: "address" },
         { name: "title", type: "string" },
         { name: "description", type: "string" },
-        { name: "taskType", type: "string" },
         { name: "budget", type: "uint256" },
-        { name: "deadline", type: "uint256" },
+        { name: "category", type: "string" },
+        { name: "workerType", type: "uint8" },
         { name: "status", type: "uint8" },
         { name: "deliverableHash", type: "string" },
         { name: "createdAt", type: "uint256" },
         { name: "completedAt", type: "uint256" },
+        { name: "milestonesCount", type: "uint256" },
+        { name: "completedMilestones", type: "uint256" },
       ],
     }],
   },
@@ -60,13 +62,15 @@ const JOB_BOARD_ABI = [
         { name: "agent", type: "address" },
         { name: "title", type: "string" },
         { name: "description", type: "string" },
-        { name: "taskType", type: "string" },
         { name: "budget", type: "uint256" },
-        { name: "deadline", type: "uint256" },
+        { name: "category", type: "string" },
+        { name: "workerType", type: "uint8" },
         { name: "status", type: "uint8" },
         { name: "deliverableHash", type: "string" },
         { name: "createdAt", type: "uint256" },
         { name: "completedAt", type: "uint256" },
+        { name: "milestonesCount", type: "uint256" },
+        { name: "completedMilestones", type: "uint256" },
       ],
     }],
   },
@@ -85,6 +89,20 @@ const JOB_BOARD_ABI = [
     outputs: [{ name: "", type: "uint256[]" }],
   },
   {
+    name: "getWorkerReviews",
+    type: "function",
+    stateMutability: "view",
+    inputs: [{ name: "worker", type: "address" }],
+    outputs: [{ type: "tuple[]", components: [
+      { name: "jobId", type: "uint256" },
+      { name: "reviewer", type: "address" },
+      { name: "worker", type: "address" },
+      { name: "rating", type: "uint8" },
+      { name: "comment", type: "string" },
+      { name: "timestamp", type: "uint256" },
+    ] }],
+  },
+  {
     name: "jobCount",
     type: "function",
     stateMutability: "view",
@@ -97,6 +115,214 @@ const JOB_BOARD_ABI = [
     stateMutability: "view",
     inputs: [],
     outputs: [{ name: "", type: "uint256" }],
+  },
+  {
+    name: "campaigns",
+    type: "function",
+    stateMutability: "view",
+    inputs: [{ name: "", type: "uint256" }],
+    outputs: [{
+      type: "tuple",
+      components: [
+        { name: "id", type: "uint256" },
+        { name: "creator", type: "address" },
+        { name: "title", type: "string" },
+        { name: "description", type: "string" },
+        { name: "prizePool", type: "uint256" },
+        { name: "entryFee", type: "uint256" },
+        { name: "maxParticipants", type: "uint256" },
+        { name: "deadline", type: "uint256" },
+        { name: "expired", type: "bool" },
+        { name: "createdAt", type: "uint256" },
+      ],
+    }],
+  },
+  {
+    name: "campaignSubmissions",
+    type: "function",
+    stateMutability: "view",
+    inputs: [{ name: "", type: "uint256" }, { name: "", type: "address" }],
+    outputs: [{ name: "", type: "string" }],
+  },
+  {
+    name: "campaignParticipants",
+    type: "function",
+    stateMutability: "view",
+    inputs: [{ name: "", type: "uint256" }],
+    outputs: [{ name: "", type: "address[]" }],
+  },
+  {
+    name: "campaignWinners",
+    type: "function",
+    stateMutability: "view",
+    inputs: [{ name: "", type: "uint256" }],
+    outputs: [{ name: "", type: "address[]" }],
+  },
+  {
+    name: "campaignCount",
+    type: "function",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+  {
+    name: "createCampaign",
+    type: "function",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "title", type: "string" },
+      { name: "description", type: "string" },
+      { name: "prizePool", type: "uint256" },
+      { name: "entryFee", type: "uint256" },
+      { name: "maxParticipants", type: "uint256" },
+      { name: "deadlineHours", type: "uint256" },
+    ],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+  {
+    name: "register",
+    type: "function",
+    stateMutability: "nonpayable",
+    inputs: [{ name: "campaignId", type: "uint256" }],
+    outputs: [],
+  },
+  {
+    name: "submitEntry",
+    type: "function",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "campaignId", type: "uint256" },
+      { name: "submissionURI", type: "string" },
+    ],
+    outputs: [],
+  },
+  {
+    name: "selectWinners",
+    type: "function",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "campaignId", type: "uint256" },
+      { name: "winners", type: "address[]" },
+    ],
+    outputs: [],
+  },
+  {
+    name: "expireCampaign",
+    type: "function",
+    stateMutability: "nonpayable",
+    inputs: [{ name: "campaignId", type: "uint256" }],
+    outputs: [],
+  },
+  {
+    name: "getCampaign",
+    type: "function",
+    stateMutability: "view",
+    inputs: [{ name: "campaignId", type: "uint256" }],
+    outputs: [{
+      type: "tuple",
+      components: [
+        { name: "id", type: "uint256" },
+        { name: "creator", type: "address" },
+        { name: "title", type: "string" },
+        { name: "description", type: "string" },
+        { name: "prizePool", type: "uint256" },
+        { name: "entryFee", type: "uint256" },
+        { name: "maxParticipants", type: "uint256" },
+        { name: "deadline", type: "uint256" },
+        { name: "expired", type: "bool" },
+        { name: "createdAt", type: "uint256" },
+      ],
+    }],
+  },
+  {
+    name: "getCampaignParticipants",
+    type: "function",
+    stateMutability: "view",
+    inputs: [{ name: "campaignId", type: "uint256" }],
+    outputs: [{ name: "", type: "address[]" }],
+  },
+  {
+    name: "getCampaignWinners",
+    type: "function",
+    stateMutability: "view",
+    inputs: [{ name: "campaignId", type: "uint256" }],
+    outputs: [{ name: "", type: "address[]" }],
+  },
+  {
+    name: "getCampaignSubmission",
+    type: "function",
+    stateMutability: "view",
+    inputs: [
+      { name: "campaignId", type: "uint256" },
+      { name: "participant", type: "address" },
+    ],
+    outputs: [{ name: "", type: "string" }],
+  },
+  {
+    name: "getAllCampaigns",
+    type: "function",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{
+      type: "tuple[]",
+      components: [
+        { name: "id", type: "uint256" },
+        { name: "creator", type: "address" },
+        { name: "title", type: "string" },
+        { name: "description", type: "string" },
+        { name: "prizePool", type: "uint256" },
+        { name: "entryFee", type: "uint256" },
+        { name: "maxParticipants", type: "uint256" },
+        { name: "deadline", type: "uint256" },
+        { name: "expired", type: "bool" },
+        { name: "createdAt", type: "uint256" },
+      ],
+    }],
+  },
+  {
+    name: "submitMilestoneDeliverable",
+    type: "function",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "jobId", type: "uint256" },
+      { name: "milestoneIndex", type: "uint256" },
+      { name: "deliverableHash", type: "string" },
+    ],
+    outputs: [],
+  },
+  {
+    name: "approveMilestone",
+    type: "function",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "jobId", type: "uint256" },
+      { name: "milestoneIndex", type: "uint256" },
+    ],
+    outputs: [],
+  },
+  {
+    name: "getJobMilestones",
+    type: "function",
+    stateMutability: "view",
+    inputs: [{ name: "jobId", type: "uint256" }],
+    outputs: [{ type: "tuple[]", components: [
+      { name: "percentage", type: "uint256" },
+      { name: "description", type: "string" },
+      { name: "deliverableHash", type: "string" },
+      { name: "submittedAt", type: "uint256" },
+      { name: "approved", type: "bool" },
+    ] }],
+  },
+  {
+    name: "submitReview",
+    type: "function",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "jobId", type: "uint256" },
+      { name: "rating", type: "uint8" },
+      { name: "comment", type: "string" },
+    ],
+    outputs: [],
   },
 ];
 
@@ -118,6 +344,7 @@ const IDENTITY_ABI = [
 ];
 
 const STATUS_LABELS = ["Open", "Funded", "Submitted", "Completed", "Rejected"];
+const WORKER_TYPES = ["AI", "Human"];
 
 // ─── Helper: format a raw job from contract ───────────────────────
 function formatJob(job) {
@@ -127,15 +354,18 @@ function formatJob(job) {
     agent: job.agent,
     title: job.title,
     description: job.description,
-    taskType: job.taskType,
+    category: job.category,
+    workerType: Number(job.workerType),
+    workerTypeLabel: WORKER_TYPES[Number(job.workerType)],
     budget: formatUnits(job.budget, 6), // convert from 6-decimal USDC
     budgetRaw: job.budget.toString(),
-    deadline: Number(job.deadline) * 1000, // to milliseconds
     status: Number(job.status),
     statusLabel: STATUS_LABELS[Number(job.status)],
     deliverableHash: job.deliverableHash,
     createdAt: Number(job.createdAt) * 1000,
     completedAt: Number(job.completedAt) * 1000,
+    milestonesCount: Number(job.milestonesCount),
+    completedMilestones: Number(job.completedMilestones),
     explorerUrl: `https://testnet.arcscan.app/address/${JOB_BOARD_ADDRESS}`,
   };
 }
@@ -145,6 +375,15 @@ function formatJob(job) {
 // Health check
 app.get("/health", (req, res) => {
   res.json({ status: "ok", network: "Arc Testnet", contractAddress: JOB_BOARD_ADDRESS });
+});
+
+// Config for frontend / clients
+app.get("/api/config", (req, res) => {
+  res.json({
+    jobBoardAddress: JOB_BOARD_ADDRESS,
+    usdcAddress: USDC_ADDRESS,
+    explorerUrl: "https://testnet.arcscan.app"
+  });
 });
 
 // Get all jobs
@@ -230,6 +469,52 @@ app.get("/api/agent/:address/jobs", async (req, res) => {
   }
 });
 
+// Get milestones for a specific job
+app.get("/api/jobs/:id/milestones", async (req, res) => {
+  try {
+    const jobId = req.params.id;
+    const milestones = await publicClient.readContract({
+      address: JOB_BOARD_ADDRESS,
+      abi: JOB_BOARD_ABI,
+      functionName: "getJobMilestones",
+      args: [BigInt(jobId)],
+    });
+    const formattedMilestones = milestones.map(m => ({
+      percentage: Number(m.percentage),
+      description: m.description,
+      deliverableHash: m.deliverableHash,
+      submittedAt: Number(m.submittedAt) * 1000,
+      approved: m.approved,
+    }));
+    res.json(formattedMilestones);
+  } catch (error) {
+    console.error("Error fetching milestones:", error);
+    res.status(500).json({ error: "Failed to fetch milestones" });
+  }
+});
+
+// Get reviews for a specific worker (AI or Human)
+app.get("/api/worker/:address/reviews", async (req, res) => {
+  try {
+    const reviews = await publicClient.readContract({
+      address: JOB_BOARD_ADDRESS,
+      abi: JOB_BOARD_ABI,
+      functionName: "getWorkerReviews",
+      args: [req.params.address],
+    });
+    res.json(reviews.map(r => ({
+      jobId: Number(r.jobId),
+      reviewer: r.reviewer,
+      worker: r.worker,
+      rating: Number(r.rating),
+      comment: r.comment,
+      timestamp: Number(r.timestamp) * 1000,
+    })));
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Get platform stats (for the dashboard)
 app.get("/api/stats", async (req, res) => {
   try {
@@ -300,6 +585,7 @@ app.get("/api/agents", async (req, res) => {
     },
     {
       id: "native-002",
+      type: "AI",
       name: "ReportAgent",
       description: "Generates structured market and data reports from raw inputs",
       taskTypes: ["report", "research"],
@@ -312,6 +598,7 @@ app.get("/api/agents", async (req, res) => {
     },
     {
       id: "native-003",
+      type: "AI",
       name: "TranslateAI",
       description: "Translates content between languages with context awareness",
       taskTypes: ["translate"],
@@ -322,7 +609,143 @@ app.get("/api/agents", async (req, res) => {
       isVerified: true,
       minBudget: "1.00",
     },
+    {
+      id: "human-001",
+      type: "Human",
+      name: "Claire Jones",
+      description: "Experienced researcher and report writer for startups and founders.",
+      taskTypes: ["research", "report"],
+      walletAddress: process.env.HUMAN_AGENT_1 || "0x0000000000000000000000000000000000000011",
+      reputationScore: 92,
+      completedJobs: 14,
+      isNative: false,
+      isVerified: true,
+      minBudget: "2.50",
+    },
+    {
+      id: "human-002",
+      type: "Human",
+      name: "Sam Patel",
+      description: "Human operator for compliance checks, writing, and manual workflow support.",
+      taskTypes: ["compliance", "review", "monitor"],
+      walletAddress: process.env.HUMAN_AGENT_2 || "0x0000000000000000000000000000000000000022",
+      reputationScore: 90,
+      completedJobs: 9,
+      isNative: false,
+      isVerified: true,
+      minBudget: "3.00",
+    },
   ]);
+});
+
+// ─── Campaign Routes ──────────────────────────────────────────────
+
+// Get all campaigns
+app.get("/api/campaigns", async (req, res) => {
+  try {
+    const campaigns = await publicClient.readContract({
+      address: JOB_BOARD_ADDRESS,
+      abi: JOB_BOARD_ABI,
+      functionName: "getAllCampaigns",
+    });
+    const formattedCampaigns = campaigns.map(c => ({
+      id: Number(c.id),
+      creator: c.creator,
+      title: c.title,
+      description: c.description,
+      prizePool: formatUnits(c.prizePool, 6),
+      entryFee: formatUnits(c.entryFee, 6),
+      maxParticipants: Number(c.maxParticipants),
+      deadline: Number(c.deadline) * 1000,
+      expired: c.expired,
+      createdAt: Number(c.createdAt) * 1000,
+    }));
+    res.json(formattedCampaigns);
+  } catch (error) {
+    console.error("Error fetching campaigns:", error);
+    res.status(500).json({ error: "Failed to fetch campaigns" });
+  }
+});
+
+// Get single campaign
+app.get("/api/campaigns/:id", async (req, res) => {
+  try {
+    const campaignId = req.params.id;
+    const campaign = await publicClient.readContract({
+      address: JOB_BOARD_ADDRESS,
+      abi: JOB_BOARD_ABI,
+      functionName: "getCampaign",
+      args: [BigInt(campaignId)],
+    });
+    const formatted = {
+      id: Number(campaign.id),
+      creator: campaign.creator,
+      title: campaign.title,
+      description: campaign.description,
+      prizePool: formatUnits(campaign.prizePool, 6),
+      entryFee: formatUnits(c.entryFee, 6),
+      maxParticipants: Number(c.maxParticipants),
+      deadline: Number(c.deadline) * 1000,
+      expired: campaign.expired,
+      createdAt: Number(c.createdAt) * 1000,
+    };
+    res.json(formatted);
+  } catch (error) {
+    console.error("Error fetching campaign:", error);
+    res.status(500).json({ error: "Failed to fetch campaign" });
+  }
+});
+
+// Get campaign participants
+app.get("/api/campaigns/:id/participants", async (req, res) => {
+  try {
+    const campaignId = req.params.id;
+    const participants = await publicClient.readContract({
+      address: JOB_BOARD_ADDRESS,
+      abi: JOB_BOARD_ABI,
+      functionName: "getCampaignParticipants",
+      args: [BigInt(campaignId)],
+    });
+    res.json(participants);
+  } catch (error) {
+    console.error("Error fetching participants:", error);
+    res.status(500).json({ error: "Failed to fetch participants" });
+  }
+});
+
+// Get campaign winners
+app.get("/api/campaigns/:id/winners", async (req, res) => {
+  try {
+    const campaignId = req.params.id;
+    const winners = await publicClient.readContract({
+      address: JOB_BOARD_ADDRESS,
+      abi: JOB_BOARD_ABI,
+      functionName: "getCampaignWinners",
+      args: [BigInt(campaignId)],
+    });
+    res.json(winners);
+  } catch (error) {
+    console.error("Error fetching winners:", error);
+    res.status(500).json({ error: "Failed to fetch winners" });
+  }
+});
+
+// Get submission for a participant
+app.get("/api/campaigns/:id/submission/:address", async (req, res) => {
+  try {
+    const campaignId = req.params.id;
+    const address = req.params.address;
+    const submission = await publicClient.readContract({
+      address: JOB_BOARD_ADDRESS,
+      abi: JOB_BOARD_ABI,
+      functionName: "getCampaignSubmission",
+      args: [BigInt(campaignId), address],
+    });
+    res.json({ submission });
+  } catch (error) {
+    console.error("Error fetching submission:", error);
+    res.status(500).json({ error: "Failed to fetch submission" });
+  }
 });
 
 const PORT = process.env.PORT || 3001;

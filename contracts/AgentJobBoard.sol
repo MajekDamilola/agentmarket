@@ -8,13 +8,14 @@ interface IERC20 {
 }
 
 /**
- * AgentJobBoard - AI Agent Marketplace on Arc Testnet
+ * AgentJobBoard - AI and Human Worker Marketplace on Arc Testnet
  * 
  * How it works:
  * 1. Client posts a job and locks USDC into escrow
- * 2. Agent submits their deliverable (a hash proving they did the work)
- * 3. Client approves → USDC released to agent (minus platform fee)
+ * 2. Agent or human worker submits their deliverable
+ * 3. Client approves → USDC released to worker (minus platform fee)
  * 4. Client rejects → USDC returned to client
+ * 5. Client leaves a review for the worker after completion
  */
 contract AgentJobBoard {
 
@@ -30,37 +31,109 @@ contract AgentJobBoard {
     // Counter for job IDs
     uint256 public jobCount;
 
-    // Job status flow: Open → Funded → Submitted → Completed OR Rejected
     enum JobStatus { Open, Funded, Submitted, Completed, Rejected }
+    enum WorkerType { AI, Human }
+
+    struct JobParams {
+        address agent;
+        string title;
+        string description;
+        string category;
+        uint8 workerType;
+        uint256 budget;
+        uint256 deadlineHours;
+        string[] milestoneDescriptions;
+        uint256[] milestonePercentages;
+    }
 
     struct Job {
         uint256 id;
-        address client;       // person who posted the job
-        address agent;        // agent assigned to the job
+        address client;
+        address agent;
         string title;
         string description;
-        string taskType;      // e.g. "summarize", "monitor", "report"
-        uint256 budget;       // in USDC (6 decimals)
-        uint256 deadline;     // unix timestamp
+        string taskType;
+        string category;
+        WorkerType workerType;
+        uint256 budget;
+        uint256 deadline;
         JobStatus status;
-        string deliverableHash; // agent submits proof of work here
+        string deliverableHash;
         uint256 createdAt;
+        uint256 completedAt;
+        uint256 milestonesCount;
+        uint256 completedMilestones;
+    }
+
+    struct Milestone {
+        uint256 jobId;
+        uint256 milestoneId;
+        string description;
+        uint256 percentage; // in basis points, e.g. 2500 = 25%
+        bool completed;
+        string deliverableHash;
         uint256 completedAt;
     }
 
-    // All jobs stored by ID
-    mapping(uint256 => Job) public jobs;
+    mapping(uint256 => Milestone[]) public jobMilestones;
 
-    // Track jobs per client and per agent
+
+    struct Review {
+        uint256 jobId;
+        address reviewer;
+        address worker;
+        uint8 rating;
+        string comment;
+        uint256 createdAt;
+    }
+
+    mapping(uint256 => Job) public jobs;
     mapping(address => uint256[]) public clientJobs;
     mapping(address => uint256[]) public agentJobs;
+    mapping(address => Review[]) private workerReviews;
+    mapping(uint256 => bool) public jobReviewed;
 
-    // Events - these appear on the blockchain explorer
-    event JobPosted(uint256 indexed jobId, address indexed client, address indexed agent, string title, uint256 budget);
+    // Bounty Campaigns
+    struct Campaign {
+        uint256 id;
+        address creator;
+        string title;
+        string description;
+        uint256 prizePool;
+        uint256 entryFee;
+        uint256 maxParticipants;
+        uint256 deadline;
+        bool expired;
+        uint256 createdAt;
+    }
+
+    mapping(uint256 => Campaign) public campaigns;
+    mapping(uint256 => mapping(address => string)) public campaignSubmissions;
+    mapping(uint256 => address[]) public campaignParticipants;
+    mapping(uint256 => address[]) public campaignWinners;
+    uint256 public campaignCount;
+
+    event JobPosted(
+        uint256 indexed jobId,
+        address indexed client,
+        address indexed agent,
+        string title,
+        string category,
+        uint256 budget,
+        uint8 workerType
+    );
     event JobFunded(uint256 indexed jobId, uint256 amount);
     event DeliverableSubmitted(uint256 indexed jobId, string deliverableHash);
     event JobCompleted(uint256 indexed jobId, address agent, uint256 agentPayout, uint256 platformFee);
     event JobRejected(uint256 indexed jobId, address client, uint256 refund);
+    event ReviewSubmitted(uint256 indexed jobId, address indexed reviewer, address indexed worker, uint8 rating);
+
+    // Bounty Campaign Events
+    event CampaignCreated(uint256 indexed campaignId, address indexed creator, string title, uint256 prizePool);
+    event ParticipantRegistered(uint256 indexed campaignId, address indexed participant);
+    event EntrySubmitted(uint256 indexed campaignId, address indexed participant, string submissionURI);
+    event WinnersSelected(uint256 indexed campaignId, address[] winners, uint256 prizePerWinner);
+    event CampaignExpired(uint256 indexed campaignId, address creator, uint256 refund);
 
     modifier onlyOwner() {
         require(msg.sender == owner, "Not platform owner");
@@ -81,25 +154,25 @@ contract AgentJobBoard {
         owner = msg.sender;
     }
 
-    /**
-     * STEP 1: Client posts a job and funds it immediately
-     * Budget must be approved for transfer before calling this
-     */
-    function postAndFundJob(
-        address _agent,
-        string calldata _title,
-        string calldata _description,
-        string calldata _taskType,
-        uint256 _budget,
-        uint256 _deadlineHours
-    ) external returns (uint256) {
-        require(_budget > 0, "Budget must be greater than 0");
-        require(_agent != address(0), "Invalid agent address");
-        require(_deadlineHours > 0 && _deadlineHours <= 720, "Deadline must be 1-720 hours");
+    function postAndFundJob(JobParams calldata params) external returns (uint256) {
+        require(params.budget > 0, "Budget must be greater than 0");
+        require(params.agent != address(0), "Invalid agent address");
+        require(bytes(params.category).length > 0, "Category is required");
+        require(params.workerType <= uint8(WorkerType.Human), "Invalid worker type");
+        require(params.deadlineHours > 0 && params.deadlineHours <= 720, "Deadline must be 1-720 hours");
+        require(params.milestoneDescriptions.length == params.milestonePercentages.length, "Milestone arrays must match");
+        // Milestones are optional; if none, use single deliverable
 
-        // Transfer USDC from client into this contract (escrow)
+        if (params.milestoneDescriptions.length > 0) {
+            uint256 totalPercentage = 0;
+            for (uint256 i = 0; i < params.milestonePercentages.length; i++) {
+                totalPercentage += params.milestonePercentages[i];
+            }
+            require(totalPercentage == 10000, "Milestone percentages must sum to 100%");
+        }
+
         require(
-            IERC20(USDC).transferFrom(msg.sender, address(this), _budget),
+            IERC20(USDC).transferFrom(msg.sender, address(this), params.budget),
             "USDC transfer failed - did you approve first?"
         );
 
@@ -109,35 +182,59 @@ contract AgentJobBoard {
         jobs[jobId] = Job({
             id: jobId,
             client: msg.sender,
-            agent: _agent,
-            title: _title,
-            description: _description,
-            taskType: _taskType,
-            budget: _budget,
-            deadline: block.timestamp + (_deadlineHours * 1 hours),
+            agent: params.agent,
+            title: params.title,
+            description: params.description,
+            taskType: "",
+            category: params.category,
+            workerType: WorkerType(params.workerType),
+            budget: params.budget,
+            deadline: block.timestamp + (params.deadlineHours * 1 hours),
             status: JobStatus.Funded,
             deliverableHash: "",
             createdAt: block.timestamp,
-            completedAt: 0
+            completedAt: 0,
+            milestonesCount: params.milestoneDescriptions.length,
+            completedMilestones: 0
         });
 
-        clientJobs[msg.sender].push(jobId);
-        agentJobs[_agent].push(jobId);
+        for (uint256 i = 0; i < params.milestoneDescriptions.length; i++) {
+            jobMilestones[jobId].push(Milestone({
+                jobId: jobId,
+                milestoneId: i + 1,
+                description: params.milestoneDescriptions[i],
+                percentage: params.milestonePercentages[i],
+                completed: false,
+                deliverableHash: "",
+                completedAt: 0
+            }));
+        }
 
-        emit JobPosted(jobId, msg.sender, _agent, _title, _budget);
-        emit JobFunded(jobId, _budget);
+        clientJobs[msg.sender].push(jobId);
+        agentJobs[params.agent].push(jobId);
+
+        emit JobPosted(jobId, msg.sender, params.agent, params.title, params.category, params.budget, params.workerType);
+        emit JobFunded(jobId, params.budget);
 
         return jobId;
     }
 
-    /**
-     * STEP 2: Agent submits their deliverable hash (proof of work)
-     * In production this is an IPFS hash of the actual output
-     */
+    function submitMilestoneDeliverable(uint256 jobId, uint256 milestoneId, string calldata _deliverableHash) external onlyAgent(jobId) {
+        Job storage job = jobs[jobId];
+        require(job.status == JobStatus.Funded, "Job must be in Funded status");
+        require(milestoneId > 0 && milestoneId <= job.milestonesCount, "Invalid milestone ID");
+        require(!jobMilestones[jobId][milestoneId - 1].completed, "Milestone already completed");
+
+        jobMilestones[jobId][milestoneId - 1].deliverableHash = _deliverableHash;
+
+        emit DeliverableSubmitted(jobId, _deliverableHash);
+    }
+
     function submitDeliverable(uint256 jobId, string calldata _deliverableHash) external onlyAgent(jobId) {
         Job storage job = jobs[jobId];
         require(job.status == JobStatus.Funded, "Job must be in Funded status");
         require(block.timestamp <= job.deadline, "Job deadline has passed");
+        require(job.milestonesCount == 0, "Use milestone functions for milestone jobs");
 
         job.deliverableHash = _deliverableHash;
         job.status = JobStatus.Submitted;
@@ -145,13 +242,39 @@ contract AgentJobBoard {
         emit DeliverableSubmitted(jobId, _deliverableHash);
     }
 
-    /**
-     * STEP 3A: Client approves the work → agent gets paid
-     * Platform fee automatically goes to owner wallet
-     */
+    function approveMilestone(uint256 jobId, uint256 milestoneId) external onlyClient(jobId) {
+        Job storage job = jobs[jobId];
+        require(job.status == JobStatus.Funded, "Job must be in Funded status");
+        require(milestoneId > 0 && milestoneId <= job.milestonesCount, "Invalid milestone ID");
+        require(bytes(jobMilestones[jobId][milestoneId - 1].deliverableHash).length > 0, "No deliverable submitted");
+
+        Milestone storage milestone = jobMilestones[jobId][milestoneId - 1];
+        require(!milestone.completed, "Milestone already completed");
+
+        milestone.completed = true;
+        milestone.completedAt = block.timestamp;
+        job.completedMilestones++;
+
+        uint256 payout = (job.budget * milestone.percentage) / 10000;
+        uint256 fee = (payout * platformFeeBps) / 10000;
+        uint256 agentPayout = payout - fee;
+
+        IERC20(USDC).transfer(job.agent, agentPayout);
+        if (fee > 0) IERC20(USDC).transfer(owner, fee);
+
+        if (job.completedMilestones == job.milestonesCount) {
+            job.status = JobStatus.Completed;
+            job.completedAt = block.timestamp;
+            emit JobCompleted(jobId, job.agent, 0, 0); // No additional payout
+        }
+
+        emit JobCompleted(jobId, job.agent, agentPayout, fee);
+    }
+
     function approveJob(uint256 jobId) external onlyClient(jobId) {
         Job storage job = jobs[jobId];
         require(job.status == JobStatus.Submitted, "Deliverable not yet submitted");
+        require(job.milestonesCount == 0, "Use approveMilestone for milestone jobs");
 
         uint256 fee = (job.budget * platformFeeBps) / 10000;
         uint256 agentPayout = job.budget - fee;
@@ -159,32 +282,22 @@ contract AgentJobBoard {
         job.status = JobStatus.Completed;
         job.completedAt = block.timestamp;
 
-        // Pay agent
         IERC20(USDC).transfer(job.agent, agentPayout);
-        // Pay platform (you)
         if (fee > 0) IERC20(USDC).transfer(owner, fee);
 
         emit JobCompleted(jobId, job.agent, agentPayout, fee);
     }
 
-    /**
-     * STEP 3B: Client rejects the work → full refund
-     */
     function rejectJob(uint256 jobId) external onlyClient(jobId) {
         Job storage job = jobs[jobId];
         require(job.status == JobStatus.Submitted, "Deliverable not yet submitted");
 
         job.status = JobStatus.Rejected;
-
-        // Refund client in full
         IERC20(USDC).transfer(job.client, job.budget);
 
         emit JobRejected(jobId, job.client, job.budget);
     }
 
-    /**
-     * If deadline passes and agent never submitted → client can claim refund
-     */
     function claimExpiredJob(uint256 jobId) external onlyClient(jobId) {
         Job storage job = jobs[jobId];
         require(job.status == JobStatus.Funded, "Job not in funded state");
@@ -196,7 +309,30 @@ contract AgentJobBoard {
         emit JobRejected(jobId, job.client, job.budget);
     }
 
-    // ── Read functions ──────────────────────────────────────────
+    function submitReview(uint256 jobId, uint8 rating, string calldata comment) external {
+        Job storage job = jobs[jobId];
+        require(job.status == JobStatus.Completed, "Job must be completed");
+        require(job.client == msg.sender, "Only client can submit review");
+        require(!jobReviewed[jobId], "Review already submitted");
+        require(rating >= 1 && rating <= 5, "Rating must be 1-5");
+        require(bytes(comment).length > 0, "Comment cannot be empty");
+
+        workerReviews[job.agent].push(Review({
+            jobId: jobId,
+            reviewer: msg.sender,
+            worker: job.agent,
+            rating: rating,
+            comment: comment,
+            createdAt: block.timestamp
+        }));
+        jobReviewed[jobId] = true;
+
+        emit ReviewSubmitted(jobId, msg.sender, job.agent, rating);
+    }
+
+    function getJobMilestones(uint256 jobId) external view returns (Milestone[] memory) {
+        return jobMilestones[jobId];
+    }
 
     function getJob(uint256 jobId) external view returns (Job memory) {
         return jobs[jobId];
@@ -218,8 +354,6 @@ contract AgentJobBoard {
         return all;
     }
 
-    // ── Owner admin ─────────────────────────────────────────────
-
     function setPlatformFee(uint256 _bps) external onlyOwner {
         require(_bps <= 1000, "Fee cannot exceed 10%");
         platformFeeBps = _bps;
@@ -227,5 +361,147 @@ contract AgentJobBoard {
 
     function transferOwnership(address newOwner) external onlyOwner {
         owner = newOwner;
+    }
+
+    // ─── Bounty Campaign Functions ─────────────────────────────────────
+
+    function createCampaign(
+        string calldata title,
+        string calldata description,
+        uint256 prizePool,
+        uint256 entryFee,
+        uint256 maxParticipants,
+        uint256 deadlineHours
+    ) external returns (uint256) {
+        require(prizePool > 0, "Prize pool must be > 0");
+        require(deadlineHours > 0, "Deadline must be > 0");
+        uint256 deadline = block.timestamp + (deadlineHours * 1 hours);
+
+        require(
+            IERC20(USDC).transferFrom(msg.sender, address(this), prizePool),
+            "USDC transfer failed - did you approve first?"
+        );
+
+        campaignCount++;
+        uint256 campaignId = campaignCount;
+
+        campaigns[campaignId] = Campaign({
+            id: campaignId,
+            creator: msg.sender,
+            title: title,
+            description: description,
+            prizePool: prizePool,
+            entryFee: entryFee,
+            maxParticipants: maxParticipants,
+            deadline: deadline,
+            expired: false,
+            createdAt: block.timestamp
+        });
+
+        emit CampaignCreated(campaignId, msg.sender, title, prizePool);
+
+        return campaignId;
+    }
+
+    function register(uint256 campaignId) external {
+        Campaign storage campaign = campaigns[campaignId];
+        require(campaign.id != 0, "Campaign does not exist");
+        require(block.timestamp < campaign.deadline, "Campaign deadline passed");
+        require(
+            campaignParticipants[campaignId].length < campaign.maxParticipants || campaign.maxParticipants == 0,
+            "Max participants reached"
+        );
+        require(!isParticipant(campaignId, msg.sender), "Already registered");
+
+        if (campaign.entryFee > 0) {
+            require(
+                IERC20(USDC).transferFrom(msg.sender, address(this), campaign.entryFee),
+                "Entry fee transfer failed"
+            );
+        }
+
+        campaignParticipants[campaignId].push(msg.sender);
+
+        emit ParticipantRegistered(campaignId, msg.sender);
+    }
+
+    function isParticipant(uint256 campaignId, address participant) internal view returns (bool) {
+        address[] memory participants = campaignParticipants[campaignId];
+        for (uint256 i = 0; i < participants.length; i++) {
+            if (participants[i] == participant) return true;
+        }
+        return false;
+    }
+
+    function submitEntry(uint256 campaignId, string calldata submissionURI) external {
+        require(isParticipant(campaignId, msg.sender), "Not registered for campaign");
+        Campaign storage campaign = campaigns[campaignId];
+        require(block.timestamp < campaign.deadline, "Deadline passed");
+        require(bytes(campaignSubmissions[campaignId][msg.sender]).length == 0, "Already submitted");
+
+        campaignSubmissions[campaignId][msg.sender] = submissionURI;
+
+        emit EntrySubmitted(campaignId, msg.sender, submissionURI);
+    }
+
+    function selectWinners(uint256 campaignId, address[] calldata winners) external {
+        Campaign storage campaign = campaigns[campaignId];
+        require(msg.sender == campaign.creator, "Only creator can select winners");
+        require(campaignWinners[campaignId].length == 0, "Winners already selected");
+        require(winners.length > 0, "At least one winner required");
+
+        for (uint256 i = 0; i < winners.length; i++) {
+            require(isParticipant(campaignId, winners[i]), "Winner not a participant");
+        }
+
+        campaignWinners[campaignId] = winners;
+
+        uint256 prizePerWinner = campaign.prizePool / winners.length;
+        for (uint256 i = 0; i < winners.length; i++) {
+            require(IERC20(USDC).transfer(winners[i], prizePerWinner), "Prize transfer failed");
+        }
+
+        emit WinnersSelected(campaignId, winners, prizePerWinner);
+    }
+
+    function expireCampaign(uint256 campaignId) external {
+        Campaign storage campaign = campaigns[campaignId];
+        require(msg.sender == campaign.creator, "Only creator can expire");
+        require(block.timestamp > campaign.deadline, "Deadline not passed");
+        require(campaignWinners[campaignId].length == 0, "Winners already selected");
+        require(!campaign.expired, "Already expired");
+
+        campaign.expired = true;
+
+        uint256 refund = campaign.prizePool;
+        require(IERC20(USDC).transfer(campaign.creator, refund), "Refund failed");
+
+        emit CampaignExpired(campaignId, campaign.creator, refund);
+    }
+
+    // ─── Bounty Campaign View Functions ───────────────────────────────
+
+    function getCampaign(uint256 campaignId) external view returns (Campaign memory) {
+        return campaigns[campaignId];
+    }
+
+    function getCampaignParticipants(uint256 campaignId) external view returns (address[] memory) {
+        return campaignParticipants[campaignId];
+    }
+
+    function getCampaignWinners(uint256 campaignId) external view returns (address[] memory) {
+        return campaignWinners[campaignId];
+    }
+
+    function getCampaignSubmission(uint256 campaignId, address participant) external view returns (string memory) {
+        return campaignSubmissions[campaignId][participant];
+    }
+
+    function getAllCampaigns() external view returns (Campaign[] memory) {
+        Campaign[] memory all = new Campaign[](campaignCount);
+        for (uint256 i = 1; i <= campaignCount; i++) {
+            all[i - 1] = campaigns[i];
+        }
+        return all;
     }
 }

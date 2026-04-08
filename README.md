@@ -5,6 +5,16 @@ Every step is explained in plain language. No deep technical knowledge needed.
 
 ---
 
+## Quick Start
+
+1. Install Node.js and Foundry.
+2. Create `.env` with your Arc Testnet private key.
+3. Run `./deploy.sh` to deploy the contract.
+4. Start the backend in `backend/` with `npm install && npm start`.
+5. Serve `frontend/` over HTTP and open `http://localhost:8080`.
+
+---
+
 ## What you're setting up
 
 ```
@@ -126,7 +136,24 @@ Leave this terminal window open. It needs to keep running.
 
 The frontend is a single HTML file — no build step needed.
 
-Just open `agentmarket/frontend/index.html` in your browser.
+### Option A — Serve it locally (recommended for wallet use)
+Run a simple HTTP server from the project root so MetaMask can connect properly:
+
+```bash
+cd agentmarket/frontend
+python3 -m http.server 8080
+```
+
+Then open:
+
+```text
+http://localhost:8080
+```
+
+### Option B — Open directly (quick preview)
+If you only need a quick preview, open `agentmarket/frontend/index.html` in your browser.
+
+> For wallet transactions, use the local HTTP server option.
 
 That's it. Your app is running.
 

@@ -322,6 +322,7 @@
 
     .badge-verified { background: rgba(79,209,165,0.1); color: var(--success); border: 1px solid rgba(79,209,165,0.2); }
     .badge-native { background: rgba(246,201,14,0.1); color: var(--gold); border: 1px solid rgba(246,201,14,0.2); }
+    .badge-open { background: rgba(79,109,250,0.1); color: var(--accent); }
     .badge-funded { background: rgba(124,109,250,0.1); color: var(--accent); }
     .badge-submitted { background: rgba(246,201,14,0.1); color: var(--gold); }
     .badge-completed { background: rgba(79,209,165,0.1); color: var(--success); }
@@ -410,6 +411,20 @@
       padding: 12px 16px;
       outline: none;
       transition: border-color 0.2s;
+    }
+
+    .deadline-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .deadline-row input {
+      flex: 1;
+    }
+
+    .deadline-row select {
+      width: 120px;
     }
 
     input:focus, textarea:focus, select:focus { border-color: var(--accent); }
@@ -610,6 +625,7 @@
   <div class="nav-links">
     <button class="nav-btn active" onclick="showPage('home')">Browse</button>
     <button class="nav-btn" onclick="showPage('post')">Post a Job</button>
+    <button class="nav-btn" onclick="showPage('pick')">Pick a Job</button>
     <button class="nav-btn" onclick="showPage('campaigns')">Campaigns</button>
     <button class="nav-btn" onclick="showPage('reviews')">Reviews</button>
     <button class="nav-btn" onclick="showPage('dashboard')">My Dashboard</button>
@@ -620,6 +636,7 @@
       <span>Arc Testnet</span>
     </div>
     <button class="btn btn-outline btn-sm" onclick="connectWallet()" id="connectBtn">Connect Wallet</button>
+    <button class="btn btn-outline btn-sm" onclick="disconnectWallet()" id="disconnectBtn" style="display:none">Disconnect</button>
   </div>
 </nav>
 
@@ -634,6 +651,7 @@
     <p class="hero-sub">Post tasks, choose AI or human help, and settle payments automatically in USDC — all onchain.</p>
     <div class="hero-actions">
       <button class="btn btn-primary" onclick="showPage('post')">Post a Job →</button>
+      <button class="btn btn-outline" onclick="showPage('pick')">Pick a Job →</button>
       <button class="btn btn-outline" onclick="scrollToAgents()">Browse Agents</button>
     </div>
 
@@ -722,23 +740,36 @@
           </select>
         </div>
       </div>
-        <div class="form-group">
-          <label>Deadline (hours from now)</label>
-          <input type="number" id="deadline" placeholder="24" min="1" max="720" value="24"/>
+      <div class="form-group">
+        <label>Availability</label>
+        <select id="jobAvailability" onchange="handleJobAvailabilityChange()">
+          <option value="assigned">Assign a specific agent</option>
+          <option value="open">Open marketplace</option>
+        </select>
+        <p style="font-size:12px;color:var(--muted);margin-top:6px">Open jobs can be claimed by any eligible worker after posting.</p>
+      </div>
+      <div class="form-group" id="agentSelectSection">
+        <label>Choose an Agent</label>
+        <div class="agent-select-grid" id="agentSelectGrid">
+          <!-- Loaded by JS -->
         </div>
       </div>
+        <div class="form-group">
+          <label>Deadline</label>
+          <div class="deadline-row">
+            <input type="number" id="deadlineValue" placeholder="120" min="1" value="120"/>
+            <select id="deadlineUnit">
+              <option value="minutes">Minutes</option>
+              <option value="hours">Hours</option>
+            </select>
+          </div>
+          <p style="font-size:12px;color:var(--muted);margin-top:6px">Enter the deadline in minutes or hours; the contract stores the final deadline in hours.</p>
+        </div>
 
       <div class="form-group">
         <label>Budget (USDC)</label>
         <input type="number" id="budget" placeholder="5.00" min="0.01" step="0.01"/>
         <p style="font-size:12px;color:var(--muted);margin-top:6px">Platform fee: 2.5% · Agent receives the rest</p>
-      </div>
-
-      <div class="form-group">
-        <label>Choose an Agent</label>
-        <div class="agent-select-grid" id="agentSelectGrid">
-          <!-- Loaded by JS -->
-        </div>
       </div>
 
       <div style="display:flex;gap:12px;margin-top:8px">
@@ -751,6 +782,17 @@
         Your USDC is locked in the smart contract. It releases to the agent only when you approve their work.
       </p>
     </div>
+  </div>
+</div>
+
+<!-- ── PAGE: PICK A JOB ── -->
+<div class="page" id="page-pick">
+  <div class="container">
+    <div class="section-head">
+      <h2>Open Jobs</h2>
+      <span class="badge badge-verified">Claim jobs from the marketplace</span>
+    </div>
+    <div id="availableJobs"></div>
   </div>
 </div>
 
@@ -887,9 +929,10 @@ async function loadConfig() {
 }
 
 // Status helpers
-const STATUS = ['Open','Funded','Submitted','Completed','Rejected'];
-const STATUS_CLASS = ['','badge-funded','badge-submitted','badge-completed','badge-rejected'];
+const STATUS = ['Open','In Progress','Submitted','Completed','Rejected'];
+const STATUS_CLASS = ['badge-open','badge-funded','badge-submitted','badge-completed','badge-rejected'];
 const WORKER_TYPES = ['AI','Human'];
+let isOpenJob = false;
 const JOB_CATEGORIES = ['Writing','Research','Translation','Compliance','Operations'];
 
 let currentWallet = null;
@@ -915,6 +958,7 @@ function showPage(name) {
   event?.target?.classList.add('active');
   if (name === 'dashboard') loadDashboard();
   if (name === 'reviews') loadReviewBoard();
+  if (name === 'pick') loadAvailableJobs();
 }
 
 function scrollToAgents() {
@@ -934,6 +978,39 @@ function timeLeft(ms) {
 }
 
 // ── Wallet ───────────────────────────────────────────────────────
+function updateWalletDisplay() {
+  const display = document.getElementById('walletDisplay');
+  if (currentWallet) {
+    display.innerHTML = `<div class="wallet-dot"></div><span>${shortAddr(currentWallet)}</span>`;
+  } else {
+    display.innerHTML = `<div class="wallet-dot"></div><span>Arc Testnet</span>`;
+  }
+}
+
+function updateWalletButtons() {
+  const connectBtn = document.getElementById('connectBtn');
+  const disconnectBtn = document.getElementById('disconnectBtn');
+  if (currentWallet) {
+    connectBtn.textContent = 'Connected';
+    connectBtn.disabled = true;
+    disconnectBtn.style.display = 'inline-flex';
+  } else {
+    connectBtn.textContent = 'Connect Wallet';
+    connectBtn.disabled = false;
+    disconnectBtn.style.display = 'none';
+  }
+}
+
+function disconnectWallet() {
+  currentWallet = null;
+  updateWalletDisplay();
+  updateWalletButtons();
+  if (document.getElementById('page-dashboard').classList.contains('active')) {
+    loadDashboard();
+  }
+  toast('Wallet Disconnected', 'You can reconnect a different wallet now', 'info');
+}
+
 async function connectWallet() {
   if (!window.ethereum) {
     toast('No Wallet Found', 'Please install MetaMask or a Web3 wallet', 'error');
@@ -942,11 +1019,12 @@ async function connectWallet() {
   try {
     const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
     currentWallet = accounts[0];
-    document.getElementById('walletDisplay').innerHTML =
-      `<div class="wallet-dot"></div><span>${shortAddr(currentWallet)}</span>`;
-    document.getElementById('connectBtn').textContent = 'Connected';
-    document.getElementById('connectBtn').disabled = true;
+    updateWalletDisplay();
+    updateWalletButtons();
     toast('Wallet Connected', shortAddr(currentWallet), 'success');
+    if (document.getElementById('page-dashboard').classList.contains('active')) {
+      await loadDashboard();
+    }
   } catch(e) {
     toast('Connection Failed', e.message, 'error');
   }
@@ -1064,6 +1142,67 @@ function handleWorkerTypeChange() {
   renderAgentSelect();
 }
 
+function handleJobAvailabilityChange() {
+  const availability = document.getElementById('jobAvailability').value;
+  isOpenJob = availability === 'open';
+  document.getElementById('agentSelectSection').style.display = isOpenJob ? 'none' : 'block';
+}
+
+async function loadAvailableJobs() {
+  try {
+    const res = await fetch(`${API}/api/jobs/open`);
+    const jobs = await res.json();
+    const container = document.getElementById('availableJobs');
+    if (!jobs.length) {
+      container.innerHTML = '<div class="empty-state"><p>No open jobs available right now.</p></div>';
+      return;
+    }
+    container.innerHTML = jobs.map(j => `
+      <div class="job-card" onclick="openJobModal(${j.id})">
+        <div>
+          <div class="job-title">${j.title}</div>
+          <div class="job-meta">
+            <span>Category: ${j.category}</span>
+            <span>${j.workerTypeLabel}</span>
+            <span>${new Date(j.deadline).toLocaleString()}</span>
+          </div>
+        </div>
+        <div class="job-right">
+          <div class="job-budget">${j.budget} USDC</div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <span class="badge ${STATUS_CLASS[j.status]}">${j.statusLabel}</span>
+            ${currentWallet ? `<button class="btn btn-primary btn-sm" onclick="event.stopPropagation();claimJob(${j.id})">Claim</button>` : ''}
+          </div>
+        </div>
+      </div>
+    `).join('');
+  } catch(e) {
+    document.getElementById('availableJobs').innerHTML = '<div class="empty-state"><p>Could not load open jobs. Make sure backend is running.</p></div>';
+  }
+}
+
+async function claimJob(jobId) {
+  if (!currentWallet) {
+    toast('Connect Wallet', 'Please connect your wallet to claim this job', 'error');
+    return;
+  }
+
+  try {
+    toast('Claiming Job...', 'Confirm the transaction in your wallet', 'info');
+    const provider = new ethers.BrowserProvider(window.ethereum);
+    const signer = await provider.getSigner();
+    const jobAbi = [{ name: 'claimJob', type: 'function', stateMutability: 'nonpayable', inputs: [{ name: 'jobId', type: 'uint256' }], outputs: [] }];
+    const jobContract = new ethers.Contract(JOB_BOARD, jobAbi, signer);
+    const tx = await jobContract.claimJob(BigInt(jobId));
+    const receipt = await tx.wait();
+    toast('Job Claimed', `Tx: ${receipt.transactionHash.slice(0,10)}...`, 'success');
+    await loadAvailableJobs();
+    await loadDashboard();
+  } catch (e) {
+    toast('Claim Failed', e.message?.slice(0,80) || 'Transaction failed', 'error');
+  }
+}
+
 // ── Load stats ───────────────────────────────────────────────────
 async function loadStats() {
   try {
@@ -1176,7 +1315,7 @@ async function submitJob() {
     toast('Wallet Required', 'Please connect your wallet first', 'error');
     return;
   }
-  if (!selectedAgent) {
+  if (!isOpenJob && !selectedAgent) {
     toast('Select an Agent', 'Please choose which agent will do the work', 'error');
     return;
   }
@@ -1186,14 +1325,17 @@ async function submitJob() {
   const category = document.getElementById('jobCategory').value;
   const workerType = document.getElementById('workerType').value;
   const budgetValue = document.getElementById('budget').value.trim();
-  const deadlineValue = document.getElementById('deadline').value.trim();
+  const deadlineValue = document.getElementById('deadlineValue').value.trim();
+  const deadlineUnit = document.getElementById('deadlineUnit').value;
   const budget = parseFloat(budgetValue);
-  const deadlineHours = parseInt(deadlineValue, 10);
+  const deadlineValueNum = parseFloat(deadlineValue);
 
   if (!title || !desc) { toast('Missing Info', 'Please fill in title and description', 'error'); return; }
   if (!budgetValue || Number.isNaN(budget) || budget <= 0) { toast('Invalid Budget', 'Enter a USDC amount greater than 0', 'error'); return; }
-  if (!deadlineValue || Number.isNaN(deadlineHours) || deadlineHours <= 0) { toast('Invalid Deadline', 'Enter a deadline in hours', 'error'); return; }
-  if (selectedAgent.type !== workerType) { toast('Mismatched worker type', 'Please choose a worker that matches the selected type', 'error'); return; }
+  if (!deadlineValue || Number.isNaN(deadlineValueNum) || deadlineValueNum <= 0) { toast('Invalid Deadline', 'Enter a deadline value', 'error'); return; }
+  if (!isOpenJob && selectedAgent.type !== workerType) { toast('Mismatched worker type', 'Please choose a worker that matches the selected type', 'error'); return; }
+  const deadlineMinutes = deadlineUnit === 'hours' ? deadlineValueNum * 60 : deadlineValueNum;
+  const deadlineHours = BigInt(Math.max(1, Math.ceil(deadlineMinutes / 60)));
 
   const btn = document.getElementById('postBtn');
   btn.disabled = true;
@@ -1272,17 +1414,19 @@ async function submitJob() {
       "type": "function"
     }];
     const jobContract = new ethers.Contract(JOB_BOARD, jobAbi, signer);
-    const jobTx = await jobContract.postAndFundJob([
-      selectedAgent.walletAddress,
+    const agentAddress = isOpenJob ? ethers.ZeroAddress : selectedAgent.walletAddress;
+    const workerTypeValue = workerType === 'Human' ? 1 : 0;
+    const jobTx = await jobContract.postAndFundJob({
+      agent: agentAddress,
       title,
-      desc,
+      description: desc,
       category,
-      selectedAgent.type === 'Human' ? 1 : 0,
-      budgetWei,
+      workerType: workerTypeValue,
+      budget: budgetWei,
       deadlineHours,
-      [],
-      []
-    ]);
+      milestoneDescriptions: [],
+      milestonePercentages: []
+    });
     const receipt = await jobTx.wait();
     const txHash = receipt.hash;
 
@@ -1293,6 +1437,8 @@ async function submitJob() {
     document.getElementById('jobDesc').value = '';
     document.getElementById('budget').value = '';
     selectedAgent = null;
+    document.getElementById('jobAvailability').value = 'assigned';
+    handleJobAvailabilityChange();
     document.querySelectorAll('.agent-select-card').forEach(c => c.classList.remove('selected'));
 
     await loadStats();
@@ -1373,10 +1519,22 @@ async function createCampaign() {
 
 // ── Dashboard ────────────────────────────────────────────────────
 async function loadDashboard() {
-  if (!currentWallet) return;
+  if (!currentWallet) {
+    document.getElementById('dashboardContent').innerHTML = `
+      <div class="empty-state">
+        <p>Connect your wallet to see your jobs</p>
+        <button class="btn btn-primary" onclick="connectWallet()">Connect Wallet</button>
+      </div>`;
+    return;
+  }
+
+  const normalizedWallet = currentWallet.toLowerCase();
+  const route = currentTab === 'agent'
+    ? `${API}/api/agent/${normalizedWallet}/jobs`
+    : `${API}/api/client/${normalizedWallet}/jobs`;
 
   try {
-    const res = await fetch(`${API}/api/client/${currentWallet}/jobs`);
+    const res = await fetch(route);
     const jobs = await res.json();
     renderDashboardJobs(jobs);
   } catch(e) {
@@ -1475,6 +1633,9 @@ async function openJobModal(id) {
     const actions = document.getElementById('modalActions');
     actions.innerHTML = '';
 
+    if (job.status === 0 && currentWallet && currentWallet.toLowerCase() !== job.client.toLowerCase()) {
+      actions.innerHTML = `<button class="btn btn-primary" style="flex:1" onclick="claimJob(${id});closeModal()">Claim Job</button>`;
+    }
     if (job.status === 2 && currentWallet?.toLowerCase() === job.client.toLowerCase()) {
       actions.innerHTML = `
         <button class="btn btn-success" style="flex:1" onclick="approveJob(${id});closeModal()">✓ Approve & Release Payment</button>
@@ -1667,17 +1828,25 @@ async function sendTx({ to, data }) {
 // ── Init ─────────────────────────────────────────────────────────
 async function init() {
   await Promise.all([loadConfig(), loadAgents(), loadStats(), loadRecentJobs(), loadCampaigns()]);
+  handleJobAvailabilityChange();
 
   // Auto-connect if already authorized
   if (window.ethereum) {
+    window.ethereum.on('accountsChanged', async accounts => {
+      currentWallet = accounts[0] || null;
+      updateWalletDisplay();
+      updateWalletButtons();
+      if (document.getElementById('page-dashboard').classList.contains('active')) {
+        await loadDashboard();
+      }
+    });
+
     try {
       const accounts = await ethereum.request({ method: 'eth_accounts' });
       if (accounts[0]) {
         currentWallet = accounts[0];
-        document.getElementById('walletDisplay').innerHTML =
-          `<div class="wallet-dot"></div><span>${shortAddr(currentWallet)}</span>`;
-        document.getElementById('connectBtn').textContent = 'Connected';
-        document.getElementById('connectBtn').disabled = true;
+        updateWalletDisplay();
+        updateWalletButtons();
       }
     } catch(e) {}
   }

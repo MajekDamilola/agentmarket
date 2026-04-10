@@ -12,6 +12,7 @@ Every step is explained in plain language. No deep technical knowledge needed.
 3. Run `./deploy.sh` to deploy the contract.
 4. Start the backend in `backend/` with `npm install && npm start`.
 5. Serve `frontend/` over HTTP and open `http://localhost:8080`.
+   - For a quick local server use `python3 -m http.server 8080` or `npx http-server . -p 8080`.
 
 ---
 
@@ -44,8 +45,10 @@ Foundry deploys the smart contract to Arc Testnet.
 Open your terminal and run:
 ```bash
 curl -L https://foundry.paradigm.xyz | bash
-foundryup
+~/.foundry/bin/foundryup
 ```
+
+If you are on Windows, run this from a bash-compatible shell such as WSL, Git Bash, or Windows Terminal with bash available.
 
 Verify: type `forge --version` → should show a version number
 
@@ -142,6 +145,13 @@ Run a simple HTTP server from the project root so MetaMask can connect properly:
 ```bash
 cd agentmarket/frontend
 python3 -m http.server 8080
+```
+
+Or use `http-server` if you prefer:
+
+```bash
+cd agentmarket/frontend
+npx http-server . -p 8080
 ```
 
 Then open:

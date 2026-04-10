@@ -61,6 +61,7 @@ contract AgentJobBoard {
         string deliverableHash;
         uint256 createdAt;
         uint256 completedAt;
+        uint256 pickedAt;
         uint256 milestonesCount;
         uint256 completedMilestones;
     }
@@ -123,6 +124,8 @@ contract AgentJobBoard {
         uint8 workerType
     );
     event JobFunded(uint256 indexed jobId, uint256 amount);
+    event JobClaimed(uint256 indexed jobId, address indexed agent);
+    event JobReopened(uint256 indexed jobId);
     event DeliverableSubmitted(uint256 indexed jobId, string deliverableHash);
     event JobCompleted(uint256 indexed jobId, address agent, uint256 agentPayout, uint256 platformFee);
     event JobRejected(uint256 indexed jobId, address client, uint256 refund);
@@ -156,7 +159,6 @@ contract AgentJobBoard {
 
     function postAndFundJob(JobParams calldata params) external returns (uint256) {
         require(params.budget > 0, "Budget must be greater than 0");
-        require(params.agent != address(0), "Invalid agent address");
         require(bytes(params.category).length > 0, "Category is required");
         require(params.workerType <= uint8(WorkerType.Human), "Invalid worker type");
         require(params.deadlineHours > 0 && params.deadlineHours <= 720, "Deadline must be 1-720 hours");
@@ -179,6 +181,7 @@ contract AgentJobBoard {
         jobCount++;
         uint256 jobId = jobCount;
 
+        JobStatus initialStatus = params.agent == address(0) ? JobStatus.Open : JobStatus.Funded;
         jobs[jobId] = Job({
             id: jobId,
             client: msg.sender,
@@ -190,10 +193,11 @@ contract AgentJobBoard {
             workerType: WorkerType(params.workerType),
             budget: params.budget,
             deadline: block.timestamp + (params.deadlineHours * 1 hours),
-            status: JobStatus.Funded,
+            status: initialStatus,
             deliverableHash: "",
             createdAt: block.timestamp,
             completedAt: 0,
+            pickedAt: 0,
             milestonesCount: params.milestoneDescriptions.length,
             completedMilestones: 0
         });
@@ -211,10 +215,14 @@ contract AgentJobBoard {
         }
 
         clientJobs[msg.sender].push(jobId);
-        agentJobs[params.agent].push(jobId);
+        if (params.agent != address(0)) {
+            agentJobs[params.agent].push(jobId);
+        }
 
         emit JobPosted(jobId, msg.sender, params.agent, params.title, params.category, params.budget, params.workerType);
-        emit JobFunded(jobId, params.budget);
+        if (params.agent != address(0)) {
+            emit JobFunded(jobId, params.budget);
+        }
 
         return jobId;
     }
@@ -269,6 +277,38 @@ contract AgentJobBoard {
         }
 
         emit JobCompleted(jobId, job.agent, agentPayout, fee);
+    }
+
+    function claimJob(uint256 jobId) external {
+        Job storage job = jobs[jobId];
+        require(job.client != address(0), "Job does not exist");
+        require(job.status == JobStatus.Open, "Job is not available");
+        require(block.timestamp <= job.deadline, "Job deadline has passed");
+        require(msg.sender != job.client, "Client cannot claim their own job");
+
+        job.agent = msg.sender;
+        job.status = JobStatus.Funded;
+        job.pickedAt = block.timestamp;
+        agentJobs[msg.sender].push(jobId);
+
+        emit JobClaimed(jobId, msg.sender);
+        emit JobFunded(jobId, job.budget);
+    }
+
+    function reopenJob(uint256 jobId) external onlyClient(jobId) {
+        Job storage job = jobs[jobId];
+        require(job.client != address(0), "Job does not exist");
+        require(job.status == JobStatus.Funded, "Job is not in progress");
+        require(job.agent != address(0), "Job has no assigned agent");
+        require(job.pickedAt > 0, "Job has not been claimed");
+        require(block.timestamp > job.pickedAt + 24 hours, "Claim window has not expired");
+        require(bytes(job.deliverableHash).length == 0, "Deliverable already submitted");
+
+        job.agent = address(0);
+        job.status = JobStatus.Open;
+        job.pickedAt = 0;
+
+        emit JobReopened(jobId);
     }
 
     function approveJob(uint256 jobId) external onlyClient(jobId) {

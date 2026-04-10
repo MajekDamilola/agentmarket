@@ -37,13 +37,16 @@ const JOB_BOARD_ABI = [
         { name: "agent", type: "address" },
         { name: "title", type: "string" },
         { name: "description", type: "string" },
-        { name: "budget", type: "uint256" },
+        { name: "taskType", type: "string" },
         { name: "category", type: "string" },
         { name: "workerType", type: "uint8" },
+        { name: "budget", type: "uint256" },
+        { name: "deadline", type: "uint256" },
         { name: "status", type: "uint8" },
         { name: "deliverableHash", type: "string" },
         { name: "createdAt", type: "uint256" },
         { name: "completedAt", type: "uint256" },
+        { name: "pickedAt", type: "uint256" },
         { name: "milestonesCount", type: "uint256" },
         { name: "completedMilestones", type: "uint256" },
       ],
@@ -62,13 +65,16 @@ const JOB_BOARD_ABI = [
         { name: "agent", type: "address" },
         { name: "title", type: "string" },
         { name: "description", type: "string" },
-        { name: "budget", type: "uint256" },
+        { name: "taskType", type: "string" },
         { name: "category", type: "string" },
         { name: "workerType", type: "uint8" },
+        { name: "budget", type: "uint256" },
+        { name: "deadline", type: "uint256" },
         { name: "status", type: "uint8" },
         { name: "deliverableHash", type: "string" },
         { name: "createdAt", type: "uint256" },
         { name: "completedAt", type: "uint256" },
+        { name: "pickedAt", type: "uint256" },
         { name: "milestonesCount", type: "uint256" },
         { name: "completedMilestones", type: "uint256" },
       ],
@@ -357,6 +363,7 @@ function formatJob(job) {
     category: job.category,
     workerType: Number(job.workerType),
     workerTypeLabel: WORKER_TYPES[Number(job.workerType)],
+    taskType: job.taskType,
     budget: formatUnits(job.budget, 6), // convert from 6-decimal USDC
     budgetRaw: job.budget.toString(),
     status: Number(job.status),
@@ -364,6 +371,8 @@ function formatJob(job) {
     deliverableHash: job.deliverableHash,
     createdAt: Number(job.createdAt) * 1000,
     completedAt: Number(job.completedAt) * 1000,
+    pickedAt: Number(job.pickedAt) * 1000,
+    deadline: Number(job.deadline) * 1000,
     milestonesCount: Number(job.milestonesCount),
     completedMilestones: Number(job.completedMilestones),
     explorerUrl: `https://testnet.arcscan.app/address/${JOB_BOARD_ADDRESS}`,
@@ -400,6 +409,20 @@ app.get("/api/jobs", async (req, res) => {
   }
 });
 
+// Get open jobs
+app.get("/api/jobs/open", async (req, res) => {
+  try {
+    const jobs = await publicClient.readContract({
+      address: JOB_BOARD_ADDRESS,
+      abi: JOB_BOARD_ABI,
+      functionName: "getAllJobs",
+    });
+    res.json(jobs.map(formatJob).filter(job => job.status === 0));
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Get single job
 app.get("/api/jobs/:id", async (req, res) => {
   try {
@@ -418,11 +441,12 @@ app.get("/api/jobs/:id", async (req, res) => {
 // Get jobs for a specific client
 app.get("/api/client/:address/jobs", async (req, res) => {
   try {
+    const address = req.params.address.toLowerCase();
     const jobIds = await publicClient.readContract({
       address: JOB_BOARD_ADDRESS,
       abi: JOB_BOARD_ABI,
       functionName: "getClientJobs",
-      args: [req.params.address],
+      args: [address],
     });
 
     const jobs = await Promise.all(
@@ -445,11 +469,12 @@ app.get("/api/client/:address/jobs", async (req, res) => {
 // Get jobs for a specific agent
 app.get("/api/agent/:address/jobs", async (req, res) => {
   try {
+    const address = req.params.address.toLowerCase();
     const jobIds = await publicClient.readContract({
       address: JOB_BOARD_ADDRESS,
       abi: JOB_BOARD_ABI,
       functionName: "getAgentJobs",
-      args: [req.params.address],
+      args: [address],
     });
 
     const jobs = await Promise.all(

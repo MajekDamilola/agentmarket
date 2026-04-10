@@ -37,7 +37,6 @@
       min-height: 100vh;
     }
 
-    /* ── Background grid ── */
     body::before {
       content: '';
       position: fixed;
@@ -50,7 +49,6 @@
       z-index: 0;
     }
 
-    /* ── Nav ── */
     nav {
       position: sticky;
       top: 0;
@@ -75,10 +73,7 @@
       letter-spacing: -0.5px;
     }
 
-    .nav-links {
-      display: flex;
-      gap: 4px;
-    }
+    .nav-links { display: flex; gap: 4px; }
 
     .nav-btn {
       background: none;
@@ -91,19 +86,11 @@
       cursor: pointer;
       transition: all 0.2s;
     }
-    .nav-btn:hover, .nav-btn.active {
-      background: var(--surface2);
-      color: var(--text);
-    }
+    .nav-btn:hover, .nav-btn.active { background: var(--surface2); color: var(--text); }
     .nav-btn.active { color: var(--accent); }
 
-    .nav-right {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
+    .nav-right { display: flex; align-items: center; gap: 12px; }
 
-    /* ── Buttons ── */
     .btn {
       display: inline-flex;
       align-items: center;
@@ -117,30 +104,21 @@
       transition: all 0.2s;
       border: none;
     }
-    .btn-primary {
-      background: var(--accent);
-      color: #fff;
-    }
+    .btn-primary { background: var(--accent); color: #fff; }
     .btn-primary:hover { background: #6a5de8; transform: translateY(-1px); }
-    .btn-outline {
-      background: transparent;
-      color: var(--text);
-      border: 1px solid var(--border-hover);
-    }
+    .btn-outline { background: transparent; color: var(--text); border: 1px solid var(--border-hover); }
     .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
     .btn-success { background: var(--success); color: #062a1a; }
     .btn-danger { background: var(--danger); color: #fff; }
     .btn-sm { padding: 6px 14px; font-size: 13px; }
     .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
 
-    /* ── Pages ── */
     .page { display: none; animation: fadeIn 0.3s ease; }
     .page.active { display: block; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
     .container { max-width: 1100px; margin: 0 auto; padding: 40px 32px; position: relative; z-index: 1; }
 
-    /* ── Hero ── */
     .hero {
       padding: 80px 32px 40px;
       max-width: 1100px;
@@ -199,7 +177,6 @@
 
     .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 60px; }
 
-    /* ── Stats bar ── */
     .stats-bar {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
@@ -211,10 +188,7 @@
       margin-bottom: 60px;
     }
 
-    .stat-cell {
-      background: var(--surface);
-      padding: 24px 28px;
-    }
+    .stat-cell { background: var(--surface); padding: 24px 28px; }
 
     .stat-value {
       font-family: var(--font-head);
@@ -230,7 +204,6 @@
       margin-top: 4px;
     }
 
-    /* ── Section heading ── */
     .section-head {
       display: flex;
       align-items: center;
@@ -245,7 +218,6 @@
       letter-spacing: -0.5px;
     }
 
-    /* ── Agent cards ── */
     .agents-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -287,39 +259,14 @@
       font-size: 20px;
     }
 
-    .agent-name {
-      font-family: var(--font-head);
-      font-size: 17px;
-      font-weight: 700;
-      margin-bottom: 4px;
-    }
-
-    .agent-desc {
-      font-size: 13px;
-      color: var(--muted);
-      line-height: 1.5;
-      margin-bottom: 16px;
-    }
-
+    .agent-name { font-family: var(--font-head); font-size: 17px; font-weight: 700; margin-bottom: 4px; }
+    .agent-desc { font-size: 13px; color: var(--muted); line-height: 1.5; margin-bottom: 16px; }
     .agent-footer { display: flex; align-items: center; justify-content: space-between; }
 
-    .rep-score {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-family: var(--font-mono);
-      font-size: 13px;
-    }
-
+    .rep-score { display: flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: 13px; }
     .rep-dot { width: 8px; height: 8px; background: var(--success); border-radius: 50%; }
 
-    .badge {
-      font-size: 11px;
-      font-family: var(--font-mono);
-      padding: 3px 10px;
-      border-radius: 100px;
-    }
-
+    .badge { font-size: 11px; font-family: var(--font-mono); padding: 3px 10px; border-radius: 100px; }
     .badge-verified { background: rgba(79,209,165,0.1); color: var(--success); border: 1px solid rgba(79,209,165,0.2); }
     .badge-native { background: rgba(246,201,14,0.1); color: var(--gold); border: 1px solid rgba(246,201,14,0.2); }
     .badge-open { background: rgba(79,109,250,0.1); color: var(--accent); }
@@ -327,19 +274,11 @@
     .badge-submitted { background: rgba(246,201,14,0.1); color: var(--gold); }
     .badge-completed { background: rgba(79,209,165,0.1); color: var(--success); }
     .badge-rejected { background: rgba(248,114,114,0.1); color: var(--danger); }
+    .badge-coming-soon { background: rgba(246,201,14,0.08); color: var(--gold); border: 1px solid rgba(246,201,14,0.2); }
 
     .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
-    .tag {
-      font-size: 11px;
-      font-family: var(--font-mono);
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      color: var(--muted);
-      padding: 3px 10px;
-      border-radius: 100px;
-    }
+    .tag { font-size: 11px; font-family: var(--font-mono); background: var(--surface2); border: 1px solid var(--border); color: var(--muted); padding: 3px 10px; border-radius: 100px; }
 
-    /* ── Job cards ── */
     .jobs-list { display: flex; flex-direction: column; gap: 12px; }
 
     .job-card {
@@ -357,31 +296,11 @@
 
     .job-card:hover { border-color: var(--border-hover); }
 
-    .job-title {
-      font-family: var(--font-head);
-      font-size: 15px;
-      font-weight: 600;
-      margin-bottom: 4px;
-    }
-
-    .job-meta {
-      font-size: 12px;
-      color: var(--muted);
-      font-family: var(--font-mono);
-      display: flex;
-      gap: 16px;
-    }
-
+    .job-title { font-family: var(--font-head); font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+    .job-meta { font-size: 12px; color: var(--muted); font-family: var(--font-mono); display: flex; gap: 16px; }
     .job-right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+    .job-budget { font-family: var(--font-head); font-size: 18px; font-weight: 700; color: var(--accent2); }
 
-    .job-budget {
-      font-family: var(--font-head);
-      font-size: 18px;
-      font-weight: 700;
-      color: var(--accent2);
-    }
-
-    /* ── Form ── */
     .form-card {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -392,13 +311,7 @@
 
     .form-group { margin-bottom: 20px; }
 
-    label {
-      display: block;
-      font-size: 13px;
-      font-family: var(--font-mono);
-      color: var(--muted);
-      margin-bottom: 8px;
-    }
+    label { display: block; font-size: 13px; font-family: var(--font-mono); color: var(--muted); margin-bottom: 8px; }
 
     input, textarea, select {
       width: 100%;
@@ -413,19 +326,9 @@
       transition: border-color 0.2s;
     }
 
-    .deadline-row {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-    }
-
-    .deadline-row input {
-      flex: 1;
-    }
-
-    .deadline-row select {
-      width: 120px;
-    }
+    .deadline-row { display: flex; gap: 10px; align-items: center; }
+    .deadline-row input { flex: 1; }
+    .deadline-row select { width: 120px; }
 
     input:focus, textarea:focus, select:focus { border-color: var(--accent); }
     textarea { resize: vertical; min-height: 100px; }
@@ -446,17 +349,54 @@
       padding: 14px;
       cursor: pointer;
       transition: all 0.2s;
+      position: relative;
     }
 
-    .agent-select-card.selected {
-      border-color: var(--accent);
-      background: rgba(124,109,250,0.08);
-    }
-
+    .agent-select-card.selected { border-color: var(--accent); background: rgba(124,109,250,0.08); }
     .agent-select-card:hover { border-color: var(--border-hover); }
+    .agent-select-card.ai-locked { opacity: 0.6; cursor: not-allowed; }
 
     .agent-select-name { font-weight: 600; font-size: 14px; margin-bottom: 4px; }
     .agent-select-desc { font-size: 12px; color: var(--muted); }
+
+    /* ── Coming Soon Banner ── */
+    .coming-soon-banner {
+      background: rgba(246,201,14,0.06);
+      border: 1px solid rgba(246,201,14,0.2);
+      border-radius: 10px;
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .coming-soon-icon { font-size: 20px; }
+
+    .coming-soon-text { flex: 1; }
+    .coming-soon-text strong { color: var(--gold); font-size: 13px; display: block; margin-bottom: 2px; }
+    .coming-soon-text span { font-size: 12px; color: var(--muted); }
+
+    /* ── Submit Deliverable Section ── */
+    .deliverable-box {
+      background: var(--surface2);
+      border: 1px solid rgba(124,109,250,0.2);
+      border-radius: 10px;
+      padding: 16px;
+      margin-top: 16px;
+    }
+
+    .deliverable-box h4 {
+      font-family: var(--font-head);
+      font-size: 14px;
+      color: var(--accent);
+      margin-bottom: 10px;
+    }
+
+    .deliverable-box textarea {
+      min-height: 80px;
+      margin-bottom: 10px;
+    }
 
     /* ── Modal ── */
     .modal-overlay {
@@ -482,18 +422,15 @@
       padding: 32px;
       max-width: 520px;
       width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
       transform: scale(0.95);
       transition: transform 0.2s;
     }
 
     .modal-overlay.open .modal { transform: scale(1); }
 
-    .modal-title {
-      font-family: var(--font-head);
-      font-size: 20px;
-      font-weight: 700;
-      margin-bottom: 20px;
-    }
+    .modal-title { font-family: var(--font-head); font-size: 20px; font-weight: 700; margin-bottom: 20px; }
 
     .detail-row {
       display: flex;
@@ -510,27 +447,58 @@
 
     .mono { font-family: var(--font-mono); font-size: 11px; }
 
-    .tx-link {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      color: var(--accent);
-      text-decoration: none;
-      font-size: 12px;
-      font-family: var(--font-mono);
-    }
-
+    .tx-link { display: inline-flex; align-items: center; gap: 6px; color: var(--accent); text-decoration: none; font-size: 12px; font-family: var(--font-mono); }
     .tx-link:hover { text-decoration: underline; }
 
-    /* ── Toast ── */
-    .toast-container {
-      position: fixed;
-      bottom: 24px; right: 24px;
-      z-index: 300;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
+    /* ── AI Coming Soon Modal ── */
+    .ai-coming-soon-modal {
+      text-align: center;
+      padding: 20px 0;
     }
+
+    .ai-coming-soon-modal .robot-icon {
+      font-size: 56px;
+      margin-bottom: 16px;
+      display: block;
+    }
+
+    .ai-coming-soon-modal h3 {
+      font-family: var(--font-head);
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 10px;
+      color: var(--gold);
+    }
+
+    .ai-coming-soon-modal p {
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.6;
+      margin-bottom: 20px;
+    }
+
+    .ai-coming-soon-modal .feature-list {
+      text-align: left;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 20px;
+    }
+
+    .ai-coming-soon-modal .feature-list li {
+      font-size: 13px;
+      color: var(--muted);
+      padding: 4px 0;
+      list-style: none;
+    }
+
+    .ai-coming-soon-modal .feature-list li::before {
+      content: '⏳ ';
+    }
+
+    /* ── Toast ── */
+    .toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 300; display: flex; flex-direction: column; gap: 10px; }
 
     .toast {
       background: var(--surface2);
@@ -549,7 +517,6 @@
     .toast-error .toast-title { color: var(--danger); }
     .toast-info .toast-title { color: var(--accent); }
 
-    /* ── Dashboard ── */
     .dashboard-header {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -565,48 +532,28 @@
     .tab { background: none; border: none; color: var(--muted); font-family: var(--font-body); font-size: 14px; padding: 8px 16px; border-radius: 8px; cursor: pointer; transition: all 0.2s; }
     .tab.active { background: var(--surface2); color: var(--text); }
 
-    .empty-state {
-      text-align: center;
-      padding: 60px 20px;
-      color: var(--muted);
-    }
-
+    .empty-state { text-align: center; padding: 60px 20px; color: var(--muted); }
     .empty-state p { margin-bottom: 16px; }
 
-    /* ── Wallet bar ── */
-    .wallet-bar {
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 8px 14px;
-      font-family: var(--font-mono);
-      font-size: 12px;
-      color: var(--muted);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
+    .wallet-bar { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 8px 14px; font-family: var(--font-mono); font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 8px; }
     .wallet-dot { width: 7px; height: 7px; background: var(--success); border-radius: 50%; }
 
-    /* ── Step indicator ── */
-    .steps {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 28px;
-    }
-
-    .step {
-      flex: 1;
-      height: 3px;
-      background: var(--surface2);
-      border-radius: 2px;
-      transition: background 0.3s;
-    }
-
+    .steps { display: flex; gap: 8px; margin-bottom: 28px; }
+    .step { flex: 1; height: 3px; background: var(--surface2); border-radius: 2px; transition: background 0.3s; }
     .step.done { background: var(--accent); }
 
-    /* ── Responsive ── */
+    /* Worker status pill */
+    .worker-action-pill {
+      background: rgba(79,209,165,0.08);
+      border: 1px solid rgba(79,209,165,0.2);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 12px;
+      color: var(--success);
+      font-family: var(--font-mono);
+      margin-top: 8px;
+    }
+
     @media (max-width: 680px) {
       nav { padding: 0 16px; }
       .container, .hero { padding-left: 16px; padding-right: 16px; }
@@ -615,7 +562,7 @@
       h1 { font-size: 36px; }
     }
   </style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
 </head>
 <body>
 
@@ -648,14 +595,13 @@
   <div class="hero">
     <div class="hero-badge">Live on Arc Testnet · ERC-8183 + ERC-8004</div>
     <h1>The marketplace<br/>for <span class="gradient-text">AI & Human Workers</span></h1>
-    <p class="hero-sub">Post tasks, choose AI or human help, and settle payments automatically in USDC — all onchain.</p>
+    <p class="hero-sub">Post tasks, choose human talent, and settle payments automatically in USDC — all onchain. AI automation coming soon.</p>
     <div class="hero-actions">
       <button class="btn btn-primary" onclick="showPage('post')">Post a Job →</button>
       <button class="btn btn-outline" onclick="showPage('pick')">Pick a Job →</button>
       <button class="btn btn-outline" onclick="scrollToAgents()">Browse Agents</button>
     </div>
 
-    <!-- Stats -->
     <div class="stats-bar" id="statsBar">
       <div class="stat-cell">
         <div class="stat-value" id="stat-jobs">—</div>
@@ -681,18 +627,14 @@
       <h2>Verified Agents</h2>
       <span class="badge badge-verified">All verified on Arc</span>
     </div>
-    <div class="agents-grid" id="agentsGrid">
-      <!-- Loaded by JS -->
-    </div>
+    <div class="agents-grid" id="agentsGrid"></div>
 
     <div style="height:48px"></div>
 
     <div class="section-head">
       <h2>Recent Jobs</h2>
     </div>
-    <div class="jobs-list" id="recentJobs">
-      <!-- Loaded by JS -->
-    </div>
+    <div class="jobs-list" id="recentJobs"></div>
   </div>
 </div>
 
@@ -701,7 +643,7 @@
   <div class="container">
     <div style="margin-bottom:32px">
       <h2 style="font-size:28px;margin-bottom:8px">Post a Job</h2>
-      <p style="color:var(--muted)">Describe your task, pick an agent, and fund escrow with USDC.</p>
+      <p style="color:var(--muted)">Describe your task, pick a human worker, and fund escrow with USDC.</p>
     </div>
 
     <div class="steps">
@@ -735,41 +677,42 @@
         <div class="form-group">
           <label>Worker Type</label>
           <select id="workerType" onchange="handleWorkerTypeChange()">
-            <option value="AI">AI</option>
             <option value="Human">Human</option>
+            <option value="AI">AI Agent (Coming Soon)</option>
           </select>
         </div>
       </div>
+
       <div class="form-group">
         <label>Availability</label>
         <select id="jobAvailability" onchange="handleJobAvailabilityChange()">
-          <option value="assigned">Assign a specific agent</option>
-          <option value="open">Open marketplace</option>
+          <option value="assigned">Assign a specific worker</option>
+          <option value="open">Open marketplace — anyone can claim</option>
         </select>
         <p style="font-size:12px;color:var(--muted);margin-top:6px">Open jobs can be claimed by any eligible worker after posting.</p>
       </div>
+
       <div class="form-group" id="agentSelectSection">
-        <label>Choose an Agent</label>
-        <div class="agent-select-grid" id="agentSelectGrid">
-          <!-- Loaded by JS -->
-        </div>
+        <label>Choose a Worker</label>
+        <div class="agent-select-grid" id="agentSelectGrid"></div>
       </div>
-        <div class="form-group">
-          <label>Deadline</label>
-          <div class="deadline-row">
-            <input type="number" id="deadlineValue" placeholder="120" min="1" value="120"/>
-            <select id="deadlineUnit">
-              <option value="minutes">Minutes</option>
-              <option value="hours">Hours</option>
-            </select>
-          </div>
-          <p style="font-size:12px;color:var(--muted);margin-top:6px">Enter the deadline in minutes or hours; the contract stores the final deadline in hours.</p>
+
+      <div class="form-group">
+        <label>Deadline</label>
+        <div class="deadline-row">
+          <input type="number" id="deadlineValue" placeholder="120" min="1" value="120"/>
+          <select id="deadlineUnit">
+            <option value="minutes">Minutes</option>
+            <option value="hours">Hours</option>
+          </select>
         </div>
+        <p style="font-size:12px;color:var(--muted);margin-top:6px">Enter the deadline in minutes or hours.</p>
+      </div>
 
       <div class="form-group">
         <label>Budget (USDC)</label>
         <input type="number" id="budget" placeholder="5.00" min="0.01" step="0.01"/>
-        <p style="font-size:12px;color:var(--muted);margin-top:6px">Platform fee: 2.5% · Agent receives the rest</p>
+        <p style="font-size:12px;color:var(--muted);margin-top:6px">Platform fee: 2.5% · Worker receives the rest</p>
       </div>
 
       <div style="display:flex;gap:12px;margin-top:8px">
@@ -779,7 +722,7 @@
       </div>
 
       <p style="font-size:12px;color:var(--muted);margin-top:14px;text-align:center">
-        Your USDC is locked in the smart contract. It releases to the agent only when you approve their work.
+        Your USDC is locked in the smart contract. It releases to the worker only when you approve their work.
       </p>
     </div>
   </div>
@@ -788,9 +731,37 @@
 <!-- ── PAGE: PICK A JOB ── -->
 <div class="page" id="page-pick">
   <div class="container">
+    <div style="margin-bottom:24px">
+      <h2 style="font-size:28px;margin-bottom:8px">Pick a Job</h2>
+      <p style="color:var(--muted)">Browse open jobs, claim one, complete the work, and get paid in USDC.</p>
+    </div>
+
+    <!-- How it works -->
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px 24px;margin-bottom:24px">
+      <p style="font-family:var(--font-mono);font-size:12px;color:var(--muted);margin-bottom:14px">HOW IT WORKS</p>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px">
+        <div style="display:flex;align-items:flex-start;gap:10px">
+          <div style="width:28px;height:28px;background:rgba(124,109,250,0.15);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0">1</div>
+          <div><strong style="font-size:13px;display:block;margin-bottom:2px">Claim a job</strong><span style="font-size:12px;color:var(--muted)">Sign with your wallet to accept</span></div>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:10px">
+          <div style="width:28px;height:28px;background:rgba(124,109,250,0.15);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0">2</div>
+          <div><strong style="font-size:13px;display:block;margin-bottom:2px">Do the work</strong><span style="font-size:12px;color:var(--muted)">Complete the task off-chain</span></div>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:10px">
+          <div style="width:28px;height:28px;background:rgba(124,109,250,0.15);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0">3</div>
+          <div><strong style="font-size:13px;display:block;margin-bottom:2px">Submit deliverable</strong><span style="font-size:12px;color:var(--muted)">Paste link or result onchain</span></div>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:10px">
+          <div style="width:28px;height:28px;background:rgba(79,209,165,0.15);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0">💰</div>
+          <div><strong style="font-size:13px;display:block;margin-bottom:2px">Get paid</strong><span style="font-size:12px;color:var(--muted)">USDC sent to your wallet</span></div>
+        </div>
+      </div>
+    </div>
+
     <div class="section-head">
       <h2>Open Jobs</h2>
-      <span class="badge badge-verified">Claim jobs from the marketplace</span>
+      <button class="btn btn-outline btn-sm" onclick="loadAvailableJobs()">↻ Refresh</button>
     </div>
     <div id="availableJobs"></div>
   </div>
@@ -817,18 +788,15 @@
       <h2 style="font-size:28px;margin-bottom:8px">Create a Bounty Campaign</h2>
       <p style="color:var(--muted)">Launch a competition with a USDC prize pool. Participants submit entries, you pick winners.</p>
     </div>
-
     <div class="form-card">
       <div class="form-group">
         <label>Campaign Title</label>
         <input type="text" id="campaignTitle" placeholder="e.g. Best Logo Design for My Startup"/>
       </div>
-
       <div class="form-group">
         <label>Description</label>
         <textarea id="campaignDesc" placeholder="Describe the task, requirements, and judging criteria."></textarea>
       </div>
-
       <div class="form-row">
         <div class="form-group">
           <label>Prize Pool (USDC)</label>
@@ -839,7 +807,6 @@
           <input type="number" id="entryFee" placeholder="0.00" min="0" step="0.01" value="0"/>
         </div>
       </div>
-
       <div class="form-row">
         <div class="form-group">
           <label>Max Participants (0 = unlimited)</label>
@@ -850,16 +817,10 @@
           <input type="number" id="campaignDeadline" placeholder="168" min="1" max="720" value="168"/>
         </div>
       </div>
-
       <div style="display:flex;gap:12px;margin-top:8px">
-        <button class="btn btn-primary" style="flex:1" onclick="createCampaign()" id="createCampaignBtn">
-          Fund Prize Pool & Launch
-        </button>
+        <button class="btn btn-primary" style="flex:1" onclick="createCampaign()" id="createCampaignBtn">Fund Prize Pool & Launch</button>
       </div>
-
-      <p style="font-size:12px;color:var(--muted);margin-top:14px;text-align:center">
-        USDC is locked in escrow. Winners receive equal shares automatically when selected.
-      </p>
+      <p style="font-size:12px;color:var(--muted);margin-top:14px;text-align:center">USDC is locked in escrow. Winners receive equal shares automatically when selected.</p>
     </div>
   </div>
 </div>
@@ -888,7 +849,7 @@
 
     <div class="tab-row">
       <button class="tab active" onclick="switchTab('posted')">Jobs I Posted</button>
-      <button class="tab" onclick="switchTab('agent')">Agent Jobs</button>
+      <button class="tab" onclick="switchTab('agent')">Jobs I'm Working On</button>
     </div>
 
     <div id="dashboardContent">
@@ -909,8 +870,47 @@
   </div>
 </div>
 
+<!-- ── AI COMING SOON MODAL ── -->
+<div class="modal-overlay" id="aiComingSoonModal" onclick="closeAiModal(event)">
+  <div class="modal">
+    <div class="ai-coming-soon-modal">
+      <span class="robot-icon">🤖</span>
+      <h3>AI Agents — Coming Soon</h3>
+      <p>Autonomous AI workers that automatically pick up, execute, and deliver jobs on-chain are currently in development.</p>
+      <ul class="feature-list">
+        <li>Auto-execution of tasks without human intervention</li>
+        <li>On-chain verification of AI deliverables</li>
+        <li>Reputation scoring for AI agents</li>
+        <li>Multi-step job pipelines with AI coordination</li>
+      </ul>
+      <p style="font-size:13px;color:var(--gold)">For now, please select a <strong>Human worker</strong> to get your job done.</p>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:8px">
+      <button class="btn btn-primary" style="flex:1" onclick="closeAiModal();switchToHuman()">Use Human Worker Instead</button>
+      <button class="btn btn-outline" onclick="closeAiModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── SUBMIT DELIVERABLE MODAL ── -->
+<div class="modal-overlay" id="deliverableModal" onclick="closeDeliverableModal(event)">
+  <div class="modal">
+    <div class="modal-title">Submit Your Deliverable</div>
+    <p style="color:var(--muted);font-size:13px;margin-bottom:20px">Paste a link, IPFS hash, Google Doc URL, or describe your completed work below. This gets stored permanently on the blockchain.</p>
+    <div class="form-group">
+      <label>Deliverable Link or Description</label>
+      <textarea id="deliverableInput" placeholder="e.g. https://docs.google.com/... or ipfs://Qm... or paste your summary here" style="min-height:120px"></textarea>
+    </div>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:16px">⚠️ Once submitted, the client will review and approve to release your payment.</p>
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-primary" style="flex:1" id="submitDeliverableBtn" onclick="confirmSubmitDeliverable()">Submit & Request Payment</button>
+      <button class="btn btn-outline" onclick="closeDeliverableModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <script>
-// ── Config ──────────────────────────────────────────────────────
+// ── Config ───────────────────────────────────────────────────────
 const API = 'https://agentmarket-cv66.vercel.app';
 const EXPLORER = 'https://testnet.arcscan.app';
 const USDC = '0x3600000000000000000000000000000000000000';
@@ -920,27 +920,20 @@ async function loadConfig() {
   try {
     const res = await fetch(`${API}/api/config`);
     const config = await res.json();
-    if (config.jobBoardAddress) {
-      JOB_BOARD = window.JOB_BOARD_ADDRESS = config.jobBoardAddress;
-    }
-  } catch (e) {
-    console.error('Could not load config from backend', e);
-  }
+    if (config.jobBoardAddress) JOB_BOARD = window.JOB_BOARD_ADDRESS = config.jobBoardAddress;
+  } catch(e) { console.error('Could not load config', e); }
 }
 
-// Status helpers
 const STATUS = ['Open','In Progress','Submitted','Completed','Rejected'];
 const STATUS_CLASS = ['badge-open','badge-funded','badge-submitted','badge-completed','badge-rejected'];
 const WORKER_TYPES = ['AI','Human'];
 let isOpenJob = false;
-const JOB_CATEGORIES = ['Writing','Research','Translation','Compliance','Operations'];
-
 let currentWallet = null;
 let agents = [];
 let selectedAgent = null;
-let selectedWorkerType = 'AI';
-let selectedCategory = 'Writing';
+let selectedWorkerType = 'Human';
 let currentTab = 'posted';
+let pendingDeliverableJobId = null;
 
 // ── Utilities ────────────────────────────────────────────────────
 function toast(title, msg, type='info') {
@@ -959,6 +952,7 @@ function showPage(name) {
   if (name === 'dashboard') loadDashboard();
   if (name === 'reviews') loadReviewBoard();
   if (name === 'pick') loadAvailableJobs();
+  if (name === 'campaigns') loadCampaigns();
 }
 
 function scrollToAgents() {
@@ -1005,32 +999,42 @@ function disconnectWallet() {
   currentWallet = null;
   updateWalletDisplay();
   updateWalletButtons();
-  if (document.getElementById('page-dashboard').classList.contains('active')) {
-    loadDashboard();
-  }
+  if (document.getElementById('page-dashboard').classList.contains('active')) loadDashboard();
   toast('Wallet Disconnected', 'You can reconnect a different wallet now', 'info');
 }
 
 async function connectWallet() {
-  if (!window.ethereum) {
-    toast('No Wallet Found', 'Please install MetaMask or a Web3 wallet', 'error');
-    return;
-  }
+  if (!window.ethereum) { toast('No Wallet Found', 'Please install MetaMask or a Web3 wallet', 'error'); return; }
   try {
     const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
     currentWallet = accounts[0];
     updateWalletDisplay();
     updateWalletButtons();
     toast('Wallet Connected', shortAddr(currentWallet), 'success');
-    if (document.getElementById('page-dashboard').classList.contains('active')) {
-      await loadDashboard();
-    }
+    if (document.getElementById('page-dashboard').classList.contains('active')) await loadDashboard();
   } catch(e) {
     toast('Connection Failed', e.message, 'error');
   }
 }
 
-// ── Load agents ──────────────────────────────────────────────────
+// ── AI Coming Soon Modal ─────────────────────────────────────────
+function showAiComingSoon() {
+  document.getElementById('aiComingSoonModal').classList.add('open');
+}
+
+function closeAiModal(e) {
+  if (!e || e.target === document.getElementById('aiComingSoonModal')) {
+    document.getElementById('aiComingSoonModal').classList.remove('open');
+  }
+}
+
+function switchToHuman() {
+  document.getElementById('workerType').value = 'Human';
+  selectedWorkerType = 'Human';
+  renderAgentSelect();
+}
+
+// ── Agents ───────────────────────────────────────────────────────
 async function loadAgents() {
   try {
     const res = await fetch(`${API}/api/agents`);
@@ -1038,7 +1042,6 @@ async function loadAgents() {
     renderAgents();
     renderAgentSelect();
   } catch(e) {
-    // Fallback static agents if backend offline
     agents = [
       { id:'native-001', type:'AI', name:'SummaryBot', description:'Summarizes documents and long text into clear bullet points', taskTypes:['summarize','analyze'], walletAddress:'0x89E3D24A54E9EEA0799A4d8d5843487606330378', reputationScore:98, isNative:true, isVerified:true, minBudget:'1.00' },
       { id:'native-002', type:'AI', name:'ReportAgent', description:'Generates structured market reports from raw inputs', taskTypes:['report','research'], walletAddress:'0x11be84f570c3670b4bB0682a9aCa10C6B80d1300', reputationScore:95, isNative:true, isVerified:true, minBudget:'2.00' },
@@ -1053,7 +1056,255 @@ async function loadAgents() {
 
 const AGENT_ICONS = { summarize:'📄', report:'📊', translate:'🌐', analyze:'🔬', monitor:'👁' };
 
-// ── Load campaigns ───────────────────────────────────────────────
+function renderAgents() {
+  const grid = document.getElementById('agentsGrid');
+  grid.innerHTML = agents.map(a => {
+    const isAI = a.type === 'AI';
+    return `
+      <div class="agent-card" onclick="${isAI ? 'showPage(\'post\');showAiComingSoon()' : `showPage('post');selectAgent('${a.id}')`}">
+        <div class="agent-header">
+          <div class="agent-icon">${isAI ? AGENT_ICONS[a.taskTypes[0]] || '🤖' : '🧑'}</div>
+          <div>
+            <span class="badge ${isAI ? 'badge-coming-soon' : 'badge-funded'}">${isAI ? '⏳ Coming Soon' : 'Human'}</span>
+            ${a.isVerified ? '<span class="badge badge-verified" style="margin-left:4px">✓ Verified</span>' : ''}
+          </div>
+        </div>
+        <div class="agent-name">${a.name}</div>
+        <div class="agent-desc">${a.description}${isAI ? ' <span style="color:var(--gold);font-size:11px">(AI automation launching soon)</span>' : ''}</div>
+        <div class="tags">${a.taskTypes.map(t => `<span class="tag">${t}</span>`).join('')}</div>
+        <div class="agent-footer">
+          <div class="rep-score"><div class="rep-dot"></div>${a.reputationScore}/100 rep</div>
+          <span style="font-family:var(--font-mono);font-size:12px;color:${isAI ? 'var(--gold)' : 'var(--accent2)'}">
+            ${isAI ? '🔒 Automated' : `from ${a.minBudget} USDC`}
+          </span>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderAgentSelect() {
+  const grid = document.getElementById('agentSelectGrid');
+  const workerType = document.getElementById('workerType').value;
+
+  if (workerType === 'AI') {
+    // Show coming soon message inline
+    grid.innerHTML = `
+      <div style="grid-column:1/-1">
+        <div class="coming-soon-banner">
+          <div class="coming-soon-icon">🤖</div>
+          <div class="coming-soon-text">
+            <strong>AI Agent Automation — Coming Soon</strong>
+            <span>Our AI workers are in development. Please select "Human" worker type to post a job now.</span>
+          </div>
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  const humanAgents = agents.filter(a => a.type === 'Human');
+  if (!humanAgents.length) {
+    grid.innerHTML = '<div class="empty-state"><p>No human workers available yet.</p></div>';
+    return;
+  }
+
+  grid.innerHTML = humanAgents.map(a => `
+    <div class="agent-select-card" id="asel-${a.id}" onclick="selectAgent('${a.id}')">
+      <div class="agent-select-name">🧑 ${a.name}</div>
+      <div class="agent-select-desc">${a.taskTypes.join(', ')} · ${a.reputationScore}/100</div>
+    </div>
+  `).join('');
+}
+
+function selectAgent(id) {
+  selectedAgent = agents.find(a => a.id === id);
+  document.querySelectorAll('.agent-select-card').forEach(c => c.classList.remove('selected'));
+  const card = document.getElementById('asel-' + id);
+  if (card) card.classList.add('selected');
+}
+
+function handleWorkerTypeChange() {
+  const workerType = document.getElementById('workerType').value;
+  if (workerType === 'AI') {
+    showAiComingSoon();
+    // Reset back to Human
+    setTimeout(() => { document.getElementById('workerType').value = 'Human'; renderAgentSelect(); }, 100);
+    return;
+  }
+  selectedWorkerType = workerType;
+  selectedAgent = null;
+  document.querySelectorAll('.agent-select-card').forEach(c => c.classList.remove('selected'));
+  renderAgentSelect();
+}
+
+function handleJobAvailabilityChange() {
+  const availability = document.getElementById('jobAvailability').value;
+  isOpenJob = availability === 'open';
+  document.getElementById('agentSelectSection').style.display = isOpenJob ? 'none' : 'block';
+}
+
+// ── Available Jobs (Pick a Job page) ────────────────────────────
+async function loadAvailableJobs() {
+  try {
+    const res = await fetch(`${API}/api/jobs/open`);
+    const jobs = await res.json();
+    const container = document.getElementById('availableJobs');
+    if (!Array.isArray(jobs) || !jobs.length) {
+      container.innerHTML = '<div class="empty-state"><p>No open jobs available right now. Check back soon!</p></div>';
+      return;
+    }
+
+    // Filter only open AND open marketplace jobs (agent = zero address)
+    const openJobs = jobs.filter(j => j.status === 0);
+
+    if (!openJobs.length) {
+      container.innerHTML = '<div class="empty-state"><p>No open marketplace jobs right now. All current jobs are assigned.</p></div>';
+      return;
+    }
+
+    container.innerHTML = '<div class="jobs-list">' + openJobs.map(j => `
+      <div class="job-card" onclick="openJobModal(${j.id})">
+        <div>
+          <div class="job-title">${j.title}</div>
+          <div class="job-meta">
+            <span>📂 ${j.category}</span>
+            <span>👤 ${j.workerTypeLabel}</span>
+            <span>⏰ ${timeLeft(j.deadline)}</span>
+            <span>Posted by ${shortAddr(j.client)}</span>
+          </div>
+          <div style="font-size:12px;color:var(--muted);margin-top:6px;max-width:500px">${j.description?.slice(0,100)}${j.description?.length > 100 ? '...' : ''}</div>
+        </div>
+        <div class="job-right">
+          <div class="job-budget">${j.budget} USDC</div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end">
+            <span class="badge ${STATUS_CLASS[j.status]}">${j.statusLabel}</span>
+            ${currentWallet
+              ? currentWallet.toLowerCase() === j.client.toLowerCase()
+                ? '<span style="font-size:11px;color:var(--muted);font-family:var(--font-mono)">Your job</span>'
+                : `<button class="btn btn-primary btn-sm" onclick="event.stopPropagation();claimJob(${j.id})">Claim Job</button>`
+              : '<button class="btn btn-outline btn-sm" onclick="event.stopPropagation();connectWallet()">Connect to Claim</button>'
+            }
+          </div>
+        </div>
+      </div>
+    `).join('') + '</div>';
+  } catch(e) {
+    document.getElementById('availableJobs').innerHTML = '<div class="empty-state"><p>Could not load open jobs. Backend may be starting up — try refreshing.</p></div>';
+  }
+}
+
+// ── Claim Job ────────────────────────────────────────────────────
+async function claimJob(jobId) {
+  if (!currentWallet) { toast('Connect Wallet', 'Please connect your wallet to claim this job', 'error'); return; }
+
+  try {
+    toast('Claiming Job...', 'Confirm the transaction in your wallet', 'info');
+    const provider = new ethers.BrowserProvider(window.ethereum);
+    const signer = await provider.getSigner();
+    const jobAbi = [{ name: 'claimJob', type: 'function', stateMutability: 'nonpayable', inputs: [{ name: 'jobId', type: 'uint256' }], outputs: [] }];
+    const jobContract = new ethers.Contract(JOB_BOARD, jobAbi, signer);
+    const tx = await jobContract.claimJob(BigInt(jobId));
+    const receipt = await tx.wait();
+    toast('Job Claimed! 🎉', 'Go to "Jobs I\'m Working On" in your dashboard to submit your work', 'success');
+    closeModal();
+    await loadAvailableJobs();
+    await loadDashboard();
+  } catch(e) {
+    toast('Claim Failed', e.message?.slice(0,80) || 'Transaction failed', 'error');
+  }
+}
+
+// ── Submit Deliverable ───────────────────────────────────────────
+function openDeliverableModal(jobId) {
+  pendingDeliverableJobId = jobId;
+  document.getElementById('deliverableInput').value = '';
+  document.getElementById('deliverableModal').classList.add('open');
+}
+
+function closeDeliverableModal(e) {
+  if (!e || e.target === document.getElementById('deliverableModal')) {
+    document.getElementById('deliverableModal').classList.remove('open');
+    pendingDeliverableJobId = null;
+  }
+}
+
+async function confirmSubmitDeliverable() {
+  const deliverable = document.getElementById('deliverableInput').value.trim();
+  if (!deliverable) { toast('Empty Deliverable', 'Please enter your work link or description', 'error'); return; }
+  if (!pendingDeliverableJobId) return;
+
+  const btn = document.getElementById('submitDeliverableBtn');
+  btn.disabled = true;
+  btn.textContent = 'Submitting...';
+
+  try {
+    toast('Submitting...', 'Confirm the transaction in your wallet', 'info');
+    const provider = new ethers.BrowserProvider(window.ethereum);
+    const signer = await provider.getSigner();
+    const abi = ['function submitDeliverable(uint256 jobId, string deliverableHash)'];
+    const contract = new ethers.Contract(JOB_BOARD, abi, signer);
+    const tx = await contract.submitDeliverable(BigInt(pendingDeliverableJobId), deliverable);
+    const receipt = await tx.wait();
+    toast('Deliverable Submitted! ✅', 'The client will review and approve to release your payment', 'success');
+    closeDeliverableModal();
+    closeModal();
+    await loadDashboard();
+  } catch(e) {
+    toast('Submission Failed', e.message?.slice(0,100) || 'Transaction failed', 'error');
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Submit & Request Payment';
+}
+
+// ── Load Stats ───────────────────────────────────────────────────
+async function loadStats() {
+  try {
+    const res = await fetch(`${API}/api/stats`);
+    const s = await res.json();
+    document.getElementById('stat-jobs').textContent = s.totalJobs;
+    document.getElementById('stat-completed').textContent = s.completedJobs;
+    document.getElementById('stat-volume').textContent = '$' + s.totalVolumeUsdc;
+  } catch(e) {
+    document.getElementById('stat-jobs').textContent = '0';
+    document.getElementById('stat-completed').textContent = '0';
+    document.getElementById('stat-volume').textContent = '$0';
+  }
+}
+
+// ── Load Recent Jobs ─────────────────────────────────────────────
+async function loadRecentJobs() {
+  try {
+    const res = await fetch(`${API}/api/jobs`);
+    const jobs = await res.json();
+    const container = document.getElementById('recentJobs');
+    if (!jobs.length) {
+      container.innerHTML = '<div class="empty-state"><p>No jobs yet. Be the first to post one.</p></div>';
+      return;
+    }
+    container.innerHTML = jobs.slice(-10).reverse().map(j => `
+      <div class="job-card" onclick="openJobModal(${j.id})">
+        <div>
+          <div class="job-title">${j.title}</div>
+          <div class="job-meta">
+            <span>Worker: ${shortAddr(j.agent)}</span>
+            <span>${j.category}</span>
+            <span>${j.workerTypeLabel}</span>
+          </div>
+        </div>
+        <div class="job-right">
+          <div class="job-budget">${j.budget} USDC</div>
+          <span class="badge ${STATUS_CLASS[j.status]}">${j.statusLabel}</span>
+        </div>
+      </div>
+    `).join('');
+  } catch(e) {
+    document.getElementById('recentJobs').innerHTML = '<div class="empty-state"><p>Connect backend to see live jobs</p></div>';
+  }
+}
+
+// ── Load Campaigns ───────────────────────────────────────────────
 async function loadCampaigns() {
   try {
     const res = await fetch(`${API}/api/campaigns`);
@@ -1074,182 +1325,16 @@ async function loadCampaigns() {
         </div>
         <div class="job-right">
           <div class="job-budget">${c.prizePool} USDC</div>
-          <div style="display:flex;gap:8px;align-items:center">
-            <span class="badge ${c.expired ? 'badge-rejected' : 'badge-funded'}">${c.expired ? 'Expired' : 'Active'}</span>
-          </div>
+          <span class="badge ${c.expired ? 'badge-rejected' : 'badge-funded'}">${c.expired ? 'Expired' : 'Active'}</span>
         </div>
       </div>
     `).join('');
   } catch(e) {
-    document.getElementById('campaignsList').innerHTML = '<div class="empty-state"><p>Could not load campaigns. Make sure backend is running.</p></div>';
+    document.getElementById('campaignsList').innerHTML = '<div class="empty-state"><p>Could not load campaigns.</p></div>';
   }
 }
 
-function renderAgents() {
-  const grid = document.getElementById('agentsGrid');
-  const visibleAgents = agents.filter(a => !selectedWorkerType || a.type === selectedWorkerType);
-  if (!visibleAgents.length) {
-    grid.innerHTML = '<div class="empty-state"><p>No workers match the selected type.</p></div>';
-    return;
-  }
-  grid.innerHTML = visibleAgents.map(a => `
-    <div class="agent-card" onclick="showPage('post');selectAgent('${a.id}')">
-      <div class="agent-header">
-        <div class="agent-icon">${a.type === 'Human' ? '🧑' : AGENT_ICONS[a.taskTypes[0]] || '🤖'}</div>
-        <div>
-          <span class="badge ${a.type === 'Human' ? 'badge-success' : 'badge-funded'}">${a.type}</span>
-          ${a.isVerified ? '<span class="badge badge-verified" style="margin-left:4px">✓ Verified</span>' : ''}
-        </div>
-      </div>
-      <div class="agent-name">${a.name}</div>
-      <div class="agent-desc">${a.description}</div>
-      <div class="tags">${a.taskTypes.map(t => `<span class="tag">${t}</span>`).join('')}</div>
-      <div class="agent-footer">
-        <div class="rep-score"><div class="rep-dot"></div>${a.reputationScore}/100 rep</div>
-        <span style="font-family:var(--font-mono);font-size:12px;color:var(--accent2)">from ${a.minBudget} USDC</span>
-      </div>
-    </div>
-  `).join('');
-}
-
-function renderAgentSelect() {
-  const grid = document.getElementById('agentSelectGrid');
-  const visibleAgents = agents.filter(a => !selectedWorkerType || a.type === selectedWorkerType);
-  if (!visibleAgents.length) {
-    grid.innerHTML = '<div class="empty-state"><p>No available workers match your selected type.</p></div>';
-    return;
-  }
-  grid.innerHTML = visibleAgents.map(a => `
-    <div class="agent-select-card" id="asel-${a.id}" onclick="selectAgent('${a.id}')">
-      <div class="agent-select-name">${a.type === 'Human' ? '🧑' : AGENT_ICONS[a.taskTypes[0]] || '🤖'} ${a.name}</div>
-      <div class="agent-select-desc">${a.type} · ${a.taskTypes.join(', ')} · ${a.reputationScore}/100</div>
-    </div>
-  `).join('');
-}
-
-function selectAgent(id) {
-  selectedAgent = agents.find(a => a.id === id);
-  document.querySelectorAll('.agent-select-card').forEach(c => c.classList.remove('selected'));
-  const card = document.getElementById('asel-' + id);
-  if (card) card.classList.add('selected');
-}
-
-function handleWorkerTypeChange() {
-  selectedWorkerType = document.getElementById('workerType').value;
-  selectedAgent = null;
-  document.querySelectorAll('.agent-select-card').forEach(c => c.classList.remove('selected'));
-  renderAgents();
-  renderAgentSelect();
-}
-
-function handleJobAvailabilityChange() {
-  const availability = document.getElementById('jobAvailability').value;
-  isOpenJob = availability === 'open';
-  document.getElementById('agentSelectSection').style.display = isOpenJob ? 'none' : 'block';
-}
-
-async function loadAvailableJobs() {
-  try {
-    const res = await fetch(`${API}/api/jobs/open`);
-    const jobs = await res.json();
-    const container = document.getElementById('availableJobs');
-    if (!jobs.length) {
-      container.innerHTML = '<div class="empty-state"><p>No open jobs available right now.</p></div>';
-      return;
-    }
-    container.innerHTML = jobs.map(j => `
-      <div class="job-card" onclick="openJobModal(${j.id})">
-        <div>
-          <div class="job-title">${j.title}</div>
-          <div class="job-meta">
-            <span>Category: ${j.category}</span>
-            <span>${j.workerTypeLabel}</span>
-            <span>${new Date(j.deadline).toLocaleString()}</span>
-          </div>
-        </div>
-        <div class="job-right">
-          <div class="job-budget">${j.budget} USDC</div>
-          <div style="display:flex;gap:8px;align-items:center">
-            <span class="badge ${STATUS_CLASS[j.status]}">${j.statusLabel}</span>
-            ${currentWallet ? `<button class="btn btn-primary btn-sm" onclick="event.stopPropagation();claimJob(${j.id})">Claim</button>` : ''}
-          </div>
-        </div>
-      </div>
-    `).join('');
-  } catch(e) {
-    document.getElementById('availableJobs').innerHTML = '<div class="empty-state"><p>Could not load open jobs. Make sure backend is running.</p></div>';
-  }
-}
-
-async function claimJob(jobId) {
-  if (!currentWallet) {
-    toast('Connect Wallet', 'Please connect your wallet to claim this job', 'error');
-    return;
-  }
-
-  try {
-    toast('Claiming Job...', 'Confirm the transaction in your wallet', 'info');
-    const provider = new ethers.BrowserProvider(window.ethereum);
-    const signer = await provider.getSigner();
-    const jobAbi = [{ name: 'claimJob', type: 'function', stateMutability: 'nonpayable', inputs: [{ name: 'jobId', type: 'uint256' }], outputs: [] }];
-    const jobContract = new ethers.Contract(JOB_BOARD, jobAbi, signer);
-    const tx = await jobContract.claimJob(BigInt(jobId));
-    const receipt = await tx.wait();
-    toast('Job Claimed', `Tx: ${receipt.transactionHash.slice(0,10)}...`, 'success');
-    await loadAvailableJobs();
-    await loadDashboard();
-  } catch (e) {
-    toast('Claim Failed', e.message?.slice(0,80) || 'Transaction failed', 'error');
-  }
-}
-
-// ── Load stats ───────────────────────────────────────────────────
-async function loadStats() {
-  try {
-    const res = await fetch(`${API}/api/stats`);
-    const s = await res.json();
-    document.getElementById('stat-jobs').textContent = s.totalJobs;
-    document.getElementById('stat-completed').textContent = s.completedJobs;
-    document.getElementById('stat-volume').textContent = '$' + s.totalVolumeUsdc;
-  } catch(e) {
-    document.getElementById('stat-jobs').textContent = '0';
-    document.getElementById('stat-completed').textContent = '0';
-    document.getElementById('stat-volume').textContent = '$0';
-  }
-}
-
-// ── Load recent jobs ─────────────────────────────────────────────
-async function loadRecentJobs() {
-  try {
-    const res = await fetch(`${API}/api/jobs`);
-    const jobs = await res.json();
-    const container = document.getElementById('recentJobs');
-    if (!jobs.length) {
-      container.innerHTML = '<div class="empty-state"><p>No jobs yet. Be the first to post one.</p></div>';
-      return;
-    }
-    container.innerHTML = jobs.slice(-10).reverse().map(j => `
-      <div class="job-card" onclick="openJobModal(${j.id})">
-        <div>
-          <div class="job-title">${j.title}</div>
-          <div class="job-meta">
-            <span>Agent: ${shortAddr(j.agent)}</span>
-            <span>${j.category}</span>
-            <span>${j.workerTypeLabel}</span>
-            ${j.milestonesCount > 0 ? '<span class="badge badge-funded" style="margin-left:4px">Milestones</span>' : ''}
-          </div>
-        </div>
-        <div class="job-right">
-          <div class="job-budget">${j.budget} USDC</div>
-          <span class="badge ${STATUS_CLASS[j.status]}">${j.statusLabel}</span>
-        </div>
-      </div>
-    `).join('');
-  } catch(e) {
-    document.getElementById('recentJobs').innerHTML = '<div class="empty-state"><p>Connect backend to see live jobs</p></div>';
-  }
-}
-
+// ── Review Board ─────────────────────────────────────────────────
 async function loadReviewBoard() {
   const container = document.getElementById('reviewBoard');
   try {
@@ -1261,31 +1346,32 @@ async function loadReviewBoard() {
         const reviews = reviewsRes.ok ? await reviewsRes.json() : [];
         const average = reviews.length ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1) : '—';
         return { ...worker, reviews, average };
-      } catch {
-        return { ...worker, reviews: [], average: '—' };
-      }
+      } catch { return { ...worker, reviews: [], average: '—' }; }
     }));
 
-    container.innerHTML = workerCards.map(worker => `
-      <div class="agent-card" onclick="openWorkerReviewModal('${worker.walletAddress}')">
-        <div class="agent-header">
-          <div class="agent-icon">${worker.type === 'Human' ? '🧑' : AGENT_ICONS[worker.taskTypes[0]] || '🤖'}</div>
-          <div>
-            <span class="badge ${worker.type === 'Human' ? 'badge-success' : 'badge-funded'}">${worker.type}</span>
-            ${worker.isVerified ? '<span class="badge badge-verified" style="margin-left:4px">✓ Verified</span>' : ''}
+    container.innerHTML = workerCards.map(worker => {
+      const isAI = worker.type === 'AI';
+      return `
+        <div class="agent-card" onclick="openWorkerReviewModal('${worker.walletAddress}')">
+          <div class="agent-header">
+            <div class="agent-icon">${isAI ? AGENT_ICONS[worker.taskTypes[0]] || '🤖' : '🧑'}</div>
+            <div>
+              <span class="badge ${isAI ? 'badge-coming-soon' : 'badge-funded'}">${isAI ? '⏳ Coming Soon' : 'Human'}</span>
+              ${worker.isVerified ? '<span class="badge badge-verified" style="margin-left:4px">✓ Verified</span>' : ''}
+            </div>
+          </div>
+          <div class="agent-name">${worker.name}</div>
+          <div class="agent-desc">${worker.description}</div>
+          <div class="tags">${worker.taskTypes.map(t => `<span class="tag">${t}</span>`).join('')}</div>
+          <div class="agent-footer">
+            <div class="rep-score"><div class="rep-dot"></div>${worker.average} rating</div>
+            <span style="font-family:var(--font-mono);font-size:12px;color:var(--accent2)">${worker.reviews.length} reviews</span>
           </div>
         </div>
-        <div class="agent-name">${worker.name}</div>
-        <div class="agent-desc">${worker.description}</div>
-        <div class="tags">${worker.taskTypes.map(t => `<span class="tag">${t}</span>`).join('')}</div>
-        <div class="agent-footer">
-          <div class="rep-score"><div class="rep-dot"></div>${worker.average} rating</div>
-          <span style="font-family:var(--font-mono);font-size:12px;color:var(--accent2)">${worker.reviews.length} reviews</span>
-        </div>
-      </div>
-    `).join('');
+      `;
+    }).join('');
   } catch(e) {
-    container.innerHTML = '<div class="empty-state"><p>Could not load review board. Make sure backend is running.</p></div>';
+    container.innerHTML = '<div class="empty-state"><p>Could not load review board.</p></div>';
   }
 }
 
@@ -1299,8 +1385,7 @@ async function openWorkerReviewModal(address) {
       <div class="detail-row"><span class="detail-key">Rating</span><span class="detail-val">${r.rating}/5</span></div>
       <div class="detail-row"><span class="detail-key">Comment</span><span class="detail-val" style="font-size:12px;color:var(--muted)">${r.comment}</span></div>
       <div class="detail-row"><span class="detail-key">From</span><span class="detail-val mono">${shortAddr(r.reviewer)}</span></div>
-      <div class="detail-row"><span class="detail-key">When</span><span class="detail-val">${new Date(r.createdAt).toLocaleDateString()}</span></div>
-      <hr style="border-color: rgba(255,255,255,0.08); margin:10px 0;">
+      <hr style="border-color:rgba(255,255,255,0.08);margin:10px 0;">
     `).join('') : '<div class="empty-state"><p>No reviews yet for this worker.</p></div>';
     document.getElementById('modalActions').innerHTML = '<button class="btn btn-outline" onclick="closeModal()">Close</button>';
     document.getElementById('jobModal').classList.add('open');
@@ -1309,21 +1394,18 @@ async function openWorkerReviewModal(address) {
   }
 }
 
-// ── Submit job ───────────────────────────────────────────────────
+// ── Submit Job ───────────────────────────────────────────────────
 async function submitJob() {
-  if (!currentWallet) {
-    toast('Wallet Required', 'Please connect your wallet first', 'error');
-    return;
-  }
-  if (!isOpenJob && !selectedAgent) {
-    toast('Select an Agent', 'Please choose which agent will do the work', 'error');
-    return;
-  }
+  if (!currentWallet) { toast('Wallet Required', 'Please connect your wallet first', 'error'); return; }
+
+  const workerType = document.getElementById('workerType').value;
+  if (workerType === 'AI') { showAiComingSoon(); return; }
+
+  if (!isOpenJob && !selectedAgent) { toast('Select a Worker', 'Please choose who will do the work', 'error'); return; }
 
   const title = document.getElementById('jobTitle').value.trim();
   const desc = document.getElementById('jobDesc').value.trim();
   const category = document.getElementById('jobCategory').value;
-  const workerType = document.getElementById('workerType').value;
   const budgetValue = document.getElementById('budget').value.trim();
   const deadlineValue = document.getElementById('deadlineValue').value.trim();
   const deadlineUnit = document.getElementById('deadlineUnit').value;
@@ -1331,9 +1413,9 @@ async function submitJob() {
   const deadlineValueNum = parseFloat(deadlineValue);
 
   if (!title || !desc) { toast('Missing Info', 'Please fill in title and description', 'error'); return; }
-  if (!budgetValue || Number.isNaN(budget) || budget <= 0) { toast('Invalid Budget', 'Enter a USDC amount greater than 0', 'error'); return; }
-  if (!deadlineValue || Number.isNaN(deadlineValueNum) || deadlineValueNum <= 0) { toast('Invalid Deadline', 'Enter a deadline value', 'error'); return; }
-  if (!isOpenJob && selectedAgent.type !== workerType) { toast('Mismatched worker type', 'Please choose a worker that matches the selected type', 'error'); return; }
+  if (!budgetValue || isNaN(budget) || budget <= 0) { toast('Invalid Budget', 'Enter a USDC amount greater than 0', 'error'); return; }
+  if (!deadlineValue || isNaN(deadlineValueNum) || deadlineValueNum <= 0) { toast('Invalid Deadline', 'Enter a deadline value', 'error'); return; }
+
   const deadlineMinutes = deadlineUnit === 'hours' ? deadlineValueNum * 60 : deadlineValueNum;
   const deadlineHours = BigInt(Math.max(1, Math.ceil(deadlineMinutes / 60)));
 
@@ -1342,9 +1424,7 @@ async function submitJob() {
   btn.textContent = 'Approving USDC...';
 
   try {
-    // Step 1: Approve USDC spending
-    const budgetWei = ethers.parseUnits(budget.toString(), 6); // USDC has 6 decimals
-
+    const budgetWei = ethers.parseUnits(budget.toString(), 6);
     toast('Step 1/2', 'Approving USDC transfer — confirm in your wallet', 'info');
 
     const provider = new ethers.BrowserProvider(window.ethereum);
@@ -1357,65 +1437,27 @@ async function submitJob() {
     btn.textContent = 'Posting Job...';
     toast('Step 2/2', 'Posting job and locking escrow — confirm in your wallet', 'info');
 
-    // Step 2: Post and fund the job
     const jobAbi = [{
-      "inputs": [
-        {
-          "components": [
-            {
-              "name": "agent",
-              "type": "address"
-            },
-            {
-              "name": "title",
-              "type": "string"
-            },
-            {
-              "name": "description",
-              "type": "string"
-            },
-            {
-              "name": "category",
-              "type": "string"
-            },
-            {
-              "name": "workerType",
-              "type": "uint8"
-            },
-            {
-              "name": "budget",
-              "type": "uint256"
-            },
-            {
-              "name": "deadlineHours",
-              "type": "uint256"
-            },
-            {
-              "name": "milestoneDescriptions",
-              "type": "string[]"
-            },
-            {
-              "name": "milestonePercentages",
-              "type": "uint256[]"
-            }
-          ],
-          "name": "params",
-          "type": "tuple"
-        }
-      ],
-      "name": "postAndFundJob",
-      "outputs": [
-        {
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "nonpayable",
-      "type": "function"
+      inputs: [{ components: [
+        { name: 'agent', type: 'address' },
+        { name: 'title', type: 'string' },
+        { name: 'description', type: 'string' },
+        { name: 'category', type: 'string' },
+        { name: 'workerType', type: 'uint8' },
+        { name: 'budget', type: 'uint256' },
+        { name: 'deadlineHours', type: 'uint256' },
+        { name: 'milestoneDescriptions', type: 'string[]' },
+        { name: 'milestonePercentages', type: 'uint256[]' }
+      ], name: 'params', type: 'tuple' }],
+      name: 'postAndFundJob',
+      outputs: [{ name: '', type: 'uint256' }],
+      stateMutability: 'nonpayable',
+      type: 'function'
     }];
+
     const jobContract = new ethers.Contract(JOB_BOARD, jobAbi, signer);
     const agentAddress = isOpenJob ? ethers.ZeroAddress : selectedAgent.walletAddress;
-    const workerTypeValue = workerType === 'Human' ? 1 : 0;
+    const workerTypeValue = 1; // Always Human for now
     const jobTx = await jobContract.postAndFundJob({
       agent: agentAddress,
       title,
@@ -1428,11 +1470,8 @@ async function submitJob() {
       milestonePercentages: []
     });
     const receipt = await jobTx.wait();
-    const txHash = receipt.hash;
+    toast('Job Posted! 🎉', `USDC locked in escrow. Tx: ${receipt.hash.slice(0,10)}...`, 'success');
 
-    toast('Job Posted!', `Tx: ${txHash.slice(0,10)}... — USDC locked in escrow`, 'success');
-
-    // Reset form
     document.getElementById('jobTitle').value = '';
     document.getElementById('jobDesc').value = '';
     document.getElementById('budget').value = '';
@@ -1444,7 +1483,6 @@ async function submitJob() {
     await loadStats();
     await loadRecentJobs();
     showPage('dashboard');
-
   } catch(e) {
     toast('Transaction Failed', e.message?.slice(0,80) || 'Unknown error', 'error');
   }
@@ -1472,9 +1510,7 @@ async function createCampaign() {
   btn.textContent = 'Approving USDC...';
 
   try {
-    // Step 1: Approve USDC spending
-    const prizeWei = BigInt(Math.round(prizePool * 1_000_000)); // USDC has 6 decimals
-
+    const prizeWei = BigInt(Math.round(prizePool * 1_000_000));
     toast('Step 1/2', 'Approving USDC transfer — confirm in your wallet', 'info');
 
     const provider = new ethers.BrowserProvider(window.ethereum);
@@ -1485,30 +1521,19 @@ async function createCampaign() {
     await approveTx.wait();
 
     btn.textContent = 'Launching Campaign...';
-    toast('Step 2/2', 'Creating campaign and locking prize pool — confirm in your wallet', 'info');
+    toast('Step 2/2', 'Creating campaign — confirm in your wallet', 'info');
 
-    // Step 2: Create campaign
-    const campaignAbi = ['function createCampaign(string title, string description, uint256 prizePool, uint256 entryFee, uint256 maxParticipants, uint256 deadlineHours) returns (uint256)'];
+    const campaignAbi = ['function createCampaign(string,string,uint256,uint256,uint256,uint256) returns (uint256)'];
     const campaignContract = new ethers.Contract(JOB_BOARD, campaignAbi, signer);
     const campaignTx = await campaignContract.createCampaign(
       title, desc, prizeWei, BigInt(Math.round(entryFee * 1_000_000)), BigInt(maxParticipants), BigInt(deadlineHours)
     );
     const receipt = await campaignTx.wait();
-    const txHash = receipt.hash;
+    toast('Campaign Launched! 🎉', `Tx: ${receipt.hash.slice(0,10)}...`, 'success');
 
-    toast('Campaign Launched!', `Tx: ${txHash.slice(0,10)}... — USDC locked in escrow`, 'success');
-
-    // Reset form
-    document.getElementById('campaignTitle').value = '';
-    document.getElementById('campaignDesc').value = '';
-    document.getElementById('prizePool').value = '';
-    document.getElementById('entryFee').value = '';
-    document.getElementById('maxParticipants').value = '';
-    document.getElementById('campaignDeadline').value = '';
-
+    ['campaignTitle','campaignDesc','prizePool','entryFee','maxParticipants','campaignDeadline'].forEach(id => document.getElementById(id).value = '');
     await loadCampaigns();
     showPage('campaigns');
-
   } catch(e) {
     toast('Transaction Failed', e.message?.slice(0,80) || 'Unknown error', 'error');
   }
@@ -1538,8 +1563,7 @@ async function loadDashboard() {
     const jobs = await res.json();
     renderDashboardJobs(jobs);
   } catch(e) {
-    document.getElementById('dashboardContent').innerHTML =
-      '<div class="empty-state"><p>Could not load jobs. Make sure backend is running.</p></div>';
+    document.getElementById('dashboardContent').innerHTML = '<div class="empty-state"><p>Could not load jobs. Make sure backend is running.</p></div>';
   }
 }
 
@@ -1552,101 +1576,120 @@ function switchTab(tab) {
 
 function renderDashboardJobs(jobs) {
   const container = document.getElementById('dashboardContent');
+  const isWorkerTab = currentTab === 'agent';
+
   if (!jobs.length) {
     container.innerHTML = `
       <div class="empty-state">
-        <p>No jobs found for your wallet</p>
-        <button class="btn btn-primary" onclick="showPage('post')">Post Your First Job</button>
+        <p>${isWorkerTab ? 'You haven\'t claimed any jobs yet.' : 'You haven\'t posted any jobs yet.'}</p>
+        <button class="btn btn-primary" onclick="showPage('${isWorkerTab ? 'pick' : 'post'}')">
+          ${isWorkerTab ? 'Browse Open Jobs' : 'Post Your First Job'}
+        </button>
       </div>`;
     return;
   }
 
-  container.innerHTML = `<div class="jobs-list">` + jobs.map(j => `
-    <div class="job-card" onclick="openJobModal(${j.id})">
-      <div>
-        <div class="job-title">${j.title}</div>
-        <div class="job-meta">
-          <span>Agent: ${shortAddr(j.agent)}</span>
-          <span>${j.category}</span>
-          <span>${j.workerTypeLabel}</span>
-          <span>${new Date(j.createdAt).toLocaleDateString()}</span>
-          ${j.milestonesCount > 0 ? '<span class="badge badge-funded" style="margin-left:4px">Milestones</span>' : ''}
+  container.innerHTML = `<div class="jobs-list">` + jobs.map(j => {
+    const isClient = currentWallet?.toLowerCase() === j.client?.toLowerCase();
+    const isWorker = currentWallet?.toLowerCase() === j.agent?.toLowerCase();
+
+    // Worker actions
+    let workerActions = '';
+    if (isWorker && j.status === 1) {
+      workerActions = `
+        <button class="btn btn-primary btn-sm" onclick="event.stopPropagation();openDeliverableModal(${j.id})">
+          Submit Work
+        </button>`;
+    }
+    if (isWorker && j.status === 2) {
+      workerActions = `<span style="font-size:12px;color:var(--gold);font-family:var(--font-mono)">⏳ Awaiting approval</span>`;
+    }
+    if (isWorker && j.status === 3) {
+      workerActions = `<span style="font-size:12px;color:var(--success);font-family:var(--font-mono)">✅ Paid!</span>`;
+    }
+
+    // Client actions
+    let clientActions = '';
+    if (isClient && j.status === 2) {
+      clientActions = `
+        <button class="btn btn-success btn-sm" onclick="event.stopPropagation();approveJob(${j.id})">Approve & Pay</button>
+        <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();rejectJob(${j.id})">Reject</button>`;
+    }
+
+    return `
+      <div class="job-card" onclick="openJobModal(${j.id})">
+        <div>
+          <div class="job-title">${j.title}</div>
+          <div class="job-meta">
+            <span>${isWorkerTab ? `Client: ${shortAddr(j.client)}` : `Worker: ${shortAddr(j.agent)}`}</span>
+            <span>${j.category}</span>
+            <span>${new Date(j.createdAt).toLocaleDateString()}</span>
+          </div>
+          ${isWorkerTab && j.status === 1 ? `<div class="worker-action-pill">✅ You claimed this job — submit your work when ready</div>` : ''}
+        </div>
+        <div class="job-right">
+          <div class="job-budget">${j.budget} USDC</div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end">
+            <span class="badge ${STATUS_CLASS[j.status]}">${j.statusLabel}</span>
+            ${workerActions}
+            ${clientActions}
+          </div>
         </div>
       </div>
-      <div class="job-right">
-        <div class="job-budget">${j.budget} USDC</div>
-        <div style="display:flex;gap:8px;align-items:center">
-          <span class="badge ${STATUS_CLASS[j.status]}">${j.statusLabel}</span>
-          ${j.status === 2 ? '<button class="btn btn-success btn-sm" onclick="event.stopPropagation();approveJob('+j.id+')">Approve</button>' : ''}
-          ${j.status === 2 ? '<button class="btn btn-danger btn-sm" onclick="event.stopPropagation();rejectJob('+j.id+')">Reject</button>' : ''}
-        </div>
-      </div>
-    </div>
-  `).join('') + `</div>`;
+    `;
+  }).join('') + `</div>`;
 }
 
-// ── Job modal ────────────────────────────────────────────────────
+// ── Job Modal ────────────────────────────────────────────────────
 async function openJobModal(id) {
   try {
     const res = await fetch(`${API}/api/jobs/${id}`);
     const job = await res.json();
-
-    let milestonesHtml = '';
-    if (job.milestonesCount > 0) {
-      const milestonesRes = await fetch(`${API}/api/jobs/${id}/milestones`);
-      const milestones = await milestonesRes.json();
-      milestonesHtml = `
-        <div style="margin-top:20px;border-top:1px solid var(--border);padding-top:20px">
-          <h4 style="font-family:var(--font-head);font-size:16px;margin-bottom:12px">Milestones (${job.completedMilestones}/${job.milestonesCount} completed)</h4>
-          ${milestones.map((m, i) => `
-            <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px">
-              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-                <span style="font-weight:500">${m.description}</span>
-                <span style="font-family:var(--font-mono);font-size:12px;color:var(--accent2)">${m.percentage}% (${(parseFloat(job.budget) * m.percentage / 100).toFixed(2)} USDC)</span>
-              </div>
-              ${m.deliverableHash ? `<div style="font-size:12px;color:var(--muted);margin-bottom:6px">Deliverable: ${m.deliverableHash.slice(0,20)}...</div>` : ''}
-              <div style="display:flex;gap:8px;align-items:center">
-                ${m.approved ? '<span style="color:var(--success);font-size:12px">✓ Approved</span>' : m.submittedAt ? '<span style="color:var(--gold);font-size:12px">⏳ Submitted</span>' : '<span style="color:var(--muted);font-size:12px">Pending</span>'}
-                ${!m.approved && m.submittedAt && currentWallet?.toLowerCase() === job.client.toLowerCase() ? `<button class="btn btn-success btn-sm" onclick="approveMilestone(${id}, ${i})">Approve</button>` : ''}
-                ${!m.submittedAt && currentWallet?.toLowerCase() === job.agent.toLowerCase() ? `<button class="btn btn-primary btn-sm" onclick="submitMilestone(${id}, ${i})">Submit Deliverable</button>` : ''}
-              </div>
-            </div>
-          `).join('')}
-        </div>
-      `;
-    }
 
     document.getElementById('modalTitle').textContent = job.title;
     document.getElementById('modalBody').innerHTML = `
       <div class="detail-row"><span class="detail-key">Status</span><span class="detail-val"><span class="badge ${STATUS_CLASS[job.status]}">${job.statusLabel}</span></span></div>
       <div class="detail-row"><span class="detail-key">Budget</span><span class="detail-val" style="color:var(--accent2);font-family:var(--font-head);font-size:18px">${job.budget} USDC</span></div>
       <div class="detail-row"><span class="detail-key">Category</span><span class="detail-val">${job.category}</span></div>
-      <div class="detail-row"><span class="detail-key">Worker</span><span class="detail-val">${job.workerTypeLabel}</span></div>
-      <div class="detail-row"><span class="detail-key">Agent</span><span class="detail-val mono"><a class="tx-link" href="${EXPLORER}/address/${job.agent}" target="_blank">${shortAddr(job.agent)} ↗</a></span></div>
+      <div class="detail-row"><span class="detail-key">Worker Type</span><span class="detail-val">${job.workerTypeLabel}</span></div>
+      <div class="detail-row"><span class="detail-key">Worker</span><span class="detail-val mono"><a class="tx-link" href="${EXPLORER}/address/${job.agent}" target="_blank">${shortAddr(job.agent)} ↗</a></span></div>
       <div class="detail-row"><span class="detail-key">Client</span><span class="detail-val mono">${shortAddr(job.client)}</span></div>
-      <div class="detail-row"><span class="detail-key">Description</span><span class="detail-val" style="font-size:12px;color:var(--muted)">${job.description}</span></div>
-      ${job.deliverableHash ? `<div class="detail-row"><span class="detail-key">Deliverable</span><span class="detail-val mono" style="color:var(--accent2)">${job.deliverableHash.slice(0,20)}...</span></div>` : ''}
-      <div class="detail-row"><span class="detail-key">Verify onchain</span><span class="detail-val"><a class="tx-link" href="${EXPLORER}/address/${JOB_BOARD}" target="_blank">View on Arcscan ↗</a></span></div>
-      ${milestonesHtml}
+      <div class="detail-row"><span class="detail-key">Description</span><span class="detail-val" style="font-size:12px;color:var(--muted);text-align:left;max-width:100%">${job.description}</span></div>
+      ${job.deliverableHash ? `<div class="detail-row"><span class="detail-key">Deliverable</span><span class="detail-val" style="font-size:12px;color:var(--accent2);word-break:break-all">${job.deliverableHash}</span></div>` : ''}
+      <div class="detail-row"><span class="detail-key">View onchain</span><span class="detail-val"><a class="tx-link" href="${EXPLORER}/address/${JOB_BOARD}" target="_blank">Arcscan ↗</a></span></div>
     `;
 
     const actions = document.getElementById('modalActions');
     actions.innerHTML = '';
 
-    if (job.status === 0 && currentWallet && currentWallet.toLowerCase() !== job.client.toLowerCase()) {
-      actions.innerHTML = `<button class="btn btn-primary" style="flex:1" onclick="claimJob(${id});closeModal()">Claim Job</button>`;
+    const isClient = currentWallet?.toLowerCase() === job.client?.toLowerCase();
+    const isWorker = currentWallet?.toLowerCase() === job.agent?.toLowerCase();
+
+    // Open job — anyone can claim
+    if (job.status === 0 && currentWallet && !isClient) {
+      actions.innerHTML = `<button class="btn btn-primary" style="flex:1" onclick="claimJob(${id})">Claim This Job</button>`;
     }
-    if (job.status === 2 && currentWallet?.toLowerCase() === job.client.toLowerCase()) {
+
+    // Worker can submit deliverable
+    if (isWorker && job.status === 1) {
+      actions.innerHTML = `<button class="btn btn-primary" style="flex:1" onclick="openDeliverableModal(${id});closeModal()">Submit My Work</button>`;
+    }
+
+    // Client can approve/reject submitted work
+    if (isClient && job.status === 2) {
       actions.innerHTML = `
         <button class="btn btn-success" style="flex:1" onclick="approveJob(${id});closeModal()">✓ Approve & Release Payment</button>
         <button class="btn btn-danger" onclick="rejectJob(${id});closeModal()">Reject</button>
       `;
     }
-    if (job.status === 3 && currentWallet?.toLowerCase() === job.client.toLowerCase()) {
-      actions.innerHTML += `
-        <button class="btn btn-outline" style="flex:1" onclick="openReviewForm(${id})">Leave a Review</button>
-      `;
+
+    // Client can leave review after completion
+    if (isClient && job.status === 3) {
+      actions.innerHTML += `<button class="btn btn-outline" style="flex:1" onclick="openReviewForm(${id})">Leave a Review</button>`;
     }
+
+    // Always add close button
+    actions.innerHTML += `<button class="btn btn-outline btn-sm" onclick="closeModal()">Close</button>`;
 
     document.getElementById('jobModal').classList.add('open');
   } catch(e) {
@@ -1675,14 +1718,13 @@ function openReviewForm(jobId) {
     </div>
     <div class="form-group">
       <label>Comment</label>
-      <textarea id="reviewComment" placeholder="Tell others what you liked or what can improve"></textarea>
+      <textarea id="reviewComment" placeholder="Tell others about this worker's quality and reliability"></textarea>
     </div>
   `;
   document.getElementById('modalActions').innerHTML = `
-    <button class="btn btn-success" style="flex:1" onclick="submitReview(${jobId});">Submit Review</button>
+    <button class="btn btn-success" style="flex:1" onclick="submitReview(${jobId})">Submit Review</button>
     <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
   `;
-  document.getElementById('jobModal').classList.add('open');
 }
 
 async function submitReview(jobId) {
@@ -1692,53 +1734,17 @@ async function submitReview(jobId) {
   if (!comment) { toast('Add a comment', 'Your review should include a short note', 'error'); return; }
 
   try {
-    toast('Submitting review...', 'Confirm the transaction in your wallet', 'info');
+    toast('Submitting review...', 'Confirm in your wallet', 'info');
     const provider = new ethers.BrowserProvider(window.ethereum);
     const signer = await provider.getSigner();
     const reviewAbi = ['function submitReview(uint256,uint8,string)'];
     const reviewContract = new ethers.Contract(JOB_BOARD, reviewAbi, signer);
     const tx = await reviewContract.submitReview(BigInt(jobId), rating, comment);
     await tx.wait();
-    toast('Review submitted!', 'This worker now has onchain feedback', 'success');
+    toast('Review submitted! ⭐', 'This worker now has onchain feedback', 'success');
     closeModal();
-    await loadReviewBoard();
   } catch(e) {
     toast('Review failed', e.message?.slice(0,80), 'error');
-  }
-}
-
-async function submitMilestone(jobId, milestoneIndex) {
-  const deliverableHash = prompt('Enter deliverable hash or link:');
-  if (!deliverableHash) return;
-
-  try {
-    toast('Submitting milestone...', 'Confirm in wallet', 'info');
-    const provider = new ethers.BrowserProvider(window.ethereum);
-    const signer = await provider.getSigner();
-    const milestoneAbi = ['function submitMilestoneDeliverable(uint256,uint256,string)'];
-    const milestoneContract = new ethers.Contract(JOB_BOARD, milestoneAbi, signer);
-    const tx = await milestoneContract.submitMilestoneDeliverable(BigInt(jobId), BigInt(milestoneIndex), deliverableHash);
-    await tx.wait();
-    toast('Milestone submitted!', 'Waiting for client approval', 'success');
-    openJobModal(jobId);
-  } catch(e) {
-    toast('Failed', e.message?.slice(0,80), 'error');
-  }
-}
-
-async function approveMilestone(jobId, milestoneIndex) {
-  try {
-    toast('Approving milestone...', 'Confirm in wallet', 'info');
-    const provider = new ethers.BrowserProvider(window.ethereum);
-    const signer = await provider.getSigner();
-    const milestoneAbi = ['function approveMilestone(uint256,uint256)'];
-    const milestoneContract = new ethers.Contract(JOB_BOARD, milestoneAbi, signer);
-    const tx = await milestoneContract.approveMilestone(BigInt(jobId), BigInt(milestoneIndex));
-    await tx.wait();
-    toast('Milestone approved!', 'Payment released', 'success');
-    openJobModal(jobId);
-  } catch(e) {
-    toast('Failed', e.message?.slice(0,80), 'error');
   }
 }
 
@@ -1747,9 +1753,13 @@ async function approveJob(jobId) {
   if (!currentWallet) return;
   try {
     toast('Approving...', 'Confirm the transaction in your wallet', 'info');
-    const data = encodeApproveJob(jobId);
-    const txHash = await sendTx({ to: JOB_BOARD, data });
-    toast('Payment Released!', `USDC sent to agent. Tx: ${txHash.slice(0,10)}...`, 'success');
+    const provider = new ethers.BrowserProvider(window.ethereum);
+    const signer = await provider.getSigner();
+    const abi = ['function approveJob(uint256 jobId)'];
+    const contract = new ethers.Contract(JOB_BOARD, abi, signer);
+    const tx = await contract.approveJob(BigInt(jobId));
+    await tx.wait();
+    toast('Payment Released! 💰', 'USDC sent to the worker\'s wallet', 'success');
     await loadDashboard();
     await loadStats();
   } catch(e) {
@@ -1761,68 +1771,17 @@ async function rejectJob(jobId) {
   if (!currentWallet) return;
   try {
     toast('Rejecting...', 'Confirm the transaction in your wallet', 'info');
-    const data = encodeRejectJob(jobId);
-    const txHash = await sendTx({ to: JOB_BOARD, data });
-    toast('Job Rejected', `USDC refunded to your wallet. Tx: ${txHash.slice(0,10)}...`, 'success');
+    const provider = new ethers.BrowserProvider(window.ethereum);
+    const signer = await provider.getSigner();
+    const abi = ['function rejectJob(uint256 jobId)'];
+    const contract = new ethers.Contract(JOB_BOARD, abi, signer);
+    const tx = await contract.rejectJob(BigInt(jobId));
+    await tx.wait();
+    toast('Job Rejected', 'USDC refunded to your wallet', 'success');
     await loadDashboard();
   } catch(e) {
     toast('Failed', e.message?.slice(0,80), 'error');
   }
-}
-
-// ── Contract encoding ─────────────────────────────────────────────
-// These encode function calls the same way viem/ethers would
-
-function encodeApprove(spender, amount) {
-  const addr = spender.slice(2).toLowerCase().padStart(64, '0');
-  const amt = BigInt(amount).toString(16).padStart(64, '0');
-  return '0xa613914d' + addr + amt;
-}
-
-function encodePostJob(agent, title, desc, taskType, budget, deadlineHours) {
-  const selector = '0x27258c70';
-  const encodeAddress = (addr) => addr.slice(2).toLowerCase().padStart(64, '0');
-  const encodeUint = (n) => BigInt(n).toString(16).padStart(64, '0');
-  const encodeString = (str) => {
-    const bytes = new TextEncoder().encode(str);
-    const hex = Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
-    return encodeUint(bytes.length) + hex.padEnd(Math.ceil(hex.length/64)*64, '0');
-  };
-  const titleEnc = encodeString(title);
-  const descEnc = encodeString(desc);
-  const taskEnc = encodeString(taskType);
-  const base = 6 * 32;
-  return selector + encodeAddress(agent) + encodeUint(base) + encodeUint(base + titleEnc.length/2) + encodeUint(base + titleEnc.length/2 + descEnc.length/2) + encodeUint(budget) + encodeUint(deadlineHours) + titleEnc + descEnc + taskEnc;
-}
-
-function encodeApproveJob(jobId) {
-  // approveJob(uint256) = keccak256 first 4 bytes
-  return '0x' + keccak256('approveJob(uint256)').slice(0,8)
-    + BigInt(jobId).toString(16).padStart(64,'0');
-}
-
-function encodeRejectJob(jobId) {
-  return '0x' + keccak256('rejectJob(uint256)').slice(0,8)
-    + BigInt(jobId).toString(16).padStart(64,'0');
-}
-
-// Simple keccak256 placeholder — in production use viem
-function keccak256(str) {
-  // Real implementation needs viem or ethers
-  const map = {
-    'approveJob(uint256)': '888a01d7',
-    'rejectJob(uint256)': '6d0f6b1c',
-    'postAndFundJob(address,string,string,string,uint256,uint256)': 'a1b2c3d4',
-  };
-  return map[str] || '00000000';
-}
-
-async function sendTx({ to, data }) {
-  if (!window.ethereum) throw new Error('No wallet connected');
-  return await ethereum.request({
-    method: 'eth_sendTransaction',
-    params: [{ from: currentWallet, to, data, chainId: '0x4cef52' }],
-  });
 }
 
 // ── Init ─────────────────────────────────────────────────────────
@@ -1830,15 +1789,12 @@ async function init() {
   await Promise.all([loadConfig(), loadAgents(), loadStats(), loadRecentJobs(), loadCampaigns()]);
   handleJobAvailabilityChange();
 
-  // Auto-connect if already authorized
   if (window.ethereum) {
     window.ethereum.on('accountsChanged', async accounts => {
       currentWallet = accounts[0] || null;
       updateWalletDisplay();
       updateWalletButtons();
-      if (document.getElementById('page-dashboard').classList.contains('active')) {
-        await loadDashboard();
-      }
+      if (document.getElementById('page-dashboard').classList.contains('active')) await loadDashboard();
     });
 
     try {

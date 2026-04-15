@@ -25,85 +25,17 @@
       --font-mono: 'DM Mono', monospace;
       --radius: 12px;
     }
-
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: var(--font-body);
-      font-size: 15px;
-      line-height: 1.6;
-      min-height: 100vh;
-    }
-
-    body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      background-image:
-        linear-gradient(rgba(124,109,250,0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(124,109,250,0.03) 1px, transparent 1px);
-      background-size: 40px 40px;
-      pointer-events: none;
-      z-index: 0;
-    }
-
-    nav {
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      background: rgba(10,10,15,0.85);
-      backdrop-filter: blur(20px);
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 32px;
-      height: 64px;
-    }
-
-    .nav-logo {
-      font-family: var(--font-head);
-      font-weight: 800;
-      font-size: 20px;
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      letter-spacing: -0.5px;
-    }
-
+    body { background: var(--bg); color: var(--text); font-family: var(--font-body); font-size: 15px; line-height: 1.6; min-height: 100vh; }
+    body::before { content: ''; position: fixed; inset: 0; background-image: linear-gradient(rgba(124,109,250,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(124,109,250,0.03) 1px, transparent 1px); background-size: 40px 40px; pointer-events: none; z-index: 0; }
+    nav { position: sticky; top: 0; z-index: 100; background: rgba(10,10,15,0.92); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 32px; height: 64px; }
+    .nav-logo { font-family: var(--font-head); font-weight: 800; font-size: 20px; background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: -0.5px; cursor: pointer; }
     .nav-links { display: flex; gap: 4px; }
-
-    .nav-btn {
-      background: none;
-      border: none;
-      color: var(--muted);
-      font-family: var(--font-body);
-      font-size: 14px;
-      padding: 8px 16px;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
+    .nav-btn { background: none; border: none; color: var(--muted); font-family: var(--font-body); font-size: 14px; padding: 8px 16px; border-radius: 8px; cursor: pointer; transition: all 0.2s; }
     .nav-btn:hover, .nav-btn.active { background: var(--surface2); color: var(--text); }
     .nav-btn.active { color: var(--accent); }
-
     .nav-right { display: flex; align-items: center; gap: 12px; }
-
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 10px 20px;
-      border-radius: 8px;
-      font-family: var(--font-body);
-      font-size: 14px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.2s;
-      border: none;
-    }
+    .btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: 8px; font-family: var(--font-body); font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s; border: none; }
     .btn-primary { background: var(--accent); color: #fff; }
     .btn-primary:hover { background: #6a5de8; transform: translateY(-1px); }
     .btn-outline { background: transparent; color: var(--text); border: 1px solid var(--border-hover); }
@@ -112,162 +44,40 @@
     .btn-danger { background: var(--danger); color: #fff; }
     .btn-gold { background: var(--gold); color: #1a1000; font-weight: 700; }
     .btn-gold:hover { background: #e0b60c; transform: translateY(-1px); }
+    .btn-warning { background: rgba(246,201,14,0.15); color: var(--gold); border: 1px solid rgba(246,201,14,0.3); }
+    .btn-warning:hover { background: rgba(246,201,14,0.25); }
     .btn-sm { padding: 6px 14px; font-size: 13px; }
     .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
-
     .page { display: none; animation: fadeIn 0.3s ease; }
     .page.active { display: block; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-
     .container { max-width: 1100px; margin: 0 auto; padding: 40px 32px; position: relative; z-index: 1; }
-
-    .hero {
-      padding: 80px 32px 40px;
-      max-width: 1100px;
-      margin: 0 auto;
-      position: relative;
-      z-index: 1;
-    }
-
-    .hero-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      background: rgba(124,109,250,0.1);
-      border: 1px solid rgba(124,109,250,0.3);
-      color: var(--accent);
-      padding: 6px 14px;
-      border-radius: 100px;
-      font-size: 12px;
-      font-family: var(--font-mono);
-      margin-bottom: 28px;
-    }
-
-    .hero-badge::before {
-      content: '';
-      width: 6px; height: 6px;
-      background: var(--accent);
-      border-radius: 50%;
-      animation: pulse 2s infinite;
-    }
-
+    .hero { padding: 80px 32px 40px; max-width: 1100px; margin: 0 auto; position: relative; z-index: 1; }
+    .hero-badge { display: inline-flex; align-items: center; gap: 8px; background: rgba(124,109,250,0.1); border: 1px solid rgba(124,109,250,0.3); color: var(--accent); padding: 6px 14px; border-radius: 100px; font-size: 12px; font-family: var(--font-mono); margin-bottom: 28px; }
+    .hero-badge::before { content: ''; width: 6px; height: 6px; background: var(--accent); border-radius: 50%; animation: pulse 2s infinite; }
     @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
-
-    h1 {
-      font-family: var(--font-head);
-      font-size: clamp(38px, 6vw, 68px);
-      font-weight: 800;
-      line-height: 1.05;
-      letter-spacing: -2px;
-      margin-bottom: 20px;
-    }
-
-    .gradient-text {
-      background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    .hero-sub {
-      font-size: 18px;
-      color: var(--muted);
-      max-width: 520px;
-      line-height: 1.6;
-      margin-bottom: 36px;
-      font-weight: 300;
-    }
-
+    h1 { font-family: var(--font-head); font-size: clamp(38px, 6vw, 68px); font-weight: 800; line-height: 1.05; letter-spacing: -2px; margin-bottom: 20px; }
+    .gradient-text { background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .hero-sub { font-size: 18px; color: var(--muted); max-width: 520px; line-height: 1.6; margin-bottom: 36px; font-weight: 300; }
     .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 60px; }
-
-    .stats-bar {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 1px;
-      background: var(--border);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      overflow: hidden;
-      margin-bottom: 60px;
-    }
-
+    .stats-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 60px; }
     .stat-cell { background: var(--surface); padding: 24px 28px; }
-
-    .stat-value {
-      font-family: var(--font-head);
-      font-size: 32px;
-      font-weight: 800;
-      letter-spacing: -1px;
-    }
-
-    .stat-label {
-      font-size: 12px;
-      color: var(--muted);
-      font-family: var(--font-mono);
-      margin-top: 4px;
-    }
-
-    .section-head {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 24px;
-    }
-
-    h2 {
-      font-family: var(--font-head);
-      font-size: 22px;
-      font-weight: 700;
-      letter-spacing: -0.5px;
-    }
-
-    .agents-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-      gap: 16px;
-    }
-
-    .agent-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 24px;
-      cursor: pointer;
-      transition: all 0.2s;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .agent-card::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 2px;
-      background: linear-gradient(90deg, var(--accent), var(--accent2));
-      opacity: 0;
-      transition: opacity 0.2s;
-    }
-
+    .stat-value { font-family: var(--font-head); font-size: 32px; font-weight: 800; letter-spacing: -1px; }
+    .stat-label { font-size: 12px; color: var(--muted); font-family: var(--font-mono); margin-top: 4px; }
+    .section-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+    h2 { font-family: var(--font-head); font-size: 22px; font-weight: 700; letter-spacing: -0.5px; }
+    .agents-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+    .agent-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; cursor: pointer; transition: all 0.2s; position: relative; overflow: hidden; }
+    .agent-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--accent), var(--accent2)); opacity: 0; transition: opacity 0.2s; }
     .agent-card:hover { border-color: var(--border-hover); transform: translateY(-2px); }
     .agent-card:hover::before { opacity: 1; }
-
     .agent-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 12px; }
-
-    .agent-icon {
-      width: 44px; height: 44px;
-      background: rgba(124,109,250,0.15);
-      border: 1px solid rgba(124,109,250,0.2);
-      border-radius: 10px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 20px;
-    }
-
+    .agent-icon { width: 44px; height: 44px; background: rgba(124,109,250,0.15); border: 1px solid rgba(124,109,250,0.2); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
     .agent-name { font-family: var(--font-head); font-size: 17px; font-weight: 700; margin-bottom: 4px; }
     .agent-desc { font-size: 13px; color: var(--muted); line-height: 1.5; margin-bottom: 16px; }
     .agent-footer { display: flex; align-items: center; justify-content: space-between; }
-
     .rep-score { display: flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: 13px; }
     .rep-dot { width: 8px; height: 8px; background: var(--success); border-radius: 50%; }
-
     .badge { font-size: 11px; font-family: var(--font-mono); padding: 3px 10px; border-radius: 100px; }
     .badge-verified { background: rgba(79,209,165,0.1); color: var(--success); border: 1px solid rgba(79,209,165,0.2); }
     .badge-native { background: rgba(246,201,14,0.1); color: var(--gold); border: 1px solid rgba(246,201,14,0.2); }
@@ -278,368 +88,126 @@
     .badge-rejected { background: rgba(248,114,114,0.1); color: var(--danger); }
     .badge-coming-soon { background: rgba(246,201,14,0.08); color: var(--gold); border: 1px solid rgba(246,201,14,0.2); }
     .badge-campaign { background: rgba(246,201,14,0.1); color: var(--gold); border: 1px solid rgba(246,201,14,0.25); }
-
     .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
     .tag { font-size: 11px; font-family: var(--font-mono); background: var(--surface2); border: 1px solid var(--border); color: var(--muted); padding: 3px 10px; border-radius: 100px; }
-
     .jobs-list { display: flex; flex-direction: column; gap: 12px; }
-
-    .job-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 20px 24px;
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 16px;
-      align-items: center;
-      transition: all 0.2s;
-      cursor: pointer;
-    }
-
+    .job-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px 24px; display: grid; grid-template-columns: 1fr auto; gap: 16px; align-items: center; transition: all 0.2s; cursor: pointer; }
     .job-card:hover { border-color: var(--border-hover); }
-
-    /* Campaign card special style */
-    .campaign-card {
-      background: var(--surface);
-      border: 1px solid rgba(246,201,14,0.15);
-      border-radius: var(--radius);
-      padding: 24px;
-      cursor: pointer;
-      transition: all 0.2s;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .campaign-card::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 2px;
-      background: linear-gradient(90deg, var(--gold), #e8a000);
-      opacity: 0.6;
-    }
-
-    .campaign-card:hover {
-      border-color: rgba(246,201,14,0.35);
-      transform: translateY(-2px);
-      box-shadow: 0 8px 32px rgba(246,201,14,0.08);
-    }
-
-    .campaign-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-      gap: 16px;
-    }
-
+    .campaign-card { background: var(--surface); border: 1px solid rgba(246,201,14,0.15); border-radius: var(--radius); padding: 24px; cursor: pointer; transition: all 0.2s; position: relative; overflow: hidden; }
+    .campaign-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--gold), #e8a000); opacity: 0.6; }
+    .campaign-card:hover { border-color: rgba(246,201,14,0.35); transform: translateY(-2px); box-shadow: 0 8px 32px rgba(246,201,14,0.08); }
+    .campaign-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; }
     .campaign-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
     .campaign-title { font-family: var(--font-head); font-size: 18px; font-weight: 700; margin-bottom: 6px; }
     .campaign-desc { font-size: 13px; color: var(--muted); line-height: 1.5; margin-bottom: 16px; }
     .campaign-prize { font-family: var(--font-head); font-size: 26px; font-weight: 800; color: var(--gold); }
     .campaign-meta { display: flex; gap: 16px; font-size: 12px; color: var(--muted); font-family: var(--font-mono); flex-wrap: wrap; }
-
     .job-title { font-family: var(--font-head); font-size: 15px; font-weight: 600; margin-bottom: 4px; }
     .job-meta { font-size: 12px; color: var(--muted); font-family: var(--font-mono); display: flex; gap: 16px; flex-wrap: wrap; }
     .job-right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
     .job-budget { font-family: var(--font-head); font-size: 18px; font-weight: 700; color: var(--accent2); }
-
-    /* Pick a Job — open job card enhanced */
-    .open-job-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 24px;
-      transition: all 0.2s;
-      cursor: pointer;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .open-job-card::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 2px;
-      background: linear-gradient(90deg, var(--accent), var(--accent2));
-      opacity: 0;
-      transition: opacity 0.2s;
-    }
-
+    .open-job-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; transition: all 0.2s; cursor: pointer; position: relative; overflow: hidden; }
+    .open-job-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--accent), var(--accent2)); opacity: 0; transition: opacity 0.2s; }
     .open-job-card:hover { border-color: rgba(124,109,250,0.4); transform: translateY(-2px); box-shadow: 0 8px 32px rgba(124,109,250,0.08); }
     .open-job-card:hover::before { opacity: 1; }
-
     .open-job-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
     .open-job-title { font-family: var(--font-head); font-size: 17px; font-weight: 700; margin-bottom: 6px; }
     .open-job-desc { font-size: 13px; color: var(--muted); line-height: 1.5; margin-bottom: 14px; }
     .open-job-meta { display: flex; gap: 12px; font-size: 12px; color: var(--muted); font-family: var(--font-mono); flex-wrap: wrap; margin-bottom: 16px; }
     .open-job-footer { display: flex; justify-content: space-between; align-items: center; }
     .open-job-budget { font-family: var(--font-head); font-size: 22px; font-weight: 800; color: var(--accent2); }
-
-    .open-jobs-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-      gap: 16px;
-    }
-
-    .form-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 32px;
-      max-width: 640px;
-    }
-
+    .open-jobs-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; }
+    .form-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 32px; max-width: 640px; }
     .form-group { margin-bottom: 20px; }
-
     label { display: block; font-size: 13px; font-family: var(--font-mono); color: var(--muted); margin-bottom: 8px; }
-
-    input, textarea, select {
-      width: 100%;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      color: var(--text);
-      font-family: var(--font-body);
-      font-size: 14px;
-      padding: 12px 16px;
-      outline: none;
-      transition: border-color 0.2s;
-    }
-
+    input, textarea, select { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: var(--font-body); font-size: 14px; padding: 12px 16px; outline: none; transition: border-color 0.2s; }
     .deadline-row { display: flex; gap: 10px; align-items: center; }
     .deadline-row input { flex: 1; }
     .deadline-row select { width: 120px; }
-
     input:focus, textarea:focus, select:focus { border-color: var(--accent); }
     textarea { resize: vertical; min-height: 100px; }
     select option { background: var(--surface2); }
-
     .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-
-    /* ── Modal ── */
-    .modal-overlay {
-      position: fixed; inset: 0;
-      background: rgba(0,0,0,0.7);
-      backdrop-filter: blur(4px);
-      z-index: 200;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.2s;
-    }
-
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 20px; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
     .modal-overlay.open { opacity: 1; pointer-events: all; }
-
-    .modal {
-      background: var(--surface);
-      border: 1px solid var(--border-hover);
-      border-radius: 16px;
-      padding: 32px;
-      max-width: 560px;
-      width: 100%;
-      max-height: 90vh;
-      overflow-y: auto;
-      transform: scale(0.95);
-      transition: transform 0.2s;
-    }
-
+    .modal { background: var(--surface); border: 1px solid var(--border-hover); border-radius: 16px; padding: 32px; max-width: 560px; width: 100%; max-height: 90vh; overflow-y: auto; transform: scale(0.95); transition: transform 0.2s; }
     .modal-overlay.open .modal { transform: scale(1); }
-
     .modal-title { font-family: var(--font-head); font-size: 20px; font-weight: 700; margin-bottom: 6px; }
     .modal-subtitle { font-size: 13px; color: var(--muted); margin-bottom: 20px; }
-
-    /* Campaign modal wide */
     .modal-wide { max-width: 680px; }
-
-    .detail-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 10px 0;
-      border-bottom: 1px solid var(--border);
-      font-size: 13px;
-    }
-
+    .detail-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
     .detail-row:last-child { border-bottom: none; }
     .detail-key { color: var(--muted); font-family: var(--font-mono); }
     .detail-val { font-weight: 500; text-align: right; max-width: 60%; word-break: break-all; }
-
     .mono { font-family: var(--font-mono); font-size: 11px; }
-
     .tx-link { display: inline-flex; align-items: center; gap: 6px; color: var(--accent); text-decoration: none; font-size: 12px; font-family: var(--font-mono); }
     .tx-link:hover { text-decoration: underline; }
-
-    /* Campaign detail sections */
-    .campaign-prize-hero {
-      background: linear-gradient(135deg, rgba(246,201,14,0.08), rgba(232,160,0,0.04));
-      border: 1px solid rgba(246,201,14,0.2);
-      border-radius: 12px;
-      padding: 20px;
-      text-align: center;
-      margin-bottom: 20px;
-    }
-
+    .campaign-prize-hero { background: linear-gradient(135deg, rgba(246,201,14,0.08), rgba(232,160,0,0.04)); border: 1px solid rgba(246,201,14,0.2); border-radius: 12px; padding: 20px; text-align: center; margin-bottom: 20px; }
     .campaign-prize-hero .prize-label { font-size: 12px; color: var(--muted); font-family: var(--font-mono); margin-bottom: 6px; }
     .campaign-prize-hero .prize-amount { font-family: var(--font-head); font-size: 40px; font-weight: 800; color: var(--gold); letter-spacing: -1px; }
-
-    .campaign-info-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-bottom: 20px;
-    }
-
-    .campaign-info-cell {
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 12px 14px;
-    }
-
+    .campaign-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+    .campaign-info-cell { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; }
     .campaign-info-cell .ci-label { font-size: 11px; color: var(--muted); font-family: var(--font-mono); margin-bottom: 4px; }
     .campaign-info-cell .ci-val { font-size: 14px; font-weight: 600; font-family: var(--font-head); }
-
-    .section-divider {
-      font-size: 11px;
-      font-family: var(--font-mono);
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      margin: 18px 0 12px;
-    }
-
+    .section-divider { font-size: 11px; font-family: var(--font-mono); color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin: 18px 0 12px; }
     .entries-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
-
-    .entry-card {
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 12px 14px;
-    }
-
+    .entry-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; }
     .entry-card .entry-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
     .entry-card .entry-author { font-family: var(--font-mono); font-size: 12px; color: var(--accent); }
     .entry-card .entry-time { font-family: var(--font-mono); font-size: 11px; color: var(--muted); }
     .entry-card .entry-text { font-size: 13px; color: var(--muted); line-height: 1.5; word-break: break-all; }
-
-    /* ── AI Coming Soon Modal ── */
-    .ai-coming-soon-modal {
-      text-align: center;
-      padding: 20px 0;
-    }
-
+    .ai-coming-soon-modal { text-align: center; padding: 20px 0; }
     .ai-coming-soon-modal .robot-icon { font-size: 56px; margin-bottom: 16px; display: block; }
     .ai-coming-soon-modal h3 { font-family: var(--font-head); font-size: 22px; font-weight: 700; margin-bottom: 10px; color: var(--gold); }
     .ai-coming-soon-modal p { font-size: 14px; color: var(--muted); line-height: 1.6; margin-bottom: 20px; }
     .ai-coming-soon-modal .feature-list { text-align: left; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin-bottom: 20px; }
     .ai-coming-soon-modal .feature-list li { font-size: 13px; color: var(--muted); padding: 4px 0; list-style: none; }
     .ai-coming-soon-modal .feature-list li::before { content: '⏳ '; }
-
-    /* ── Toast ── */
     .toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 300; display: flex; flex-direction: column; gap: 10px; }
-
-    .toast {
-      background: var(--surface2);
-      border: 1px solid var(--border-hover);
-      border-radius: 10px;
-      padding: 14px 18px;
-      font-size: 13px;
-      max-width: 340px;
-      animation: slideIn 0.3s ease;
-    }
-
+    .toast { background: var(--surface2); border: 1px solid var(--border-hover); border-radius: 10px; padding: 14px 18px; font-size: 13px; max-width: 340px; animation: slideIn 0.3s ease; }
     @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-
     .toast-title { font-weight: 600; margin-bottom: 2px; }
     .toast-success .toast-title { color: var(--success); }
     .toast-error .toast-title { color: var(--danger); }
     .toast-info .toast-title { color: var(--accent); }
-
-    .dashboard-header {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 20px 24px;
-      margin-bottom: 24px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
+    .dashboard-header { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px 24px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; }
     .tab-row { display: flex; gap: 4px; margin-bottom: 24px; }
     .tab { background: none; border: none; color: var(--muted); font-family: var(--font-body); font-size: 14px; padding: 8px 16px; border-radius: 8px; cursor: pointer; transition: all 0.2s; }
     .tab.active { background: var(--surface2); color: var(--text); }
-
     .empty-state { text-align: center; padding: 60px 20px; color: var(--muted); }
     .empty-state p { margin-bottom: 16px; }
     .empty-icon { font-size: 40px; margin-bottom: 12px; display: block; }
-
-    .wallet-bar { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 8px 14px; font-family: var(--font-mono); font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 8px; }
+    .wallet-bar { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 8px 14px; font-family: var(--font-mono); font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 8px; cursor: pointer; transition: all 0.2s; }
+    .wallet-bar:hover { border-color: var(--accent); color: var(--accent); }
     .wallet-dot { width: 7px; height: 7px; background: var(--success); border-radius: 50%; }
-
     .steps { display: flex; gap: 8px; margin-bottom: 28px; }
     .step { flex: 1; height: 3px; background: var(--surface2); border-radius: 2px; transition: background 0.3s; }
     .step.done { background: var(--accent); }
-
-    .worker-action-pill {
-      background: rgba(79,209,165,0.08);
-      border: 1px solid rgba(79,209,165,0.2);
-      border-radius: 8px;
-      padding: 10px 14px;
-      font-size: 12px;
-      color: var(--success);
-      font-family: var(--font-mono);
-      margin-top: 8px;
-    }
-
-    /* How it works steps */
-    .how-it-works {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 24px;
-      margin-bottom: 28px;
-    }
-
+    .worker-action-pill { background: rgba(79,209,165,0.08); border: 1px solid rgba(79,209,165,0.2); border-radius: 8px; padding: 10px 14px; font-size: 12px; color: var(--success); font-family: var(--font-mono); margin-top: 8px; }
+    .how-it-works { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; margin-bottom: 28px; }
     .how-label { font-family: var(--font-mono); font-size: 11px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 16px; }
-
     .how-steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
-
     .how-step { display: flex; align-items: flex-start; gap: 10px; }
-
-    .how-num {
-      width: 28px; height: 28px;
-      background: rgba(124,109,250,0.15);
-      border: 1px solid rgba(124,109,250,0.2);
-      border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 12px;
-      font-family: var(--font-mono);
-      flex-shrink: 0;
-      color: var(--accent);
-    }
-
+    .how-num { width: 28px; height: 28px; background: rgba(124,109,250,0.15); border: 1px solid rgba(124,109,250,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-family: var(--font-mono); flex-shrink: 0; color: var(--accent); }
     .how-step strong { font-size: 13px; display: block; margin-bottom: 2px; }
     .how-step span { font-size: 12px; color: var(--muted); }
-
-    /* Info banner */
-    .info-banner {
-      background: rgba(124,109,250,0.06);
-      border: 1px solid rgba(124,109,250,0.2);
-      border-radius: 10px;
-      padding: 14px 18px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 24px;
-      font-size: 13px;
-      color: var(--muted);
-    }
-
+    .info-banner { background: rgba(124,109,250,0.06); border: 1px solid rgba(124,109,250,0.2); border-radius: 10px; padding: 14px 18px; display: flex; align-items: center; gap: 12px; margin-bottom: 24px; font-size: 13px; color: var(--muted); }
     .info-banner strong { color: var(--accent); }
+
+    /* Profile Page */
+    .profile-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 32px; max-width: 560px; }
+    .avatar-upload { width: 80px; height: 80px; border-radius: 50%; background: var(--surface2); border: 2px dashed var(--border-hover); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 28px; transition: all 0.2s; overflow: hidden; position: relative; flex-shrink: 0; }
+    .avatar-upload:hover { border-color: var(--accent); }
+    .avatar-upload img { width: 100%; height: 100%; object-fit: cover; }
+    .avatar-upload input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+    .arc-house-card { background: linear-gradient(135deg, rgba(124,109,250,0.06), rgba(79,209,197,0.04)); border: 1px solid rgba(124,109,250,0.2); border-radius: 12px; padding: 20px 24px; display: flex; align-items: center; justify-content: space-between; margin-top: 20px; }
+    .profile-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 20px; }
+    .profile-stat { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 16px; text-align: center; }
+    .profile-stat-val { font-family: var(--font-head); font-size: 22px; font-weight: 800; }
+    .profile-stat-label { font-size: 11px; color: var(--muted); font-family: var(--font-mono); margin-top: 2px; }
+
+    /* Expired job styling */
+    .expired-banner { background: rgba(248,114,114,0.06); border: 1px solid rgba(248,114,114,0.2); border-radius: 8px; padding: 10px 14px; font-size: 12px; color: var(--danger); font-family: var(--font-mono); margin-top: 8px; }
 
     @media (max-width: 680px) {
       nav { padding: 0 16px; }
@@ -649,34 +217,33 @@
       h1 { font-size: 36px; }
       .open-jobs-grid, .campaign-grid { grid-template-columns: 1fr; }
       .campaign-info-grid { grid-template-columns: 1fr; }
+      .nav-links { display: none; }
     }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
 </head>
 <body>
 
-<!-- Navigation -->
 <nav>
-  <div class="nav-logo">AgentMarket</div>
+  <div class="nav-logo" onclick="showPage('home')">AgentMarket</div>
   <div class="nav-links">
-    <button class="nav-btn active" onclick="showPage('home')">Browse</button>
-    <button class="nav-btn" onclick="showPage('post')">Post a Job</button>
-    <button class="nav-btn" onclick="showPage('pick')">Pick a Job</button>
-    <button class="nav-btn" onclick="showPage('campaigns')">Campaigns</button>
-    <button class="nav-btn" onclick="showPage('reviews')">Reviews</button>
-    <button class="nav-btn" onclick="showPage('dashboard')">My Dashboard</button>
+    <button class="nav-btn active" data-page="home" onclick="showPage('home')">Browse</button>
+    <button class="nav-btn" data-page="post" onclick="showPage('post')">Post a Job</button>
+    <button class="nav-btn" data-page="pick" onclick="showPage('pick')">Pick a Job</button>
+    <button class="nav-btn" data-page="campaigns" onclick="showPage('campaigns')">Campaigns</button>
+    <button class="nav-btn" data-page="reviews" onclick="showPage('reviews')">Reviews</button>
+    <button class="nav-btn" data-page="dashboard" onclick="showPage('dashboard')">My Dashboard</button>
   </div>
   <div class="nav-right">
-    <div class="wallet-bar" id="walletDisplay">
+    <div class="wallet-bar" id="walletDisplay" onclick="currentWallet ? showPage('profile') : connectWallet()">
       <div class="wallet-dot"></div>
-      <span>Arc Testnet</span>
+      <span id="walletLabel">Arc Testnet</span>
     </div>
     <button class="btn btn-outline btn-sm" onclick="connectWallet()" id="connectBtn">Connect Wallet</button>
     <button class="btn btn-outline btn-sm" onclick="disconnectWallet()" id="disconnectBtn" style="display:none">Disconnect</button>
   </div>
 </nav>
 
-<!-- Toast container -->
 <div class="toast-container" id="toasts"></div>
 
 <!-- ── PAGE: HOME ── -->
@@ -690,38 +257,23 @@
       <button class="btn btn-outline" onclick="showPage('pick')">Pick a Job →</button>
       <button class="btn btn-outline" onclick="scrollToAgents()">Browse Agents</button>
     </div>
-
     <div class="stats-bar" id="statsBar">
-      <div class="stat-cell">
-        <div class="stat-value" id="stat-jobs">—</div>
-        <div class="stat-label">total jobs</div>
-      </div>
-      <div class="stat-cell">
-        <div class="stat-value" id="stat-completed">—</div>
-        <div class="stat-label">completed</div>
-      </div>
-      <div class="stat-cell">
-        <div class="stat-value" id="stat-volume">—</div>
-        <div class="stat-label">usdc volume</div>
-      </div>
-      <div class="stat-cell">
-        <div class="stat-value" id="stat-agents">3</div>
-        <div class="stat-label">verified agents</div>
-      </div>
+      <div class="stat-cell"><div class="stat-value" id="stat-jobs">—</div><div class="stat-label">total jobs</div></div>
+      <div class="stat-cell"><div class="stat-value" id="stat-completed">—</div><div class="stat-label">completed</div></div>
+      <div class="stat-cell"><div class="stat-value" id="stat-volume">—</div><div class="stat-label">usdc volume</div></div>
+      <div class="stat-cell"><div class="stat-value" id="stat-agents">2</div><div class="stat-label">verified agents</div></div>
     </div>
   </div>
-
   <div class="container">
     <div class="section-head" id="agents-section">
-      <h2>Verified Agents</h2>
-      <span class="badge badge-verified">All verified on Arc</span>
+      <h2>AI Agents</h2>
+      <span class="badge badge-coming-soon">⏳ Coming Soon</span>
     </div>
     <div class="agents-grid" id="agentsGrid"></div>
-
     <div style="height:48px"></div>
-
     <div class="section-head">
       <h2>Recent Jobs</h2>
+      <button class="btn btn-outline btn-sm" onclick="loadRecentJobs()">↻ Refresh</button>
     </div>
     <div class="jobs-list" id="recentJobs"></div>
   </div>
@@ -734,27 +286,21 @@
       <h2 style="font-size:28px;margin-bottom:8px">Post a Job</h2>
       <p style="color:var(--muted)">Describe your task and fund escrow with USDC — anyone can pick it up and get paid.</p>
     </div>
-
     <div class="steps">
       <div class="step done" id="step1"></div>
       <div class="step" id="step2"></div>
       <div class="step" id="step3"></div>
     </div>
-
     <div class="form-card">
-      <!-- Hidden: always open marketplace -->
       <input type="hidden" id="jobAvailability" value="open"/>
-
       <div class="form-group">
         <label>Job Title</label>
         <input type="text" id="jobTitle" placeholder="e.g. Summarize Q3 earnings report"/>
       </div>
-
       <div class="form-group">
         <label>Description — what exactly do you need done?</label>
         <textarea id="jobDesc" placeholder="Describe the task in detail. The more specific, the better the result."></textarea>
       </div>
-
       <div class="form-row">
         <div class="form-group">
           <label>Category</label>
@@ -764,6 +310,9 @@
             <option value="Translation">Translation</option>
             <option value="Compliance">Compliance</option>
             <option value="Operations">Operations</option>
+            <option value="Design">Design</option>
+            <option value="Development">Development</option>
+            <option value="Other">Other</option>
           </select>
         </div>
         <div class="form-group">
@@ -774,11 +323,9 @@
           </select>
         </div>
       </div>
-
       <div class="info-banner">
         🌐 <span><strong>Open Marketplace</strong> — This job will be visible to all connected workers. First eligible person to claim it gets the work.</span>
       </div>
-
       <div class="form-group">
         <label>Deadline</label>
         <div class="deadline-row">
@@ -788,24 +335,17 @@
             <option value="hours">Hours</option>
           </select>
         </div>
-        <p style="font-size:12px;color:var(--muted);margin-top:6px">Enter the deadline in minutes or hours.</p>
+        <p style="font-size:12px;color:var(--muted);margin-top:6px">Worker must submit within this time after claiming. Expired jobs can be cancelled for a refund.</p>
       </div>
-
       <div class="form-group">
         <label>Budget (USDC)</label>
         <input type="number" id="budget" placeholder="5.00" min="0.01" step="0.01"/>
         <p style="font-size:12px;color:var(--muted);margin-top:6px">Platform fee: 2.5% · Worker receives the rest</p>
       </div>
-
       <div style="display:flex;gap:12px;margin-top:8px">
-        <button class="btn btn-primary" style="flex:1" onclick="submitJob()" id="postBtn">
-          Fund Escrow & Post Job
-        </button>
+        <button class="btn btn-primary" style="flex:1" onclick="submitJob()" id="postBtn">Fund Escrow & Post Job</button>
       </div>
-
-      <p style="font-size:12px;color:var(--muted);margin-top:14px;text-align:center">
-        Your USDC is locked in the smart contract. It releases to the worker only when you approve their work.
-      </p>
+      <p style="font-size:12px;color:var(--muted);margin-top:14px;text-align:center">Your USDC is locked in the smart contract. It releases to the worker only when you approve their work.</p>
     </div>
   </div>
 </div>
@@ -817,29 +357,15 @@
       <h2 style="font-size:28px;margin-bottom:8px">Pick a Job</h2>
       <p style="color:var(--muted)">Browse open jobs, claim one, complete the work, and get paid in USDC.</p>
     </div>
-
     <div class="how-it-works">
       <div class="how-label">How it works</div>
       <div class="how-steps">
-        <div class="how-step">
-          <div class="how-num">1</div>
-          <div><strong>Connect wallet</strong><span>Sign in with MetaMask or any Web3 wallet</span></div>
-        </div>
-        <div class="how-step">
-          <div class="how-num">2</div>
-          <div><strong>Claim a job</strong><span>Pick any open job — first come, first served</span></div>
-        </div>
-        <div class="how-step">
-          <div class="how-num">3</div>
-          <div><strong>Do the work</strong><span>Complete the task off-chain</span></div>
-        </div>
-        <div class="how-step">
-          <div class="how-num">4</div>
-          <div><strong>Submit & get paid</strong><span>USDC auto-released to your wallet on approval</span></div>
-        </div>
+        <div class="how-step"><div class="how-num">1</div><div><strong>Connect wallet</strong><span>Sign in with MetaMask or any Web3 wallet</span></div></div>
+        <div class="how-step"><div class="how-num">2</div><div><strong>Claim a job</strong><span>Pick any open job — first come, first served</span></div></div>
+        <div class="how-step"><div class="how-num">3</div><div><strong>Do the work</strong><span>Complete the task off-chain</span></div></div>
+        <div class="how-step"><div class="how-num">4</div><div><strong>Submit & get paid</strong><span>USDC auto-released to your wallet on approval</span></div></div>
       </div>
     </div>
-
     <div class="section-head">
       <h2>Open Jobs</h2>
       <button class="btn btn-outline btn-sm" onclick="loadAvailableJobs()">↻ Refresh</button>
@@ -855,12 +381,10 @@
       <h2 style="font-size:28px;margin-bottom:8px">Bounty Campaigns</h2>
       <p style="color:var(--muted)">Compete for prize pools by submitting your best work. Anyone can participate.</p>
     </div>
-
     <div class="section-head">
       <span class="badge badge-campaign">🏆 Prize Pools in USDC</span>
       <button class="btn btn-gold btn-sm" onclick="showPage('create-campaign')">+ Create Campaign</button>
     </div>
-
     <div class="campaign-grid" id="campaignsList"></div>
   </div>
 </div>
@@ -873,33 +397,15 @@
       <p style="color:var(--muted)">Launch a competition with a USDC prize pool. Participants submit entries, you pick winners.</p>
     </div>
     <div class="form-card">
-      <div class="form-group">
-        <label>Campaign Title</label>
-        <input type="text" id="campaignTitle" placeholder="e.g. Best Logo Design for My Startup"/>
-      </div>
-      <div class="form-group">
-        <label>Description</label>
-        <textarea id="campaignDesc" placeholder="Describe the task, requirements, and judging criteria."></textarea>
+      <div class="form-group"><label>Campaign Title</label><input type="text" id="campaignTitle" placeholder="e.g. Best Logo Design for My Startup"/></div>
+      <div class="form-group"><label>Description</label><textarea id="campaignDesc" placeholder="Describe the task, requirements, and judging criteria."></textarea></div>
+      <div class="form-row">
+        <div class="form-group"><label>Prize Pool (USDC)</label><input type="number" id="prizePool" placeholder="100.00" min="0.01" step="0.01"/></div>
+        <div class="form-group"><label>Entry Fee (USDC, optional)</label><input type="number" id="entryFee" placeholder="0.00" min="0" step="0.01" value="0"/></div>
       </div>
       <div class="form-row">
-        <div class="form-group">
-          <label>Prize Pool (USDC)</label>
-          <input type="number" id="prizePool" placeholder="100.00" min="0.01" step="0.01"/>
-        </div>
-        <div class="form-group">
-          <label>Entry Fee (USDC, optional)</label>
-          <input type="number" id="entryFee" placeholder="0.00" min="0" step="0.01" value="0"/>
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>Max Participants (0 = unlimited)</label>
-          <input type="number" id="maxParticipants" placeholder="50" min="0" value="0"/>
-        </div>
-        <div class="form-group">
-          <label>Deadline (hours from now)</label>
-          <input type="number" id="campaignDeadline" placeholder="168" min="1" max="720" value="168"/>
-        </div>
+        <div class="form-group"><label>Max Participants (0 = unlimited)</label><input type="number" id="maxParticipants" placeholder="50" min="0" value="0"/></div>
+        <div class="form-group"><label>Deadline (hours from now)</label><input type="number" id="campaignDeadline" placeholder="168" min="1" max="720" value="168"/></div>
       </div>
       <div style="display:flex;gap:12px;margin-top:8px">
         <button class="btn btn-gold" style="flex:1" onclick="createCampaign()" id="createCampaignBtn">Fund Prize Pool & Launch</button>
@@ -909,13 +415,10 @@
   </div>
 </div>
 
-<!-- ── PAGE: REVIEW BOARD ── -->
+<!-- ── PAGE: REVIEWS ── -->
 <div class="page" id="page-reviews">
   <div class="container">
-    <div class="section-head">
-      <h2>Verified Talent & Reviews</h2>
-      <span class="badge badge-verified">AI + Humans</span>
-    </div>
+    <div class="section-head"><h2>Verified Talent & Reviews</h2><span class="badge badge-verified">AI + Humans</span></div>
     <div id="reviewBoard"></div>
   </div>
 </div>
@@ -926,20 +429,74 @@
     <div class="dashboard-header">
       <div>
         <h2>My Dashboard</h2>
-        <p style="color:var(--muted);font-size:13px;margin-top:4px">Track jobs you posted and manage deliverables</p>
+        <p style="color:var(--muted);font-size:13px;margin-top:4px" id="dashWalletSub">Connect your wallet to see your jobs</p>
       </div>
       <button class="btn btn-outline btn-sm" onclick="loadDashboard()">↻ Refresh</button>
     </div>
-
     <div class="tab-row">
-      <button class="tab active" onclick="switchTab('posted')">Jobs I Posted</button>
-      <button class="tab" onclick="switchTab('agent')">Jobs I'm Working On</button>
+      <button class="tab active" onclick="switchTab('posted', event)">Jobs I Posted</button>
+      <button class="tab" onclick="switchTab('agent', event)">Jobs I'm Working On</button>
     </div>
-
     <div id="dashboardContent">
       <div class="empty-state">
         <p>Connect your wallet to see your jobs</p>
         <button class="btn btn-primary" onclick="connectWallet()">Connect Wallet</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── PAGE: PROFILE ── -->
+<div class="page" id="page-profile">
+  <div class="container">
+    <div style="margin-bottom:32px">
+      <h2 style="font-size:28px;margin-bottom:8px">My Profile</h2>
+      <p style="color:var(--muted)">Set your identity on AgentMarket.</p>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;max-width:900px">
+      <div>
+        <div class="profile-card">
+          <div style="display:flex;align-items:center;gap:16px;margin-bottom:24px">
+            <div class="avatar-upload" id="avatarDisplay" onclick="document.getElementById('avatarFile').click()">
+              <input type="file" id="avatarFile" accept="image/*" style="display:none" onchange="handleAvatarUpload(event)"/>
+              <span id="avatarEmoji">🧑</span>
+            </div>
+            <div>
+              <div id="profileWalletAddr" style="font-family:var(--font-mono);font-size:12px;color:var(--muted)">Not connected</div>
+              <div id="profileDisplayName" style="font-family:var(--font-head);font-size:18px;font-weight:700;margin-top:4px">—</div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Username</label>
+            <input type="text" id="profileUsername" placeholder="e.g. cryptobuilder.arc" maxlength="32"/>
+          </div>
+          <div class="form-group">
+            <label>Bio (optional)</label>
+            <textarea id="profileBio" placeholder="Tell others what you do..." style="min-height:80px" maxlength="200"></textarea>
+          </div>
+          <button class="btn btn-primary" style="width:100%" onclick="saveProfile()">Save Profile</button>
+        </div>
+
+        <!-- Arc House Section -->
+        <div class="arc-house-card">
+          <div>
+            <div style="font-family:var(--font-head);font-size:16px;font-weight:700;margin-bottom:4px">🏛️ Arc House</div>
+            <div style="font-size:13px;color:var(--muted);max-width:240px">Connect with Arc's community governance and identity layer.</div>
+          </div>
+          <span class="badge badge-coming-soon" style="flex-shrink:0">⏳ Coming Soon</span>
+        </div>
+      </div>
+
+      <div>
+        <div class="profile-stats" id="profileStats">
+          <div class="profile-stat"><div class="profile-stat-val" id="ps-posted">—</div><div class="profile-stat-label">Jobs Posted</div></div>
+          <div class="profile-stat"><div class="profile-stat-val" id="ps-completed">—</div><div class="profile-stat-label">Completed</div></div>
+          <div class="profile-stat"><div class="profile-stat-val" id="ps-earned">—</div><div class="profile-stat-label">USDC Earned</div></div>
+        </div>
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-top:12px">
+          <div style="font-family:var(--font-mono);font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px">Recent Activity</div>
+          <div id="profileActivity"><div style="color:var(--muted);font-size:13px">Connect wallet to see activity</div></div>
+        </div>
       </div>
     </div>
   </div>
@@ -1010,7 +567,7 @@
       <label>Your Entry — Link, IPFS hash, or description</label>
       <textarea id="campaignEntryInput" placeholder="e.g. https://your-work.com or describe your submission in detail" style="min-height:140px"></textarea>
     </div>
-    <p style="font-size:12px;color:var(--muted);margin-bottom:16px">⚠️ Entries are stored permanently on the blockchain. Make sure your submission is complete before sending.</p>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:16px">⚠️ Entries are stored permanently. Make sure your submission is complete before sending.</p>
     <div style="display:flex;gap:10px">
       <button class="btn btn-gold" style="flex:1" id="submitCampaignEntryBtn" onclick="confirmSubmitCampaignEntry()">Submit Entry</button>
       <button class="btn btn-outline" onclick="closeCampaignEntryModal()">Cancel</button>
@@ -1019,7 +576,7 @@
 </div>
 
 <script>
-// ── Config ───────────────────────────────────────────────────────
+// ── Config ──────────────────────────────────────────────────────
 const API = 'https://agentmarket-cv66.vercel.app';
 const EXPLORER = 'https://testnet.arcscan.app';
 const USDC = '0x3600000000000000000000000000000000000000';
@@ -1033,33 +590,37 @@ async function loadConfig() {
   } catch(e) { console.error('Could not load config', e); }
 }
 
-const STATUS = ['Open','In Progress','Submitted','Completed','Rejected'];
-const STATUS_CLASS = ['badge-open','badge-funded','badge-submitted','badge-completed','badge-rejected'];
+const STATUS = ['Open','In Progress','Submitted','Completed','Rejected','Cancelled'];
+const STATUS_CLASS = ['badge-open','badge-funded','badge-submitted','badge-completed','badge-rejected','badge-rejected'];
 let currentWallet = null;
-let agents = [];
 let currentTab = 'posted';
 let pendingDeliverableJobId = null;
 let pendingCampaignEntryId = null;
 let currentCampaignData = null;
+let profileData = {};
 
-// ── Utilities ────────────────────────────────────────────────────
+// ── Utilities ───────────────────────────────────────────────────
 function toast(title, msg, type='info') {
   const el = document.createElement('div');
   el.className = `toast toast-${type}`;
-  el.innerHTML = `<div class="toast-title">${title}</div><div>${msg}</div>`;
+  el.innerHTML = `<div class="toast-title">${title}</div><div>${msg || ''}</div>`;
   document.getElementById('toasts').appendChild(el);
   setTimeout(() => el.remove(), 5000);
 }
 
 function showPage(name) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.getElementById('page-' + name).classList.add('active');
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  event?.target?.classList.add('active');
+  const page = document.getElementById('page-' + name);
+  if (!page) return;
+  page.classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.page === name);
+  });
   if (name === 'dashboard') loadDashboard();
   if (name === 'reviews') loadReviewBoard();
   if (name === 'pick') loadAvailableJobs();
   if (name === 'campaigns') loadCampaigns();
+  if (name === 'profile') loadProfile();
 }
 
 function scrollToAgents() {
@@ -1067,28 +628,35 @@ function scrollToAgents() {
 }
 
 function shortAddr(addr) {
-  return addr ? addr.slice(0,6) + '...' + addr.slice(-4) : '—';
+  if (!addr || addr === '0x0000000000000000000000000000000000000000') return 'Open';
+  return addr.slice(0,6) + '...' + addr.slice(-4);
 }
 
 function timeLeft(ms) {
   const diff = ms - Date.now();
   if (diff <= 0) return 'Expired';
   const h = Math.floor(diff / 3600000);
+  if (h < 1) return Math.floor(diff / 60000) + 'm left';
   if (h < 24) return h + 'h left';
   return Math.floor(h/24) + 'd left';
+}
+
+function isExpiredDeadline(ms) {
+  return ms && Date.now() > ms;
 }
 
 function formatDate(ts) {
   return new Date(ts).toLocaleString();
 }
 
-// ── Wallet ───────────────────────────────────────────────────────
+// ── Wallet ──────────────────────────────────────────────────────
 function updateWalletDisplay() {
-  const display = document.getElementById('walletDisplay');
+  const label = document.getElementById('walletLabel');
   if (currentWallet) {
-    display.innerHTML = `<div class="wallet-dot"></div><span>${shortAddr(currentWallet)}</span>`;
+    const prof = profileData[currentWallet.toLowerCase()];
+    label.textContent = prof?.username || shortAddr(currentWallet);
   } else {
-    display.innerHTML = `<div class="wallet-dot"></div><span>Arc Testnet</span>`;
+    label.textContent = 'Arc Testnet';
   }
 }
 
@@ -1099,10 +667,12 @@ function updateWalletButtons() {
     connectBtn.textContent = 'Connected';
     connectBtn.disabled = true;
     disconnectBtn.style.display = 'inline-flex';
+    document.getElementById('dashWalletSub').textContent = shortAddr(currentWallet);
   } else {
     connectBtn.textContent = 'Connect Wallet';
     connectBtn.disabled = false;
     disconnectBtn.style.display = 'none';
+    document.getElementById('dashWalletSub').textContent = 'Connect your wallet to see your jobs';
   }
 }
 
@@ -1110,8 +680,7 @@ function disconnectWallet() {
   currentWallet = null;
   updateWalletDisplay();
   updateWalletButtons();
-  if (document.getElementById('page-dashboard').classList.contains('active')) loadDashboard();
-  toast('Wallet Disconnected', 'You can reconnect a different wallet now', 'info');
+  toast('Wallet Disconnected', '', 'info');
 }
 
 async function connectWallet() {
@@ -1122,27 +691,111 @@ async function connectWallet() {
     updateWalletDisplay();
     updateWalletButtons();
     toast('Wallet Connected', shortAddr(currentWallet), 'success');
-    if (document.getElementById('page-dashboard').classList.contains('active')) await loadDashboard();
+    // Reload current page data after connecting
+    const activePage = document.querySelector('.page.active');
+    if (activePage?.id === 'page-pick') loadAvailableJobs();
+    if (activePage?.id === 'page-dashboard') loadDashboard();
   } catch(e) {
     toast('Connection Failed', e.message, 'error');
   }
 }
 
-// ── AI Coming Soon Modal ─────────────────────────────────────────
+// ── Profile ─────────────────────────────────────────────────────
+function loadProfile() {
+  if (!currentWallet) {
+    document.getElementById('profileWalletAddr').textContent = 'Not connected';
+    document.getElementById('profileDisplayName').textContent = 'Connect wallet first';
+    return;
+  }
+
+  const key = currentWallet.toLowerCase();
+  const stored = profileData[key] || {};
+
+  document.getElementById('profileWalletAddr').textContent = currentWallet;
+  document.getElementById('profileDisplayName').textContent = stored.username || shortAddr(currentWallet);
+  document.getElementById('profileUsername').value = stored.username || '';
+  document.getElementById('profileBio').value = stored.bio || '';
+
+  if (stored.avatar) {
+    document.getElementById('avatarDisplay').innerHTML = `<img src="${stored.avatar}" alt="avatar"/>`;
+  } else {
+    document.getElementById('avatarDisplay').innerHTML = `<span id="avatarEmoji">🧑</span>`;
+  }
+
+  // Load stats from API
+  Promise.all([
+    fetch(`${API}/api/client/${key}/jobs`).then(r => r.json()).catch(() => []),
+    fetch(`${API}/api/agent/${key}/jobs`).then(r => r.json()).catch(() => [])
+  ]).then(([posted, worked]) => {
+    document.getElementById('ps-posted').textContent = posted.length || 0;
+    const completed = worked.filter(j => j.status === 3);
+    document.getElementById('ps-completed').textContent = completed.length || 0;
+    const earned = completed.reduce((sum, j) => sum + parseFloat(j.budget || 0), 0);
+    document.getElementById('ps-earned').textContent = '$' + earned.toFixed(2);
+
+    // Recent activity
+    const all = [...posted.map(j => ({...j, role: 'Posted'})), ...worked.map(j => ({...j, role: 'Worked'}))];
+    all.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    const actEl = document.getElementById('profileActivity');
+    if (!all.length) {
+      actEl.innerHTML = '<div style="color:var(--muted);font-size:13px">No activity yet</div>';
+      return;
+    }
+    actEl.innerHTML = all.slice(0,5).map(j => `
+      <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px">
+        <span style="color:var(--muted)">${j.role}: ${j.title?.slice(0,28) || '—'}</span>
+        <span class="badge ${STATUS_CLASS[j.status] || 'badge-open'}">${j.statusLabel || STATUS[j.status] || '—'}</span>
+      </div>
+    `).join('');
+  });
+}
+
+function saveProfile() {
+  if (!currentWallet) { toast('Not Connected', 'Connect your wallet first', 'error'); return; }
+  const key = currentWallet.toLowerCase();
+  const username = document.getElementById('profileUsername').value.trim();
+  const bio = document.getElementById('profileBio').value.trim();
+  profileData[key] = { ...profileData[key], username, bio };
+  localStorage.setItem('agentmarket_profiles', JSON.stringify(profileData));
+  updateWalletDisplay();
+  document.getElementById('profileDisplayName').textContent = username || shortAddr(currentWallet);
+  toast('Profile Saved ✅', 'Your username is set', 'success');
+}
+
+function handleAvatarUpload(event) {
+  const file = event.target.files[0];
+  if (!file || !currentWallet) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const dataUrl = e.target.result;
+    const key = currentWallet.toLowerCase();
+    profileData[key] = { ...profileData[key], avatar: dataUrl };
+    localStorage.setItem('agentmarket_profiles', JSON.stringify(profileData));
+    document.getElementById('avatarDisplay').innerHTML = `<img src="${dataUrl}" alt="avatar"/>`;
+    updateWalletDisplay();
+  };
+  reader.readAsDataURL(file);
+}
+
+function loadProfileData() {
+  try {
+    const stored = localStorage.getItem('agentmarket_profiles');
+    if (stored) profileData = JSON.parse(stored);
+  } catch(e) {}
+}
+
+// ── AI / Worker Type ─────────────────────────────────────────────
 function showAiComingSoon() {
   document.getElementById('aiComingSoonModal').classList.add('open');
 }
-
 function closeAiModal(e) {
   if (!e || e.target === document.getElementById('aiComingSoonModal')) {
     document.getElementById('aiComingSoonModal').classList.remove('open');
   }
 }
-
 function switchToHuman() {
   document.getElementById('workerType').value = 'Human';
 }
-
 function handleWorkerTypeChange() {
   const workerType = document.getElementById('workerType').value;
   if (workerType === 'AI') {
@@ -1151,59 +804,55 @@ function handleWorkerTypeChange() {
   }
 }
 
-// ── Agents ───────────────────────────────────────────────────────
-const AGENT_ICONS = { summarize:'📄', report:'📊', translate:'🌐', analyze:'🔬', monitor:'👁' };
-
-async function loadAgents() {
-  try {
-    const res = await fetch(`${API}/api/agents`);
-    agents = await res.json();
-    renderAgents();
-  } catch(e) {
-    agents = [
-      { id:'native-001', type:'AI', name:'SummaryBot', description:'Summarizes documents and long text into clear bullet points', taskTypes:['summarize','analyze'], walletAddress:'0x89E3D24A54E9EEA0799A4d8d5843487606330378', reputationScore:98, isNative:true, isVerified:true, minBudget:'1.00' },
-      { id:'native-002', type:'AI', name:'ReportAgent', description:'Generates structured market reports from raw inputs', taskTypes:['report','research'], walletAddress:'0x11be84f570c3670b4bB0682a9aCa10C6B80d1300', reputationScore:95, isNative:true, isVerified:true, minBudget:'2.00' },
-      { id:'native-003', type:'AI', name:'TranslateAI', description:'Translates content between languages accurately', taskTypes:['translate'], walletAddress:'0x986008ac6580395ff496559880b6fcDDFEB9AeE9', reputationScore:97, isNative:true, isVerified:true, minBudget:'1.00' },
-    ];
-    renderAgents();
-  }
-}
+// ── Agents (2 demo AI only) ─────────────────────────────────────
+const DEMO_AGENTS = [
+  { name: 'SummaryBot', icon: '📄', desc: 'Autonomously summarizes documents and long text into clear bullet points. Supports PDFs, web pages, and raw text.', tags: ['summarize','analyze','research'], rep: 98 },
+  { name: 'TranslateAI', icon: '🌐', desc: 'Translates content between 40+ languages with high accuracy. Specialized in technical and legal documents.', tags: ['translate','localize'], rep: 97 },
+];
 
 function renderAgents() {
   const grid = document.getElementById('agentsGrid');
-  grid.innerHTML = agents.map(a => {
-    const isAI = a.type === 'AI';
-    return `
-      <div class="agent-card" onclick="${isAI ? 'showPage(\'post\');showAiComingSoon()' : `showPage('post')`}">
-        <div class="agent-header">
-          <div class="agent-icon">${isAI ? AGENT_ICONS[a.taskTypes[0]] || '🤖' : '🧑'}</div>
-          <div>
-            <span class="badge ${isAI ? 'badge-coming-soon' : 'badge-funded'}">${isAI ? '⏳ Coming Soon' : 'Human'}</span>
-            ${a.isVerified ? '<span class="badge badge-verified" style="margin-left:4px">✓ Verified</span>' : ''}
-          </div>
-        </div>
-        <div class="agent-name">${a.name}</div>
-        <div class="agent-desc">${a.description}${isAI ? ' <span style="color:var(--gold);font-size:11px">(AI automation launching soon)</span>' : ''}</div>
-        <div class="tags">${a.taskTypes.map(t => `<span class="tag">${t}</span>`).join('')}</div>
-        <div class="agent-footer">
-          <div class="rep-score"><div class="rep-dot"></div>${a.reputationScore}/100 rep</div>
-          <span style="font-family:var(--font-mono);font-size:12px;color:${isAI ? 'var(--gold)' : 'var(--accent2)'}">
-            ${isAI ? '🔒 Automated' : `from ${a.minBudget} USDC`}
-          </span>
+  grid.innerHTML = DEMO_AGENTS.map(a => `
+    <div class="agent-card" onclick="showAiComingSoon()">
+      <div class="agent-header">
+        <div class="agent-icon">${a.icon}</div>
+        <div>
+          <span class="badge badge-coming-soon">⏳ Coming Soon</span>
         </div>
       </div>
-    `;
-  }).join('');
+      <div class="agent-name">${a.name}</div>
+      <div class="agent-desc">${a.desc}</div>
+      <div class="tags">${a.tags.map(t => `<span class="tag">${t}</span>`).join('')}</div>
+      <div class="agent-footer">
+        <div class="rep-score"><div class="rep-dot"></div>${a.rep}/100 rep</div>
+        <span style="font-family:var(--font-mono);font-size:12px;color:var(--gold)">🔒 Automated</span>
+      </div>
+    </div>
+  `).join('');
 }
 
-// ── Available Jobs (Pick a Job page) ────────────────────────────
+// ── Available Jobs (Pick a Job) ──────────────────────────────────
 async function loadAvailableJobs() {
   const container = document.getElementById('availableJobs');
   container.innerHTML = '<div class="empty-state"><p style="color:var(--muted)">Loading open jobs...</p></div>';
 
   try {
-    const res = await fetch(`${API}/api/jobs/open`);
-    const jobs = await res.json();
+    // Try /api/jobs/open first, fall back to /api/jobs
+    let jobs = [];
+    try {
+      const res = await fetch(`${API}/api/jobs/open`);
+      if (res.ok) jobs = await res.json();
+    } catch(e) {}
+
+    // Fallback: get all jobs and filter
+    if (!jobs.length) {
+      const res = await fetch(`${API}/api/jobs`);
+      if (res.ok) {
+        const all = await res.json();
+        // Status 0 = Open, and not posted by connected wallet (they can still see them)
+        jobs = all.filter(j => j.status === 0);
+      }
+    }
 
     if (!Array.isArray(jobs) || !jobs.length) {
       container.innerHTML = `
@@ -1215,46 +864,39 @@ async function loadAvailableJobs() {
       return;
     }
 
-    // Only status=0 (Open) jobs
-    const openJobs = jobs.filter(j => j.status === 0);
-
-    if (!openJobs.length) {
-      container.innerHTML = `
-        <div class="empty-state">
-          <span class="empty-icon">⏳</span>
-          <p>No open jobs available right now. All current jobs are in progress.</p>
-          <button class="btn btn-primary" style="margin-top:8px" onclick="showPage('post')">Post a Job</button>
-        </div>`;
-      return;
-    }
-
-    container.innerHTML = '<div class="open-jobs-grid">' + openJobs.map(j => `
-      <div class="open-job-card" onclick="openJobModal(${j.id})">
-        <div class="open-job-top">
-          <div>
-            <div class="open-job-title">${j.title}</div>
-            <span class="badge badge-open" style="margin-top:4px">Open</span>
+    container.innerHTML = '<div class="open-jobs-grid">' + jobs.map(j => {
+      const expired = isExpiredDeadline(j.deadline);
+      const isOwner = currentWallet && currentWallet.toLowerCase() === j.client?.toLowerCase();
+      return `
+        <div class="open-job-card" onclick="openJobModal(${j.id})">
+          <div class="open-job-top">
+            <div>
+              <div class="open-job-title">${j.title || 'Untitled Job'}</div>
+              <span class="badge badge-open" style="margin-top:4px">Open</span>
+              ${expired ? '<span class="badge badge-rejected" style="margin-left:4px">Expired</span>' : ''}
+            </div>
+            <div class="open-job-budget">${j.budget} USDC</div>
           </div>
-          <div class="open-job-budget">${j.budget} USDC</div>
+          <div class="open-job-desc">${(j.description || '').slice(0,120)}${(j.description || '').length > 120 ? '...' : ''}</div>
+          <div class="open-job-meta">
+            <span>📂 ${j.category || 'General'}</span>
+            <span>⏰ ${j.deadline ? timeLeft(j.deadline) : 'No deadline'}</span>
+            <span>by ${shortAddr(j.client)}</span>
+          </div>
+          <div class="open-job-footer">
+            <span style="font-family:var(--font-mono);font-size:11px;color:var(--muted)">Job #${j.id}</span>
+            ${!currentWallet
+              ? `<button class="btn btn-outline btn-sm" onclick="event.stopPropagation();connectWallet()">Connect to Claim</button>`
+              : isOwner
+                ? `<span style="font-size:12px;color:var(--muted);font-family:var(--font-mono)">Your job</span>`
+                : expired
+                  ? `<span style="font-size:12px;color:var(--danger);font-family:var(--font-mono)">Expired</span>`
+                  : `<button class="btn btn-primary btn-sm" onclick="event.stopPropagation();claimJob(${j.id})">Claim Job →</button>`
+            }
+          </div>
         </div>
-        <div class="open-job-desc">${j.description?.slice(0,120)}${j.description?.length > 120 ? '...' : ''}</div>
-        <div class="open-job-meta">
-          <span>📂 ${j.category}</span>
-          <span>👤 ${j.workerTypeLabel || 'Human'}</span>
-          <span>⏰ ${timeLeft(j.deadline)}</span>
-          <span>by ${shortAddr(j.client)}</span>
-        </div>
-        <div class="open-job-footer">
-          <span style="font-family:var(--font-mono);font-size:11px;color:var(--muted)">Job #${j.id}</span>
-          ${currentWallet
-            ? currentWallet.toLowerCase() === j.client?.toLowerCase()
-              ? '<span style="font-size:12px;color:var(--muted);font-family:var(--font-mono)">Your job</span>'
-              : `<button class="btn btn-primary btn-sm" onclick="event.stopPropagation();claimJob(${j.id})">Claim Job →</button>`
-            : `<button class="btn btn-outline btn-sm" onclick="event.stopPropagation();connectWallet()">Connect to Claim</button>`
-          }
-        </div>
-      </div>
-    `).join('') + '</div>';
+      `;
+    }).join('') + '</div>';
   } catch(e) {
     container.innerHTML = `
       <div class="empty-state">
@@ -1273,16 +915,78 @@ async function claimJob(jobId) {
     toast('Claiming Job...', 'Confirm the transaction in your wallet', 'info');
     const provider = new ethers.BrowserProvider(window.ethereum);
     const signer = await provider.getSigner();
-    const jobAbi = [{ name: 'claimJob', type: 'function', stateMutability: 'nonpayable', inputs: [{ name: 'jobId', type: 'uint256' }], outputs: [] }];
+
+    // Make sure we're on the right network
+    const network = await provider.getNetwork();
+    console.log('Network:', network.chainId.toString());
+
+    const jobAbi = [{
+      name: 'claimJob',
+      type: 'function',
+      stateMutability: 'nonpayable',
+      inputs: [{ name: 'jobId', type: 'uint256' }],
+      outputs: []
+    }];
     const jobContract = new ethers.Contract(JOB_BOARD, jobAbi, signer);
+
+    // Estimate gas first to catch reverts early with better error messages
+    try {
+      await jobContract.claimJob.estimateGas(BigInt(jobId));
+    } catch(gasErr) {
+      const reason = gasErr.reason || gasErr.data?.message || gasErr.message || 'Contract rejected the claim';
+      // Parse common revert reasons
+      if (reason.includes('assigned')) {
+        toast('Cannot Claim', 'This job is assigned to a specific worker — not open for claiming.', 'error');
+      } else if (reason.includes('status') || reason.includes('not open')) {
+        toast('Cannot Claim', 'This job is no longer open (already claimed or completed).', 'error');
+      } else if (reason.includes('deadline') || reason.includes('expired')) {
+        toast('Job Expired', 'The deadline for this job has passed.', 'error');
+      } else {
+        toast('Claim Rejected', reason.slice(0, 100), 'error');
+      }
+      return;
+    }
+
     const tx = await jobContract.claimJob(BigInt(jobId));
     await tx.wait();
     toast('Job Claimed! 🎉', 'Go to "Jobs I\'m Working On" in your dashboard to submit your work', 'success');
     closeModal();
     await loadAvailableJobs();
-    await loadDashboard();
+    // Also notify the dashboard if it's active
+    if (document.getElementById('page-dashboard').classList.contains('active')) await loadDashboard();
   } catch(e) {
-    toast('Claim Failed', e.message?.slice(0,80) || 'Transaction failed', 'error');
+    const msg = e.reason || e.message || 'Transaction failed';
+    toast('Claim Failed', msg.slice(0,100), 'error');
+  }
+}
+
+// ── Cancel / Terminate Job (client) ─────────────────────────────
+async function cancelJob(jobId) {
+  if (!currentWallet) return;
+  if (!confirm('Cancel this job and reclaim your USDC? This cannot be undone.')) return;
+  try {
+    toast('Cancelling...', 'Confirm in your wallet', 'info');
+    const provider = new ethers.BrowserProvider(window.ethereum);
+    const signer = await provider.getSigner();
+    // Try cancelJob first, then rejectJob as fallback
+    let tx;
+    try {
+      const abi = ['function cancelJob(uint256 jobId)'];
+      const contract = new ethers.Contract(JOB_BOARD, abi, signer);
+      tx = await contract.cancelJob(BigInt(jobId));
+    } catch(e1) {
+      // Some contracts use rejectJob to refund client
+      const abi2 = ['function rejectJob(uint256 jobId)'];
+      const contract2 = new ethers.Contract(JOB_BOARD, abi2, signer);
+      tx = await contract2.rejectJob(BigInt(jobId));
+    }
+    await tx.wait();
+    toast('Job Cancelled ✅', 'USDC refunded to your wallet', 'success');
+    closeModal();
+    await loadDashboard();
+    await loadStats();
+  } catch(e) {
+    toast('Cancel Failed', e.reason || e.message?.slice(0,80) || 'Transaction failed', 'error');
   }
 }
 
@@ -1306,8 +1010,7 @@ async function confirmSubmitDeliverable() {
   if (!pendingDeliverableJobId) return;
 
   const btn = document.getElementById('submitDeliverableBtn');
-  btn.disabled = true;
-  btn.textContent = 'Submitting...';
+  btn.disabled = true; btn.textContent = 'Submitting...';
 
   try {
     toast('Submitting...', 'Confirm the transaction in your wallet', 'info');
@@ -1322,21 +1025,20 @@ async function confirmSubmitDeliverable() {
     closeModal();
     await loadDashboard();
   } catch(e) {
-    toast('Submission Failed', e.message?.slice(0,100) || 'Transaction failed', 'error');
+    toast('Submission Failed', e.reason || e.message?.slice(0,100) || 'Transaction failed', 'error');
   }
 
-  btn.disabled = false;
-  btn.textContent = 'Submit & Request Payment';
+  btn.disabled = false; btn.textContent = 'Submit & Request Payment';
 }
 
-// ── Load Stats ───────────────────────────────────────────────────
+// ── Stats ────────────────────────────────────────────────────────
 async function loadStats() {
   try {
     const res = await fetch(`${API}/api/stats`);
     const s = await res.json();
-    document.getElementById('stat-jobs').textContent = s.totalJobs;
-    document.getElementById('stat-completed').textContent = s.completedJobs;
-    document.getElementById('stat-volume').textContent = '$' + s.totalVolumeUsdc;
+    document.getElementById('stat-jobs').textContent = s.totalJobs ?? 0;
+    document.getElementById('stat-completed').textContent = s.completedJobs ?? 0;
+    document.getElementById('stat-volume').textContent = '$' + (s.totalVolumeUsdc || '0');
   } catch(e) {
     document.getElementById('stat-jobs').textContent = '0';
     document.getElementById('stat-completed').textContent = '0';
@@ -1344,10 +1046,11 @@ async function loadStats() {
   }
 }
 
-// ── Load Recent Jobs ─────────────────────────────────────────────
+// ── Recent Jobs ──────────────────────────────────────────────────
 async function loadRecentJobs() {
   try {
     const res = await fetch(`${API}/api/jobs`);
+    if (!res.ok) throw new Error('Failed');
     const jobs = await res.json();
     const container = document.getElementById('recentJobs');
     if (!jobs.length) {
@@ -1357,25 +1060,25 @@ async function loadRecentJobs() {
     container.innerHTML = '<div class="jobs-list">' + jobs.slice(-10).reverse().map(j => `
       <div class="job-card" onclick="openJobModal(${j.id})">
         <div>
-          <div class="job-title">${j.title}</div>
+          <div class="job-title">${j.title || 'Untitled'}</div>
           <div class="job-meta">
             <span>Worker: ${shortAddr(j.agent)}</span>
-            <span>${j.category}</span>
-            <span>${j.workerTypeLabel}</span>
+            <span>${j.category || 'General'}</span>
+            <span>${j.workerTypeLabel || 'Human'}</span>
           </div>
         </div>
         <div class="job-right">
           <div class="job-budget">${j.budget} USDC</div>
-          <span class="badge ${STATUS_CLASS[j.status]}">${j.statusLabel}</span>
+          <span class="badge ${STATUS_CLASS[j.status] || 'badge-open'}">${j.statusLabel || STATUS[j.status] || 'Open'}</span>
         </div>
       </div>
     `).join('') + '</div>';
   } catch(e) {
-    document.getElementById('recentJobs').innerHTML = '<div class="empty-state"><p>Connect backend to see live jobs</p></div>';
+    document.getElementById('recentJobs').innerHTML = '<div class="empty-state"><p>Could not load recent jobs.</p></div>';
   }
 }
 
-// ── Load Campaigns ───────────────────────────────────────────────
+// ── Campaigns ────────────────────────────────────────────────────
 async function loadCampaigns() {
   const container = document.getElementById('campaignsList');
   container.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:20px 0">Loading campaigns...</div>';
@@ -1402,15 +1105,15 @@ async function loadCampaigns() {
           </div>
           <div class="campaign-prize">${c.prizePool} USDC</div>
         </div>
-        <div class="campaign-desc">${c.description?.slice(0,120)}${c.description?.length > 120 ? '...' : ''}</div>
+        <div class="campaign-desc">${(c.description || '').slice(0,120)}${(c.description || '').length > 120 ? '...' : ''}</div>
         <div class="campaign-meta">
           <span>👤 by ${shortAddr(c.creator)}</span>
           <span>⏰ ${timeLeft(c.deadline)}</span>
-          ${c.maxParticipants > 0 ? `<span>👥 max ${c.maxParticipants} entries</span>` : '<span>👥 Unlimited entries</span>'}
+          ${c.maxParticipants > 0 ? `<span>👥 max ${c.maxParticipants}</span>` : '<span>👥 Unlimited</span>'}
           ${c.entryFee > 0 ? `<span>🎟 ${c.entryFee} USDC entry</span>` : '<span>🎟 Free entry</span>'}
         </div>
         <div style="margin-top:14px;display:flex;justify-content:flex-end">
-          <span class="btn btn-sm" style="background:rgba(246,201,14,0.1);color:var(--gold);border:1px solid rgba(246,201,14,0.2);pointer-events:none;font-family:var(--font-mono);font-size:11px">View & Participate →</span>
+          <span style="font-size:12px;font-family:var(--font-mono);color:var(--gold)">View & Participate →</span>
         </div>
       </div>
     `).join('');
@@ -1419,22 +1122,23 @@ async function loadCampaigns() {
   }
 }
 
-// ── Campaign Modal ───────────────────────────────────────────────
+// ── Campaign Modal ────────────────────────────────────────────────
 async function openCampaignModal(id) {
   const modal = document.getElementById('campaignModal');
   const body = document.getElementById('campaignModalBody');
   const actions = document.getElementById('campaignModalActions');
-  body.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:20px">Loading campaign details...</div>';
+  body.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:40px">Loading campaign details...</div>';
   actions.innerHTML = '';
   modal.classList.add('open');
 
   try {
-    const res = await fetch(`${API}/api/campaigns/${id}`);
     let campaign;
-    if (res.ok) {
-      campaign = await res.json();
-    } else {
-      // Fallback: load from the campaigns list
+    try {
+      const res = await fetch(`${API}/api/campaigns/${id}`);
+      if (res.ok) campaign = await res.json();
+    } catch(e) {}
+
+    if (!campaign) {
       const listRes = await fetch(`${API}/api/campaigns`);
       const list = await listRes.json();
       campaign = list.find(c => c.id == id);
@@ -1442,12 +1146,12 @@ async function openCampaignModal(id) {
 
     if (!campaign) {
       body.innerHTML = '<div class="empty-state"><p>Campaign not found.</p></div>';
+      actions.innerHTML = `<button class="btn btn-outline" onclick="closeCampaignModal()">Close</button>`;
       return;
     }
 
     currentCampaignData = campaign;
 
-    // Load entries if available
     let entries = [];
     try {
       const entryRes = await fetch(`${API}/api/campaigns/${id}/entries`);
@@ -1463,31 +1167,16 @@ async function openCampaignModal(id) {
         <span class="badge ${isExpired ? 'badge-rejected' : 'badge-campaign'}">${isExpired ? 'Expired' : 'Active'}</span>
       </div>
       <div class="modal-subtitle">${campaign.description || 'No description provided.'}</div>
-
       <div class="campaign-prize-hero">
         <div class="prize-label">Total Prize Pool</div>
         <div class="prize-amount">${campaign.prizePool} USDC</div>
       </div>
-
       <div class="campaign-info-grid">
-        <div class="campaign-info-cell">
-          <div class="ci-label">Creator</div>
-          <div class="ci-val">${shortAddr(campaign.creator)}</div>
-        </div>
-        <div class="campaign-info-cell">
-          <div class="ci-label">Time Left</div>
-          <div class="ci-val">${timeLeft(campaign.deadline)}</div>
-        </div>
-        <div class="campaign-info-cell">
-          <div class="ci-label">Entry Fee</div>
-          <div class="ci-val">${campaign.entryFee > 0 ? campaign.entryFee + ' USDC' : 'Free'}</div>
-        </div>
-        <div class="campaign-info-cell">
-          <div class="ci-label">Max Participants</div>
-          <div class="ci-val">${campaign.maxParticipants > 0 ? campaign.maxParticipants : 'Unlimited'}</div>
-        </div>
+        <div class="campaign-info-cell"><div class="ci-label">Creator</div><div class="ci-val">${shortAddr(campaign.creator)}</div></div>
+        <div class="campaign-info-cell"><div class="ci-label">Time Left</div><div class="ci-val">${timeLeft(campaign.deadline)}</div></div>
+        <div class="campaign-info-cell"><div class="ci-label">Entry Fee</div><div class="ci-val">${campaign.entryFee > 0 ? campaign.entryFee + ' USDC' : 'Free'}</div></div>
+        <div class="campaign-info-cell"><div class="ci-label">Max Participants</div><div class="ci-val">${campaign.maxParticipants > 0 ? campaign.maxParticipants : 'Unlimited'}</div></div>
       </div>
-
       <div class="section-divider">📋 Submissions (${entries.length})</div>
       ${entries.length ? `
         <div class="entries-list">
@@ -1503,7 +1192,6 @@ async function openCampaignModal(id) {
           `).join('')}
         </div>
       ` : `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:20px;text-align:center;color:var(--muted);font-size:13px;margin-bottom:8px">No entries yet — be the first to submit!</div>`}
-
       <div class="detail-row" style="margin-top:8px">
         <span class="detail-key">View onchain</span>
         <span class="detail-val"><a class="tx-link" href="${EXPLORER}/address/${JOB_BOARD}" target="_blank">Arcscan ↗</a></span>
@@ -1511,21 +1199,16 @@ async function openCampaignModal(id) {
     `;
 
     actions.innerHTML = '';
-
     if (!isExpired && currentWallet && !isCreator) {
       actions.innerHTML += `<button class="btn btn-gold" style="flex:1" onclick="openCampaignEntryModal(${id})">🏆 Submit My Entry</button>`;
     }
-
     if (!currentWallet) {
       actions.innerHTML += `<button class="btn btn-primary" style="flex:1" onclick="connectWallet();closeCampaignModal()">Connect Wallet to Participate</button>`;
     }
-
     if (isCreator) {
       actions.innerHTML += `<span style="font-size:12px;color:var(--muted);font-family:var(--font-mono);align-self:center">You created this campaign</span>`;
     }
-
     actions.innerHTML += `<button class="btn btn-outline" onclick="closeCampaignModal()">Close</button>`;
-
   } catch(e) {
     body.innerHTML = `<div class="empty-state"><p>Could not load campaign details.<br><small style="font-family:var(--font-mono)">${e.message}</small></p></div>`;
     actions.innerHTML = `<button class="btn btn-outline" onclick="closeCampaignModal()">Close</button>`;
@@ -1539,7 +1222,6 @@ function closeCampaignModal(e) {
   }
 }
 
-// ── Campaign Entry ────────────────────────────────────────────────
 function openCampaignEntryModal(campaignId) {
   pendingCampaignEntryId = campaignId;
   document.getElementById('campaignEntryInput').value = '';
@@ -1560,46 +1242,42 @@ async function confirmSubmitCampaignEntry() {
   if (!pendingCampaignEntryId) return;
 
   const btn = document.getElementById('submitCampaignEntryBtn');
-  btn.disabled = true;
-  btn.textContent = 'Submitting...';
+  btn.disabled = true; btn.textContent = 'Submitting...';
+
+  const campaignId = pendingCampaignEntryId;
 
   try {
     toast('Submitting Entry...', 'Confirm the transaction in your wallet', 'info');
     const provider = new ethers.BrowserProvider(window.ethereum);
     const signer = await provider.getSigner();
-
-    // Try contract call first
     const abi = ['function submitCampaignEntry(uint256 campaignId, string entry)'];
     const contract = new ethers.Contract(JOB_BOARD, abi, signer);
-    const tx = await contract.submitCampaignEntry(BigInt(pendingCampaignEntryId), entry);
+    const tx = await contract.submitCampaignEntry(BigInt(campaignId), entry);
     await tx.wait();
-
-    toast('Entry Submitted! 🏆', 'The campaign creator will review all entries and pick winners', 'success');
+    toast('Entry Submitted! 🏆', 'The campaign creator will review and pick winners', 'success');
     closeCampaignEntryModal();
-    // Refresh campaign modal
-    await openCampaignModal(pendingCampaignEntryId);
+    await openCampaignModal(campaignId);
   } catch(e) {
-    // If contract call fails, fall back to API
+    // Fallback to API
     try {
-      const res = await fetch(`${API}/api/campaigns/${pendingCampaignEntryId}/entries`, {
+      const res = await fetch(`${API}/api/campaigns/${campaignId}/entries`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ participant: currentWallet, entry })
       });
       if (res.ok) {
-        toast('Entry Submitted! 🏆', 'The campaign creator will review all entries and pick winners', 'success');
+        toast('Entry Submitted! 🏆', 'The campaign creator will review and pick winners', 'success');
         closeCampaignEntryModal();
-        await openCampaignModal(pendingCampaignEntryId);
+        await openCampaignModal(campaignId);
       } else {
         throw new Error('API submission failed');
       }
     } catch(e2) {
-      toast('Submission Failed', e.message?.slice(0,100) || 'Transaction failed', 'error');
+      toast('Submission Failed', e.reason || e.message?.slice(0,100) || 'Transaction failed', 'error');
     }
   }
 
-  btn.disabled = false;
-  btn.textContent = 'Submit Entry';
+  btn.disabled = false; btn.textContent = 'Submit Entry';
 }
 
 async function selectCampaignWinner(campaignId, winnerAddress) {
@@ -1615,7 +1293,7 @@ async function selectCampaignWinner(campaignId, winnerAddress) {
     toast('Winner Selected! 🏆', 'Prize has been released to the winner', 'success');
     await openCampaignModal(campaignId);
   } catch(e) {
-    toast('Failed', e.message?.slice(0,80), 'error');
+    toast('Failed', e.reason || e.message?.slice(0,80), 'error');
   }
 }
 
@@ -1624,7 +1302,11 @@ async function loadReviewBoard() {
   const container = document.getElementById('reviewBoard');
   try {
     const res = await fetch(`${API}/api/agents`);
-    const workers = await res.json();
+    const workers = res.ok ? await res.json() : [];
+    if (!workers.length) {
+      container.innerHTML = '<div class="empty-state"><p>No workers yet.</p></div>';
+      return;
+    }
     const workerCards = await Promise.all(workers.map(async worker => {
       try {
         const reviewsRes = await fetch(`${API}/api/worker/${worker.walletAddress}/reviews`);
@@ -1633,28 +1315,21 @@ async function loadReviewBoard() {
         return { ...worker, reviews, average };
       } catch { return { ...worker, reviews: [], average: '—' }; }
     }));
-
-    container.innerHTML = '<div class="agents-grid">' + workerCards.map(worker => {
-      const isAI = worker.type === 'AI';
-      return `
-        <div class="agent-card" onclick="openWorkerReviewModal('${worker.walletAddress}')">
-          <div class="agent-header">
-            <div class="agent-icon">${isAI ? AGENT_ICONS[worker.taskTypes[0]] || '🤖' : '🧑'}</div>
-            <div>
-              <span class="badge ${isAI ? 'badge-coming-soon' : 'badge-funded'}">${isAI ? '⏳ Coming Soon' : 'Human'}</span>
-              ${worker.isVerified ? '<span class="badge badge-verified" style="margin-left:4px">✓ Verified</span>' : ''}
-            </div>
-          </div>
-          <div class="agent-name">${worker.name}</div>
-          <div class="agent-desc">${worker.description}</div>
-          <div class="tags">${worker.taskTypes.map(t => `<span class="tag">${t}</span>`).join('')}</div>
-          <div class="agent-footer">
-            <div class="rep-score"><div class="rep-dot"></div>${worker.average} rating</div>
-            <span style="font-family:var(--font-mono);font-size:12px;color:var(--accent2)">${worker.reviews.length} reviews</span>
-          </div>
+    container.innerHTML = '<div class="agents-grid">' + workerCards.map(worker => `
+      <div class="agent-card" onclick="openWorkerReviewModal('${worker.walletAddress}')">
+        <div class="agent-header">
+          <div class="agent-icon">🧑</div>
+          <div><span class="badge badge-funded">Human</span>${worker.isVerified ? '<span class="badge badge-verified" style="margin-left:4px">✓ Verified</span>' : ''}</div>
         </div>
-      `;
-    }).join('') + '</div>';
+        <div class="agent-name">${worker.name}</div>
+        <div class="agent-desc">${worker.description || ''}</div>
+        <div class="tags">${(worker.taskTypes || []).map(t => `<span class="tag">${t}</span>`).join('')}</div>
+        <div class="agent-footer">
+          <div class="rep-score"><div class="rep-dot"></div>${worker.average} rating</div>
+          <span style="font-family:var(--font-mono);font-size:12px;color:var(--accent2)">${worker.reviews.length} reviews</span>
+        </div>
+      </div>
+    `).join('') + '</div>';
   } catch(e) {
     container.innerHTML = '<div class="empty-state"><p>Could not load review board.</p></div>';
   }
@@ -1662,10 +1337,9 @@ async function loadReviewBoard() {
 
 async function openWorkerReviewModal(address) {
   try {
-    const agent = agents.find(a => a.walletAddress.toLowerCase() === address.toLowerCase());
     const res = await fetch(`${API}/api/worker/${address}/reviews`);
     const reviews = res.ok ? await res.json() : [];
-    document.getElementById('modalTitle').textContent = agent ? agent.name : 'Worker Reviews';
+    document.getElementById('modalTitle').textContent = 'Worker Reviews';
     document.getElementById('modalBody').innerHTML = reviews.length ? reviews.map(r => `
       <div class="detail-row"><span class="detail-key">Rating</span><span class="detail-val">${r.rating}/5</span></div>
       <div class="detail-row"><span class="detail-key">Comment</span><span class="detail-val" style="font-size:12px;color:var(--muted)">${r.comment}</span></div>
@@ -1689,29 +1363,29 @@ async function submitJob() {
   const title = document.getElementById('jobTitle').value.trim();
   const desc = document.getElementById('jobDesc').value.trim();
   const category = document.getElementById('jobCategory').value;
-  const budgetValue = document.getElementById('budget').value.trim();
-  const deadlineValue = document.getElementById('deadlineValue').value.trim();
+  const budgetStr = document.getElementById('budget').value.trim();
+  const deadlineStr = document.getElementById('deadlineValue').value.trim();
   const deadlineUnit = document.getElementById('deadlineUnit').value;
-  const budget = parseFloat(budgetValue);
-  const deadlineValueNum = parseFloat(deadlineValue);
+  const budget = parseFloat(budgetStr);
+  const deadlineNum = parseFloat(deadlineStr);
 
   if (!title || !desc) { toast('Missing Info', 'Please fill in title and description', 'error'); return; }
-  if (!budgetValue || isNaN(budget) || budget <= 0) { toast('Invalid Budget', 'Enter a USDC amount greater than 0', 'error'); return; }
-  if (!deadlineValue || isNaN(deadlineValueNum) || deadlineValueNum <= 0) { toast('Invalid Deadline', 'Enter a deadline value', 'error'); return; }
+  if (!budgetStr || isNaN(budget) || budget <= 0) { toast('Invalid Budget', 'Enter a USDC amount greater than 0', 'error'); return; }
+  if (!deadlineStr || isNaN(deadlineNum) || deadlineNum <= 0) { toast('Invalid Deadline', 'Enter a deadline value', 'error'); return; }
 
-  const deadlineMinutes = deadlineUnit === 'hours' ? deadlineValueNum * 60 : deadlineValueNum;
+  const deadlineMinutes = deadlineUnit === 'hours' ? deadlineNum * 60 : deadlineNum;
   const deadlineHours = BigInt(Math.max(1, Math.ceil(deadlineMinutes / 60)));
 
   const btn = document.getElementById('postBtn');
-  btn.disabled = true;
-  btn.textContent = 'Approving USDC...';
+  btn.disabled = true; btn.textContent = 'Approving USDC...';
 
   try {
-    const budgetWei = ethers.parseUnits(budget.toString(), 6);
+    const budgetWei = ethers.parseUnits(budget.toFixed(6), 6);
     toast('Step 1/2', 'Approving USDC transfer — confirm in your wallet', 'info');
 
     const provider = new ethers.BrowserProvider(window.ethereum);
     const signer = await provider.getSigner();
+
     const usdcAbi = ['function approve(address spender, uint256 amount) returns (bool)'];
     const usdcContract = new ethers.Contract(USDC, usdcAbi, signer);
     const approveTx = await usdcContract.approve(JOB_BOARD, budgetWei);
@@ -1739,16 +1413,12 @@ async function submitJob() {
     }];
 
     const jobContract = new ethers.Contract(JOB_BOARD, jobAbi, signer);
-    // Always open marketplace — address(0) means anyone can claim
-    const agentAddress = ethers.ZeroAddress;
-    const workerTypeValue = 1; // Human
-
     const jobTx = await jobContract.postAndFundJob({
-      agent: agentAddress,
+      agent: ethers.ZeroAddress, // Always open marketplace
       title,
       description: desc,
       category,
-      workerType: workerTypeValue,
+      workerType: 1, // Human
       budget: budgetWei,
       deadlineHours,
       milestoneDescriptions: [],
@@ -1757,19 +1427,25 @@ async function submitJob() {
     const receipt = await jobTx.wait();
     toast('Job Posted! 🎉', `USDC locked in escrow. Tx: ${receipt.hash.slice(0,10)}...`, 'success');
 
+    // Clear form
     document.getElementById('jobTitle').value = '';
     document.getElementById('jobDesc').value = '';
     document.getElementById('budget').value = '';
 
-    await loadStats();
-    await loadRecentJobs();
+    // Reload data & go to dashboard
+    await Promise.all([loadStats(), loadRecentJobs()]);
+
+    // Small delay so the backend has time to index the event
+    setTimeout(async () => {
+      await loadDashboard();
+    }, 2000);
+
     showPage('dashboard');
   } catch(e) {
-    toast('Transaction Failed', e.message?.slice(0,80) || 'Unknown error', 'error');
+    toast('Transaction Failed', e.reason || e.message?.slice(0,100) || 'Unknown error', 'error');
   }
 
-  btn.disabled = false;
-  btn.textContent = 'Fund Escrow & Post Job';
+  btn.disabled = false; btn.textContent = 'Fund Escrow & Post Job';
 }
 
 // ── Create Campaign ──────────────────────────────────────────────
@@ -1787,8 +1463,7 @@ async function createCampaign() {
   if (!prizePool || prizePool <= 0) { toast('Invalid Prize Pool', 'Enter a USDC amount greater than 0', 'error'); return; }
 
   const btn = document.getElementById('createCampaignBtn');
-  btn.disabled = true;
-  btn.textContent = 'Approving USDC...';
+  btn.disabled = true; btn.textContent = 'Approving USDC...';
 
   try {
     const prizeWei = BigInt(Math.round(prizePool * 1_000_000));
@@ -1796,6 +1471,7 @@ async function createCampaign() {
 
     const provider = new ethers.BrowserProvider(window.ethereum);
     const signer = await provider.getSigner();
+
     const usdcAbi = ['function approve(address spender, uint256 amount) returns (bool)'];
     const usdcContract = new ethers.Contract(USDC, usdcAbi, signer);
     const approveTx = await usdcContract.approve(JOB_BOARD, prizeWei);
@@ -1812,18 +1488,19 @@ async function createCampaign() {
     const receipt = await campaignTx.wait();
     toast('Campaign Launched! 🎉', `Tx: ${receipt.hash.slice(0,10)}...`, 'success');
 
-    ['campaignTitle','campaignDesc','prizePool','entryFee','maxParticipants','campaignDeadline'].forEach(id => document.getElementById(id).value = '');
+    ['campaignTitle','campaignDesc','prizePool','entryFee','maxParticipants','campaignDeadline'].forEach(id => {
+      document.getElementById(id).value = '';
+    });
     await loadCampaigns();
     showPage('campaigns');
   } catch(e) {
-    toast('Transaction Failed', e.message?.slice(0,80) || 'Unknown error', 'error');
+    toast('Transaction Failed', e.reason || e.message?.slice(0,80) || 'Unknown error', 'error');
   }
 
-  btn.disabled = false;
-  btn.textContent = 'Fund Prize Pool & Launch';
+  btn.disabled = false; btn.textContent = 'Fund Prize Pool & Launch';
 }
 
-// ── Dashboard ────────────────────────────────────────────────────
+// ── Dashboard ─────────────────────────────────────────────────────
 async function loadDashboard() {
   if (!currentWallet) {
     document.getElementById('dashboardContent').innerHTML = `
@@ -1835,24 +1512,33 @@ async function loadDashboard() {
     return;
   }
 
-  const normalizedWallet = currentWallet.toLowerCase();
+  // Normalize wallet to lowercase for API calls
+  const wallet = currentWallet.toLowerCase();
   const route = currentTab === 'agent'
-    ? `${API}/api/agent/${normalizedWallet}/jobs`
-    : `${API}/api/client/${normalizedWallet}/jobs`;
+    ? `${API}/api/agent/${wallet}/jobs`
+    : `${API}/api/client/${wallet}/jobs`;
+
+  document.getElementById('dashboardContent').innerHTML = '<div style="color:var(--muted);padding:20px;text-align:center">Loading...</div>';
 
   try {
     const res = await fetch(route);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const jobs = await res.json();
     renderDashboardJobs(jobs);
   } catch(e) {
-    document.getElementById('dashboardContent').innerHTML = '<div class="empty-state"><p>Could not load jobs. Make sure backend is running.</p></div>';
+    document.getElementById('dashboardContent').innerHTML = `
+      <div class="empty-state">
+        <span class="empty-icon">⚠️</span>
+        <p>Could not load jobs. Backend may be indexing your transaction — wait a few seconds and refresh.</p>
+        <button class="btn btn-outline btn-sm" style="margin-top:12px" onclick="loadDashboard()">↻ Refresh</button>
+      </div>`;
   }
 }
 
-function switchTab(tab) {
+function switchTab(tab, e) {
   currentTab = tab;
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  event.target.classList.add('active');
+  if (e?.target) e.target.classList.add('active');
   loadDashboard();
 }
 
@@ -1860,7 +1546,7 @@ function renderDashboardJobs(jobs) {
   const container = document.getElementById('dashboardContent');
   const isWorkerTab = currentTab === 'agent';
 
-  if (!jobs.length) {
+  if (!Array.isArray(jobs) || !jobs.length) {
     container.innerHTML = `
       <div class="empty-state">
         <span class="empty-icon">${isWorkerTab ? '💼' : '📋'}</span>
@@ -1875,17 +1561,14 @@ function renderDashboardJobs(jobs) {
   container.innerHTML = `<div class="jobs-list">` + jobs.map(j => {
     const isClient = currentWallet?.toLowerCase() === j.client?.toLowerCase();
     const isWorker = currentWallet?.toLowerCase() === j.agent?.toLowerCase();
+    const expired = isExpiredDeadline(j.deadline) && j.status === 1; // Claimed but deadline passed
 
     let workerActions = '';
     if (isWorker && j.status === 1) {
       workerActions = `<button class="btn btn-primary btn-sm" onclick="event.stopPropagation();openDeliverableModal(${j.id})">Submit Work</button>`;
     }
-    if (isWorker && j.status === 2) {
-      workerActions = `<span style="font-size:12px;color:var(--gold);font-family:var(--font-mono)">⏳ Awaiting approval</span>`;
-    }
-    if (isWorker && j.status === 3) {
-      workerActions = `<span style="font-size:12px;color:var(--success);font-family:var(--font-mono)">✅ Paid!</span>`;
-    }
+    if (isWorker && j.status === 2) workerActions = `<span style="font-size:12px;color:var(--gold);font-family:var(--font-mono)">⏳ Awaiting approval</span>`;
+    if (isWorker && j.status === 3) workerActions = `<span style="font-size:12px;color:var(--success);font-family:var(--font-mono)">✅ Paid!</span>`;
 
     let clientActions = '';
     if (isClient && j.status === 2) {
@@ -1893,22 +1576,28 @@ function renderDashboardJobs(jobs) {
         <button class="btn btn-success btn-sm" onclick="event.stopPropagation();approveJob(${j.id})">Approve & Pay</button>
         <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();rejectJob(${j.id})">Reject</button>`;
     }
+    // Allow client to cancel Open or expired In-Progress jobs
+    if (isClient && (j.status === 0 || (j.status === 1 && expired))) {
+      clientActions += `<button class="btn btn-warning btn-sm" onclick="event.stopPropagation();cancelJob(${j.id})" title="Cancel and reclaim USDC">Cancel Job</button>`;
+    }
 
     return `
       <div class="job-card" onclick="openJobModal(${j.id})">
-        <div>
-          <div class="job-title">${j.title}</div>
+        <div style="min-width:0">
+          <div class="job-title">${j.title || 'Untitled'}</div>
           <div class="job-meta">
             <span>${isWorkerTab ? `Client: ${shortAddr(j.client)}` : `Worker: ${shortAddr(j.agent)}`}</span>
-            <span>${j.category}</span>
-            <span>${new Date(j.createdAt).toLocaleDateString()}</span>
+            <span>${j.category || 'General'}</span>
+            <span>${new Date(j.createdAt || Date.now()).toLocaleDateString()}</span>
+            ${j.deadline ? `<span>⏰ ${timeLeft(j.deadline)}</span>` : ''}
           </div>
           ${isWorkerTab && j.status === 1 ? `<div class="worker-action-pill">✅ You claimed this job — submit your work when ready</div>` : ''}
+          ${expired ? `<div class="expired-banner">⚠️ Deadline passed — client can cancel and reclaim funds</div>` : ''}
         </div>
         <div class="job-right">
           <div class="job-budget">${j.budget} USDC</div>
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end">
-            <span class="badge ${STATUS_CLASS[j.status]}">${j.statusLabel}</span>
+            <span class="badge ${STATUS_CLASS[j.status] || 'badge-open'}">${j.statusLabel || STATUS[j.status] || 'Open'}</span>
             ${workerActions}
             ${clientActions}
           </div>
@@ -1918,23 +1607,27 @@ function renderDashboardJobs(jobs) {
   }).join('') + `</div>`;
 }
 
-// ── Job Modal ────────────────────────────────────────────────────
+// ── Job Modal ─────────────────────────────────────────────────────
 async function openJobModal(id) {
   try {
     const res = await fetch(`${API}/api/jobs/${id}`);
+    if (!res.ok) throw new Error('Job not found');
     const job = await res.json();
+    const expired = isExpiredDeadline(job.deadline) && job.status === 1;
 
-    document.getElementById('modalTitle').textContent = job.title;
+    document.getElementById('modalTitle').textContent = job.title || 'Job Details';
     document.getElementById('modalBody').innerHTML = `
-      <div class="detail-row"><span class="detail-key">Status</span><span class="detail-val"><span class="badge ${STATUS_CLASS[job.status]}">${job.statusLabel}</span></span></div>
+      <div class="detail-row"><span class="detail-key">Status</span><span class="detail-val"><span class="badge ${STATUS_CLASS[job.status] || 'badge-open'}">${job.statusLabel || STATUS[job.status] || 'Open'}</span></span></div>
       <div class="detail-row"><span class="detail-key">Budget</span><span class="detail-val" style="color:var(--accent2);font-family:var(--font-head);font-size:18px">${job.budget} USDC</span></div>
-      <div class="detail-row"><span class="detail-key">Category</span><span class="detail-val">${job.category}</span></div>
-      <div class="detail-row"><span class="detail-key">Worker Type</span><span class="detail-val">${job.workerTypeLabel}</span></div>
-      <div class="detail-row"><span class="detail-key">Worker</span><span class="detail-val mono"><a class="tx-link" href="${EXPLORER}/address/${job.agent}" target="_blank">${shortAddr(job.agent)} ↗</a></span></div>
+      <div class="detail-row"><span class="detail-key">Category</span><span class="detail-val">${job.category || '—'}</span></div>
+      <div class="detail-row"><span class="detail-key">Worker Type</span><span class="detail-val">${job.workerTypeLabel || 'Human'}</span></div>
+      <div class="detail-row"><span class="detail-key">Worker</span><span class="detail-val mono">${job.agent && job.agent !== ethers.ZeroAddress ? `<a class="tx-link" href="${EXPLORER}/address/${job.agent}" target="_blank">${shortAddr(job.agent)} ↗</a>` : 'Unclaimed (open)'}</span></div>
       <div class="detail-row"><span class="detail-key">Client</span><span class="detail-val mono">${shortAddr(job.client)}</span></div>
-      <div class="detail-row"><span class="detail-key">Description</span><span class="detail-val" style="font-size:12px;color:var(--muted);text-align:left;max-width:100%">${job.description}</span></div>
+      ${job.deadline ? `<div class="detail-row"><span class="detail-key">Deadline</span><span class="detail-val" style="color:${expired ? 'var(--danger)' : 'var(--text)'}">${timeLeft(job.deadline)}</span></div>` : ''}
+      <div class="detail-row"><span class="detail-key">Description</span><span class="detail-val" style="font-size:12px;color:var(--muted);text-align:left;max-width:100%">${job.description || '—'}</span></div>
       ${job.deliverableHash ? `<div class="detail-row"><span class="detail-key">Deliverable</span><span class="detail-val" style="font-size:12px;color:var(--accent2);word-break:break-all">${job.deliverableHash}</span></div>` : ''}
       <div class="detail-row"><span class="detail-key">View onchain</span><span class="detail-val"><a class="tx-link" href="${EXPLORER}/address/${JOB_BOARD}" target="_blank">Arcscan ↗</a></span></div>
+      ${expired ? '<div class="expired-banner" style="margin-top:10px">⚠️ Deadline passed — client can cancel and reclaim USDC</div>' : ''}
     `;
 
     const actions = document.getElementById('modalActions');
@@ -1946,28 +1639,24 @@ async function openJobModal(id) {
     if (job.status === 0 && currentWallet && !isClient) {
       actions.innerHTML = `<button class="btn btn-primary" style="flex:1" onclick="claimJob(${id})">Claim This Job →</button>`;
     }
-
     if (!currentWallet && job.status === 0) {
       actions.innerHTML = `<button class="btn btn-primary" style="flex:1" onclick="connectWallet();closeModal()">Connect Wallet to Claim</button>`;
     }
-
     if (isWorker && job.status === 1) {
       actions.innerHTML = `<button class="btn btn-primary" style="flex:1" onclick="openDeliverableModal(${id});closeModal()">Submit My Work</button>`;
     }
-
     if (isClient && job.status === 2) {
       actions.innerHTML = `
         <button class="btn btn-success" style="flex:1" onclick="approveJob(${id});closeModal()">✓ Approve & Release Payment</button>
-        <button class="btn btn-danger" onclick="rejectJob(${id});closeModal()">Reject</button>
-      `;
+        <button class="btn btn-danger" onclick="rejectJob(${id});closeModal()">Reject</button>`;
     }
-
+    if (isClient && (job.status === 0 || (job.status === 1 && expired))) {
+      actions.innerHTML += `<button class="btn btn-warning" onclick="cancelJob(${id})">Cancel & Refund</button>`;
+    }
     if (isClient && job.status === 3) {
       actions.innerHTML += `<button class="btn btn-outline" style="flex:1" onclick="openReviewForm(${id})">Leave a Review</button>`;
     }
-
     actions.innerHTML += `<button class="btn btn-outline btn-sm" onclick="closeModal()">Close</button>`;
-
     document.getElementById('jobModal').classList.add('open');
   } catch(e) {
     toast('Error', 'Could not load job details', 'error');
@@ -1986,46 +1675,43 @@ function openReviewForm(jobId) {
     <div class="form-group">
       <label>Rating</label>
       <select id="reviewRating">
-        <option value="5">5 - Excellent</option>
-        <option value="4">4 - Great</option>
-        <option value="3">3 - Good</option>
-        <option value="2">2 - Fair</option>
-        <option value="1">1 - Needs work</option>
+        <option value="5">5 — Excellent</option>
+        <option value="4">4 — Great</option>
+        <option value="3">3 — Good</option>
+        <option value="2">2 — Fair</option>
+        <option value="1">1 — Needs work</option>
       </select>
     </div>
     <div class="form-group">
       <label>Comment</label>
       <textarea id="reviewComment" placeholder="Tell others about this worker's quality and reliability"></textarea>
-    </div>
-  `;
+    </div>`;
   document.getElementById('modalActions').innerHTML = `
     <button class="btn btn-success" style="flex:1" onclick="submitReview(${jobId})">Submit Review</button>
-    <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
-  `;
+    <button class="btn btn-outline" onclick="closeModal()">Cancel</button>`;
 }
 
 async function submitReview(jobId) {
   if (!currentWallet) return;
   const rating = parseInt(document.getElementById('reviewRating').value);
   const comment = document.getElementById('reviewComment').value.trim();
-  if (!comment) { toast('Add a comment', 'Your review should include a short note', 'error'); return; }
-
+  if (!comment) { toast('Add a comment', '', 'error'); return; }
   try {
     toast('Submitting review...', 'Confirm in your wallet', 'info');
     const provider = new ethers.BrowserProvider(window.ethereum);
     const signer = await provider.getSigner();
-    const reviewAbi = ['function submitReview(uint256,uint8,string)'];
-    const reviewContract = new ethers.Contract(JOB_BOARD, reviewAbi, signer);
-    const tx = await reviewContract.submitReview(BigInt(jobId), rating, comment);
+    const abi = ['function submitReview(uint256,uint8,string)'];
+    const contract = new ethers.Contract(JOB_BOARD, abi, signer);
+    const tx = await contract.submitReview(BigInt(jobId), rating, comment);
     await tx.wait();
     toast('Review submitted! ⭐', 'This worker now has onchain feedback', 'success');
     closeModal();
   } catch(e) {
-    toast('Review failed', e.message?.slice(0,80), 'error');
+    toast('Review failed', e.reason || e.message?.slice(0,80), 'error');
   }
 }
 
-// ── Approve / Reject ─────────────────────────────────────────────
+// ── Approve / Reject ──────────────────────────────────────────────
 async function approveJob(jobId) {
   if (!currentWallet) return;
   try {
@@ -2040,7 +1726,7 @@ async function approveJob(jobId) {
     await loadDashboard();
     await loadStats();
   } catch(e) {
-    toast('Failed', e.message?.slice(0,80), 'error');
+    toast('Failed', e.reason || e.message?.slice(0,80), 'error');
   }
 }
 
@@ -2057,20 +1743,26 @@ async function rejectJob(jobId) {
     toast('Job Rejected', 'USDC refunded to your wallet', 'success');
     await loadDashboard();
   } catch(e) {
-    toast('Failed', e.message?.slice(0,80), 'error');
+    toast('Failed', e.reason || e.message?.slice(0,80), 'error');
   }
 }
 
-// ── Init ─────────────────────────────────────────────────────────
+// ── Init ──────────────────────────────────────────────────────────
 async function init() {
-  await Promise.all([loadConfig(), loadAgents(), loadStats(), loadRecentJobs(), loadCampaigns()]);
+  loadProfileData();
+  await loadConfig();
+  renderAgents();
+  await Promise.all([loadStats(), loadRecentJobs(), loadCampaigns()]);
 
   if (window.ethereum) {
     window.ethereum.on('accountsChanged', async accounts => {
       currentWallet = accounts[0] || null;
       updateWalletDisplay();
       updateWalletButtons();
-      if (document.getElementById('page-dashboard').classList.contains('active')) await loadDashboard();
+      const activePage = document.querySelector('.page.active');
+      if (activePage?.id === 'page-dashboard') await loadDashboard();
+      if (activePage?.id === 'page-pick') await loadAvailableJobs();
+      if (activePage?.id === 'page-profile') loadProfile();
     });
 
     try {

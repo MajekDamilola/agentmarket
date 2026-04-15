@@ -74,7 +74,9 @@ else
 fi
 
 # Update frontend fallback address
-sed -i "s|const JOB_BOARD = window.JOB_BOARD_ADDRESS = '.*';|const JOB_BOARD = window.JOB_BOARD_ADDRESS = '$CONTRACT_ADDRESS';|" frontend/index.html 2>/dev/null || true
+if [ -f "frontend/index.html" ]; then
+  sed -i -E "s#let JOB_BOARD = (window\\.JOB_BOARD_ADDRESS \\|\\| )?'0x[a-fA-F0-9]{40}';#let JOB_BOARD = window.JOB_BOARD_ADDRESS || '$CONTRACT_ADDRESS';#" frontend/index.html
+fi
 
 echo "  ✓ Address saved to backend/.env and .env"
 echo ""

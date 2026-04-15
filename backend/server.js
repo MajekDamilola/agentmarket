@@ -381,6 +381,54 @@ function formatJob(job) {
 
 // ─── Routes ──────────────────────────────────────────────────────
 
+function sameAddress(a, b) {
+  return a?.toLowerCase() === b?.toLowerCase();
+}
+
+async function getAllFormattedJobs() {
+  const jobs = await publicClient.readContract({
+    address: JOB_BOARD_ADDRESS,
+    abi: JOB_BOARD_ABI,
+    functionName: "getAllJobs",
+  });
+  return jobs.map(formatJob);
+}
+
+async function getJobsByIds(jobIds) {
+  const jobs = await Promise.all(
+    jobIds.map(id =>
+      publicClient.readContract({
+        address: JOB_BOARD_ADDRESS,
+        abi: JOB_BOARD_ABI,
+        functionName: "getJob",
+        args: [id],
+      })
+    )
+  );
+  return jobs.map(formatJob);
+}
+
+async function getJobsForAddress(address, idFunctionName, matchesAddress) {
+  const normalized = address.toLowerCase();
+  let indexedJobs = [];
+  try {
+    const jobIds = await publicClient.readContract({
+      address: JOB_BOARD_ADDRESS,
+      abi: JOB_BOARD_ABI,
+      functionName: idFunctionName,
+      args: [normalized],
+    });
+    indexedJobs = await getJobsByIds(jobIds);
+  } catch (err) {
+    console.warn(`Falling back to getAllJobs for ${idFunctionName}:`, err.message);
+  }
+
+  if (indexedJobs.length > 0) return indexedJobs;
+
+  const allJobs = await getAllFormattedJobs();
+  return allJobs.filter(job => matchesAddress(job, normalized));
+}
+
 // Health check
 app.get("/health", (req, res) => {
   res.json({ status: "ok", network: "Arc Testnet", contractAddress: JOB_BOARD_ADDRESS });
@@ -398,12 +446,7 @@ app.get("/api/config", (req, res) => {
 // Get all jobs
 app.get("/api/jobs", async (req, res) => {
   try {
-    const jobs = await publicClient.readContract({
-      address: JOB_BOARD_ADDRESS,
-      abi: JOB_BOARD_ABI,
-      functionName: "getAllJobs",
-    });
-    res.json(jobs.map(formatJob));
+    res.json(await getAllFormattedJobs());
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -412,12 +455,8 @@ app.get("/api/jobs", async (req, res) => {
 // Get open jobs
 app.get("/api/jobs/open", async (req, res) => {
   try {
-    const jobs = await publicClient.readContract({
-      address: JOB_BOARD_ADDRESS,
-      abi: JOB_BOARD_ABI,
-      functionName: "getAllJobs",
-    });
-    res.json(jobs.map(formatJob).filter(job => job.status === 0));
+    const jobs = await getAllFormattedJobs();
+    res.json(jobs.filter(job => job.status === 0));
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -441,26 +480,12 @@ app.get("/api/jobs/:id", async (req, res) => {
 // Get jobs for a specific client
 app.get("/api/client/:address/jobs", async (req, res) => {
   try {
-    const address = req.params.address.toLowerCase();
-    const jobIds = await publicClient.readContract({
-      address: JOB_BOARD_ADDRESS,
-      abi: JOB_BOARD_ABI,
-      functionName: "getClientJobs",
-      args: [address],
-    });
-
-    const jobs = await Promise.all(
-      jobIds.map(id =>
-        publicClient.readContract({
-          address: JOB_BOARD_ADDRESS,
-          abi: JOB_BOARD_ABI,
-          functionName: "getJob",
-          args: [id],
-        })
-      )
+    const jobs = await getJobsForAddress(
+      req.params.address,
+      "getClientJobs",
+      (job, address) => sameAddress(job.client, address)
     );
-
-    res.json(jobs.map(formatJob));
+    res.json(jobs);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -469,26 +494,12 @@ app.get("/api/client/:address/jobs", async (req, res) => {
 // Get jobs for a specific agent
 app.get("/api/agent/:address/jobs", async (req, res) => {
   try {
-    const address = req.params.address.toLowerCase();
-    const jobIds = await publicClient.readContract({
-      address: JOB_BOARD_ADDRESS,
-      abi: JOB_BOARD_ABI,
-      functionName: "getAgentJobs",
-      args: [address],
-    });
-
-    const jobs = await Promise.all(
-      jobIds.map(id =>
-        publicClient.readContract({
-          address: JOB_BOARD_ADDRESS,
-          abi: JOB_BOARD_ABI,
-          functionName: "getJob",
-          args: [id],
-        })
-      )
+    const jobs = await getJobsForAddress(
+      req.params.address,
+      "getAgentJobs",
+      (job, address) => sameAddress(job.agent, address)
     );
-
-    res.json(jobs.map(formatJob));
+    res.json(jobs);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

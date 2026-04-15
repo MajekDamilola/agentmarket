@@ -429,8 +429,8 @@
       </div>
     </div>
     <div class="tab-row">
-      <button class="tab active" onclick="switchTab('posted',event)">Jobs I Posted</button>
-      <button class="tab" onclick="switchTab('agent',event)">Jobs I'm Working On</button>
+      <button class="tab active" data-tab="posted" onclick="switchTab('posted')">Jobs I Posted</button>
+      <button class="tab" data-tab="agent" onclick="switchTab('agent')">Jobs I'm Working On</button>
     </div>
     <div id="dashboardContent">
       <div class="empty-state"><p>Connect your wallet to see your jobs</p><button class="btn btn-primary" onclick="connectWallet()">Connect Wallet</button></div>
@@ -603,10 +603,13 @@
 
 <script>
 // ── Config ────────────────────────────────────────────────────────
-const API = 'https://agentmarket-cv66.vercel.app';
+const PROD_API = 'https://agentmarket-cv66.vercel.app';
+const LOCAL_API = 'http://localhost:3001';
+const LOCAL_HOSTS = new Set(['', 'localhost', '127.0.0.1']);
+const API = window.AGENTMARKET_API || (LOCAL_HOSTS.has(window.location.hostname) ? LOCAL_API : PROD_API);
 const EXPLORER = 'https://testnet.arcscan.app';
 const USDC = '0x3600000000000000000000000000000000000000';
-let JOB_BOARD = '0x42e4cC4836cDd7355a7aD600B51B054b03322D3f';
+let JOB_BOARD = window.JOB_BOARD_ADDRESS || '0x42e4cC4836cDd7355a7aD600B51B054b03322D3f';
 
 const STATUS = ['Open','In Progress','Submitted','Completed','Rejected','Cancelled'];
 const STATUS_CLASS = ['badge-open','badge-funded','badge-submitted','badge-completed','badge-rejected','badge-rejected'];
@@ -1255,7 +1258,8 @@ async function submitJob() {
     document.getElementById('jobDesc').value='';
     document.getElementById('budget').value='';
 
-    // Go to dashboard and reload after delay for backend indexing
+    // Go to posted jobs and reload after delay for backend indexing
+    setDashboardTab('posted');
     showPage('dashboard');
     toast('Dashboard loading...','Your job will appear in a few seconds as the blockchain confirms','info');
     setTimeout(async () => {
@@ -1305,10 +1309,15 @@ async function loadDashboard() {
   }
 }
 
-function switchTab(tab, e) {
+function setDashboardTab(tab) {
   currentTab = tab;
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  if(e?.target) e.target.classList.add('active');
+  document.querySelectorAll('#page-dashboard .tab').forEach(t=>{
+    t.classList.toggle('active', t.dataset.tab === tab);
+  });
+}
+
+function switchTab(tab) {
+  setDashboardTab(tab);
   loadDashboard();
 }
 

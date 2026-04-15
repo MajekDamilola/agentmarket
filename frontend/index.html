@@ -110,6 +110,8 @@
     .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
     .btn-success { background: var(--success); color: #062a1a; }
     .btn-danger { background: var(--danger); color: #fff; }
+    .btn-gold { background: var(--gold); color: #1a1000; font-weight: 700; }
+    .btn-gold:hover { background: #e0b60c; transform: translateY(-1px); }
     .btn-sm { padding: 6px 14px; font-size: 13px; }
     .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
 
@@ -275,6 +277,7 @@
     .badge-completed { background: rgba(79,209,165,0.1); color: var(--success); }
     .badge-rejected { background: rgba(248,114,114,0.1); color: var(--danger); }
     .badge-coming-soon { background: rgba(246,201,14,0.08); color: var(--gold); border: 1px solid rgba(246,201,14,0.2); }
+    .badge-campaign { background: rgba(246,201,14,0.1); color: var(--gold); border: 1px solid rgba(246,201,14,0.25); }
 
     .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
     .tag { font-size: 11px; font-family: var(--font-mono); background: var(--surface2); border: 1px solid var(--border); color: var(--muted); padding: 3px 10px; border-radius: 100px; }
@@ -296,10 +299,87 @@
 
     .job-card:hover { border-color: var(--border-hover); }
 
+    /* Campaign card special style */
+    .campaign-card {
+      background: var(--surface);
+      border: 1px solid rgba(246,201,14,0.15);
+      border-radius: var(--radius);
+      padding: 24px;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .campaign-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--gold), #e8a000);
+      opacity: 0.6;
+    }
+
+    .campaign-card:hover {
+      border-color: rgba(246,201,14,0.35);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(246,201,14,0.08);
+    }
+
+    .campaign-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 16px;
+    }
+
+    .campaign-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+    .campaign-title { font-family: var(--font-head); font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+    .campaign-desc { font-size: 13px; color: var(--muted); line-height: 1.5; margin-bottom: 16px; }
+    .campaign-prize { font-family: var(--font-head); font-size: 26px; font-weight: 800; color: var(--gold); }
+    .campaign-meta { display: flex; gap: 16px; font-size: 12px; color: var(--muted); font-family: var(--font-mono); flex-wrap: wrap; }
+
     .job-title { font-family: var(--font-head); font-size: 15px; font-weight: 600; margin-bottom: 4px; }
-    .job-meta { font-size: 12px; color: var(--muted); font-family: var(--font-mono); display: flex; gap: 16px; }
+    .job-meta { font-size: 12px; color: var(--muted); font-family: var(--font-mono); display: flex; gap: 16px; flex-wrap: wrap; }
     .job-right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
     .job-budget { font-family: var(--font-head); font-size: 18px; font-weight: 700; color: var(--accent2); }
+
+    /* Pick a Job — open job card enhanced */
+    .open-job-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      transition: all 0.2s;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .open-job-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .open-job-card:hover { border-color: rgba(124,109,250,0.4); transform: translateY(-2px); box-shadow: 0 8px 32px rgba(124,109,250,0.08); }
+    .open-job-card:hover::before { opacity: 1; }
+
+    .open-job-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+    .open-job-title { font-family: var(--font-head); font-size: 17px; font-weight: 700; margin-bottom: 6px; }
+    .open-job-desc { font-size: 13px; color: var(--muted); line-height: 1.5; margin-bottom: 14px; }
+    .open-job-meta { display: flex; gap: 12px; font-size: 12px; color: var(--muted); font-family: var(--font-mono); flex-wrap: wrap; margin-bottom: 16px; }
+    .open-job-footer { display: flex; justify-content: space-between; align-items: center; }
+    .open-job-budget { font-family: var(--font-head); font-size: 22px; font-weight: 800; color: var(--accent2); }
+
+    .open-jobs-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 16px;
+    }
 
     .form-card {
       background: var(--surface);
@@ -336,68 +416,6 @@
 
     .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 
-    .agent-select-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-      gap: 10px;
-    }
-
-    .agent-select-card {
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 14px;
-      cursor: pointer;
-      transition: all 0.2s;
-      position: relative;
-    }
-
-    .agent-select-card.selected { border-color: var(--accent); background: rgba(124,109,250,0.08); }
-    .agent-select-card:hover { border-color: var(--border-hover); }
-    .agent-select-card.ai-locked { opacity: 0.6; cursor: not-allowed; }
-
-    .agent-select-name { font-weight: 600; font-size: 14px; margin-bottom: 4px; }
-    .agent-select-desc { font-size: 12px; color: var(--muted); }
-
-    /* ── Coming Soon Banner ── */
-    .coming-soon-banner {
-      background: rgba(246,201,14,0.06);
-      border: 1px solid rgba(246,201,14,0.2);
-      border-radius: 10px;
-      padding: 14px 18px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 16px;
-    }
-
-    .coming-soon-icon { font-size: 20px; }
-
-    .coming-soon-text { flex: 1; }
-    .coming-soon-text strong { color: var(--gold); font-size: 13px; display: block; margin-bottom: 2px; }
-    .coming-soon-text span { font-size: 12px; color: var(--muted); }
-
-    /* ── Submit Deliverable Section ── */
-    .deliverable-box {
-      background: var(--surface2);
-      border: 1px solid rgba(124,109,250,0.2);
-      border-radius: 10px;
-      padding: 16px;
-      margin-top: 16px;
-    }
-
-    .deliverable-box h4 {
-      font-family: var(--font-head);
-      font-size: 14px;
-      color: var(--accent);
-      margin-bottom: 10px;
-    }
-
-    .deliverable-box textarea {
-      min-height: 80px;
-      margin-bottom: 10px;
-    }
-
     /* ── Modal ── */
     .modal-overlay {
       position: fixed; inset: 0;
@@ -420,7 +438,7 @@
       border: 1px solid var(--border-hover);
       border-radius: 16px;
       padding: 32px;
-      max-width: 520px;
+      max-width: 560px;
       width: 100%;
       max-height: 90vh;
       overflow-y: auto;
@@ -430,7 +448,11 @@
 
     .modal-overlay.open .modal { transform: scale(1); }
 
-    .modal-title { font-family: var(--font-head); font-size: 20px; font-weight: 700; margin-bottom: 20px; }
+    .modal-title { font-family: var(--font-head); font-size: 20px; font-weight: 700; margin-bottom: 6px; }
+    .modal-subtitle { font-size: 13px; color: var(--muted); margin-bottom: 20px; }
+
+    /* Campaign modal wide */
+    .modal-wide { max-width: 680px; }
 
     .detail-row {
       display: flex;
@@ -450,52 +472,71 @@
     .tx-link { display: inline-flex; align-items: center; gap: 6px; color: var(--accent); text-decoration: none; font-size: 12px; font-family: var(--font-mono); }
     .tx-link:hover { text-decoration: underline; }
 
+    /* Campaign detail sections */
+    .campaign-prize-hero {
+      background: linear-gradient(135deg, rgba(246,201,14,0.08), rgba(232,160,0,0.04));
+      border: 1px solid rgba(246,201,14,0.2);
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .campaign-prize-hero .prize-label { font-size: 12px; color: var(--muted); font-family: var(--font-mono); margin-bottom: 6px; }
+    .campaign-prize-hero .prize-amount { font-family: var(--font-head); font-size: 40px; font-weight: 800; color: var(--gold); letter-spacing: -1px; }
+
+    .campaign-info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .campaign-info-cell {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 14px;
+    }
+
+    .campaign-info-cell .ci-label { font-size: 11px; color: var(--muted); font-family: var(--font-mono); margin-bottom: 4px; }
+    .campaign-info-cell .ci-val { font-size: 14px; font-weight: 600; font-family: var(--font-head); }
+
+    .section-divider {
+      font-size: 11px;
+      font-family: var(--font-mono);
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin: 18px 0 12px;
+    }
+
+    .entries-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+
+    .entry-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 14px;
+    }
+
+    .entry-card .entry-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+    .entry-card .entry-author { font-family: var(--font-mono); font-size: 12px; color: var(--accent); }
+    .entry-card .entry-time { font-family: var(--font-mono); font-size: 11px; color: var(--muted); }
+    .entry-card .entry-text { font-size: 13px; color: var(--muted); line-height: 1.5; word-break: break-all; }
+
     /* ── AI Coming Soon Modal ── */
     .ai-coming-soon-modal {
       text-align: center;
       padding: 20px 0;
     }
 
-    .ai-coming-soon-modal .robot-icon {
-      font-size: 56px;
-      margin-bottom: 16px;
-      display: block;
-    }
-
-    .ai-coming-soon-modal h3 {
-      font-family: var(--font-head);
-      font-size: 22px;
-      font-weight: 700;
-      margin-bottom: 10px;
-      color: var(--gold);
-    }
-
-    .ai-coming-soon-modal p {
-      font-size: 14px;
-      color: var(--muted);
-      line-height: 1.6;
-      margin-bottom: 20px;
-    }
-
-    .ai-coming-soon-modal .feature-list {
-      text-align: left;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 16px;
-      margin-bottom: 20px;
-    }
-
-    .ai-coming-soon-modal .feature-list li {
-      font-size: 13px;
-      color: var(--muted);
-      padding: 4px 0;
-      list-style: none;
-    }
-
-    .ai-coming-soon-modal .feature-list li::before {
-      content: '⏳ ';
-    }
+    .ai-coming-soon-modal .robot-icon { font-size: 56px; margin-bottom: 16px; display: block; }
+    .ai-coming-soon-modal h3 { font-family: var(--font-head); font-size: 22px; font-weight: 700; margin-bottom: 10px; color: var(--gold); }
+    .ai-coming-soon-modal p { font-size: 14px; color: var(--muted); line-height: 1.6; margin-bottom: 20px; }
+    .ai-coming-soon-modal .feature-list { text-align: left; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin-bottom: 20px; }
+    .ai-coming-soon-modal .feature-list li { font-size: 13px; color: var(--muted); padding: 4px 0; list-style: none; }
+    .ai-coming-soon-modal .feature-list li::before { content: '⏳ '; }
 
     /* ── Toast ── */
     .toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 300; display: flex; flex-direction: column; gap: 10px; }
@@ -534,6 +575,7 @@
 
     .empty-state { text-align: center; padding: 60px 20px; color: var(--muted); }
     .empty-state p { margin-bottom: 16px; }
+    .empty-icon { font-size: 40px; margin-bottom: 12px; display: block; }
 
     .wallet-bar { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 8px 14px; font-family: var(--font-mono); font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 8px; }
     .wallet-dot { width: 7px; height: 7px; background: var(--success); border-radius: 50%; }
@@ -542,7 +584,6 @@
     .step { flex: 1; height: 3px; background: var(--surface2); border-radius: 2px; transition: background 0.3s; }
     .step.done { background: var(--accent); }
 
-    /* Worker status pill */
     .worker-action-pill {
       background: rgba(79,209,165,0.08);
       border: 1px solid rgba(79,209,165,0.2);
@@ -554,12 +595,60 @@
       margin-top: 8px;
     }
 
+    /* How it works steps */
+    .how-it-works {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      margin-bottom: 28px;
+    }
+
+    .how-label { font-family: var(--font-mono); font-size: 11px; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 16px; }
+
+    .how-steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+
+    .how-step { display: flex; align-items: flex-start; gap: 10px; }
+
+    .how-num {
+      width: 28px; height: 28px;
+      background: rgba(124,109,250,0.15);
+      border: 1px solid rgba(124,109,250,0.2);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px;
+      font-family: var(--font-mono);
+      flex-shrink: 0;
+      color: var(--accent);
+    }
+
+    .how-step strong { font-size: 13px; display: block; margin-bottom: 2px; }
+    .how-step span { font-size: 12px; color: var(--muted); }
+
+    /* Info banner */
+    .info-banner {
+      background: rgba(124,109,250,0.06);
+      border: 1px solid rgba(124,109,250,0.2);
+      border-radius: 10px;
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .info-banner strong { color: var(--accent); }
+
     @media (max-width: 680px) {
       nav { padding: 0 16px; }
       .container, .hero { padding-left: 16px; padding-right: 16px; }
       .stats-bar { grid-template-columns: repeat(2, 1fr); }
       .form-row { grid-template-columns: 1fr; }
       h1 { font-size: 36px; }
+      .open-jobs-grid, .campaign-grid { grid-template-columns: 1fr; }
+      .campaign-info-grid { grid-template-columns: 1fr; }
     }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
@@ -595,7 +684,7 @@
   <div class="hero">
     <div class="hero-badge">Live on Arc Testnet · ERC-8183 + ERC-8004</div>
     <h1>The marketplace<br/>for <span class="gradient-text">AI & Human Workers</span></h1>
-    <p class="hero-sub">Post tasks, choose human talent, and settle payments automatically in USDC — all onchain. AI automation coming soon.</p>
+    <p class="hero-sub">Post tasks, get paid in USDC — all onchain. Anyone can pick up a job and get paid automatically.</p>
     <div class="hero-actions">
       <button class="btn btn-primary" onclick="showPage('post')">Post a Job →</button>
       <button class="btn btn-outline" onclick="showPage('pick')">Pick a Job →</button>
@@ -643,7 +732,7 @@
   <div class="container">
     <div style="margin-bottom:32px">
       <h2 style="font-size:28px;margin-bottom:8px">Post a Job</h2>
-      <p style="color:var(--muted)">Describe your task, pick a human worker, and fund escrow with USDC.</p>
+      <p style="color:var(--muted)">Describe your task and fund escrow with USDC — anyone can pick it up and get paid.</p>
     </div>
 
     <div class="steps">
@@ -653,6 +742,9 @@
     </div>
 
     <div class="form-card">
+      <!-- Hidden: always open marketplace -->
+      <input type="hidden" id="jobAvailability" value="open"/>
+
       <div class="form-group">
         <label>Job Title</label>
         <input type="text" id="jobTitle" placeholder="e.g. Summarize Q3 earnings report"/>
@@ -683,18 +775,8 @@
         </div>
       </div>
 
-      <div class="form-group">
-        <label>Availability</label>
-        <select id="jobAvailability" onchange="handleJobAvailabilityChange()">
-          <option value="assigned">Assign a specific worker</option>
-          <option value="open">Open marketplace — anyone can claim</option>
-        </select>
-        <p style="font-size:12px;color:var(--muted);margin-top:6px">Open jobs can be claimed by any eligible worker after posting.</p>
-      </div>
-
-      <div class="form-group" id="agentSelectSection">
-        <label>Choose a Worker</label>
-        <div class="agent-select-grid" id="agentSelectGrid"></div>
+      <div class="info-banner">
+        🌐 <span><strong>Open Marketplace</strong> — This job will be visible to all connected workers. First eligible person to claim it gets the work.</span>
       </div>
 
       <div class="form-group">
@@ -736,25 +818,24 @@
       <p style="color:var(--muted)">Browse open jobs, claim one, complete the work, and get paid in USDC.</p>
     </div>
 
-    <!-- How it works -->
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px 24px;margin-bottom:24px">
-      <p style="font-family:var(--font-mono);font-size:12px;color:var(--muted);margin-bottom:14px">HOW IT WORKS</p>
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px">
-        <div style="display:flex;align-items:flex-start;gap:10px">
-          <div style="width:28px;height:28px;background:rgba(124,109,250,0.15);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0">1</div>
-          <div><strong style="font-size:13px;display:block;margin-bottom:2px">Claim a job</strong><span style="font-size:12px;color:var(--muted)">Sign with your wallet to accept</span></div>
+    <div class="how-it-works">
+      <div class="how-label">How it works</div>
+      <div class="how-steps">
+        <div class="how-step">
+          <div class="how-num">1</div>
+          <div><strong>Connect wallet</strong><span>Sign in with MetaMask or any Web3 wallet</span></div>
         </div>
-        <div style="display:flex;align-items:flex-start;gap:10px">
-          <div style="width:28px;height:28px;background:rgba(124,109,250,0.15);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0">2</div>
-          <div><strong style="font-size:13px;display:block;margin-bottom:2px">Do the work</strong><span style="font-size:12px;color:var(--muted)">Complete the task off-chain</span></div>
+        <div class="how-step">
+          <div class="how-num">2</div>
+          <div><strong>Claim a job</strong><span>Pick any open job — first come, first served</span></div>
         </div>
-        <div style="display:flex;align-items:flex-start;gap:10px">
-          <div style="width:28px;height:28px;background:rgba(124,109,250,0.15);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0">3</div>
-          <div><strong style="font-size:13px;display:block;margin-bottom:2px">Submit deliverable</strong><span style="font-size:12px;color:var(--muted)">Paste link or result onchain</span></div>
+        <div class="how-step">
+          <div class="how-num">3</div>
+          <div><strong>Do the work</strong><span>Complete the task off-chain</span></div>
         </div>
-        <div style="display:flex;align-items:flex-start;gap:10px">
-          <div style="width:28px;height:28px;background:rgba(79,209,165,0.15);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0">💰</div>
-          <div><strong style="font-size:13px;display:block;margin-bottom:2px">Get paid</strong><span style="font-size:12px;color:var(--muted)">USDC sent to your wallet</span></div>
+        <div class="how-step">
+          <div class="how-num">4</div>
+          <div><strong>Submit & get paid</strong><span>USDC auto-released to your wallet on approval</span></div>
         </div>
       </div>
     </div>
@@ -770,14 +851,17 @@
 <!-- ── PAGE: CAMPAIGNS ── -->
 <div class="page" id="page-campaigns">
   <div class="container">
+    <div style="margin-bottom:28px">
+      <h2 style="font-size:28px;margin-bottom:8px">Bounty Campaigns</h2>
+      <p style="color:var(--muted)">Compete for prize pools by submitting your best work. Anyone can participate.</p>
+    </div>
+
     <div class="section-head">
-      <h2>Bounty Campaigns</h2>
-      <span class="badge badge-funded">Prize Pools in USDC</span>
+      <span class="badge badge-campaign">🏆 Prize Pools in USDC</span>
+      <button class="btn btn-gold btn-sm" onclick="showPage('create-campaign')">+ Create Campaign</button>
     </div>
-    <div id="campaignsList"></div>
-    <div style="margin-top:32px;text-align:center">
-      <button class="btn btn-primary" onclick="showPage('create-campaign')">Create Campaign</button>
-    </div>
+
+    <div class="campaign-grid" id="campaignsList"></div>
   </div>
 </div>
 
@@ -818,7 +902,7 @@
         </div>
       </div>
       <div style="display:flex;gap:12px;margin-top:8px">
-        <button class="btn btn-primary" style="flex:1" onclick="createCampaign()" id="createCampaignBtn">Fund Prize Pool & Launch</button>
+        <button class="btn btn-gold" style="flex:1" onclick="createCampaign()" id="createCampaignBtn">Fund Prize Pool & Launch</button>
       </div>
       <p style="font-size:12px;color:var(--muted);margin-top:14px;text-align:center">USDC is locked in escrow. Winners receive equal shares automatically when selected.</p>
     </div>
@@ -870,6 +954,14 @@
   </div>
 </div>
 
+<!-- ── CAMPAIGN DETAIL MODAL ── -->
+<div class="modal-overlay" id="campaignModal" onclick="closeCampaignModal(event)">
+  <div class="modal modal-wide">
+    <div id="campaignModalBody"></div>
+    <div id="campaignModalActions" style="display:flex;gap:10px;margin-top:20px;flex-wrap:wrap"></div>
+  </div>
+</div>
+
 <!-- ── AI COMING SOON MODAL ── -->
 <div class="modal-overlay" id="aiComingSoonModal" onclick="closeAiModal(event)">
   <div class="modal">
@@ -909,6 +1001,23 @@
   </div>
 </div>
 
+<!-- ── CAMPAIGN ENTRY MODAL ── -->
+<div class="modal-overlay" id="campaignEntryModal" onclick="closeCampaignEntryModal(event)">
+  <div class="modal">
+    <div class="modal-title">Submit Your Entry</div>
+    <p style="color:var(--muted);font-size:13px;margin-bottom:20px">Submit your work for this bounty campaign. The campaign creator will review all entries and select winners.</p>
+    <div class="form-group">
+      <label>Your Entry — Link, IPFS hash, or description</label>
+      <textarea id="campaignEntryInput" placeholder="e.g. https://your-work.com or describe your submission in detail" style="min-height:140px"></textarea>
+    </div>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:16px">⚠️ Entries are stored permanently on the blockchain. Make sure your submission is complete before sending.</p>
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-gold" style="flex:1" id="submitCampaignEntryBtn" onclick="confirmSubmitCampaignEntry()">Submit Entry</button>
+      <button class="btn btn-outline" onclick="closeCampaignEntryModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // ── Config ───────────────────────────────────────────────────────
 const API = 'https://agentmarket-cv66.vercel.app';
@@ -926,14 +1035,12 @@ async function loadConfig() {
 
 const STATUS = ['Open','In Progress','Submitted','Completed','Rejected'];
 const STATUS_CLASS = ['badge-open','badge-funded','badge-submitted','badge-completed','badge-rejected'];
-const WORKER_TYPES = ['AI','Human'];
-let isOpenJob = false;
 let currentWallet = null;
 let agents = [];
-let selectedAgent = null;
-let selectedWorkerType = 'Human';
 let currentTab = 'posted';
 let pendingDeliverableJobId = null;
+let pendingCampaignEntryId = null;
+let currentCampaignData = null;
 
 // ── Utilities ────────────────────────────────────────────────────
 function toast(title, msg, type='info') {
@@ -969,6 +1076,10 @@ function timeLeft(ms) {
   const h = Math.floor(diff / 3600000);
   if (h < 24) return h + 'h left';
   return Math.floor(h/24) + 'd left';
+}
+
+function formatDate(ts) {
+  return new Date(ts).toLocaleString();
 }
 
 // ── Wallet ───────────────────────────────────────────────────────
@@ -1030,38 +1141,40 @@ function closeAiModal(e) {
 
 function switchToHuman() {
   document.getElementById('workerType').value = 'Human';
-  selectedWorkerType = 'Human';
-  renderAgentSelect();
+}
+
+function handleWorkerTypeChange() {
+  const workerType = document.getElementById('workerType').value;
+  if (workerType === 'AI') {
+    showAiComingSoon();
+    setTimeout(() => { document.getElementById('workerType').value = 'Human'; }, 100);
+  }
 }
 
 // ── Agents ───────────────────────────────────────────────────────
+const AGENT_ICONS = { summarize:'📄', report:'📊', translate:'🌐', analyze:'🔬', monitor:'👁' };
+
 async function loadAgents() {
   try {
     const res = await fetch(`${API}/api/agents`);
     agents = await res.json();
     renderAgents();
-    renderAgentSelect();
   } catch(e) {
     agents = [
       { id:'native-001', type:'AI', name:'SummaryBot', description:'Summarizes documents and long text into clear bullet points', taskTypes:['summarize','analyze'], walletAddress:'0x89E3D24A54E9EEA0799A4d8d5843487606330378', reputationScore:98, isNative:true, isVerified:true, minBudget:'1.00' },
       { id:'native-002', type:'AI', name:'ReportAgent', description:'Generates structured market reports from raw inputs', taskTypes:['report','research'], walletAddress:'0x11be84f570c3670b4bB0682a9aCa10C6B80d1300', reputationScore:95, isNative:true, isVerified:true, minBudget:'2.00' },
       { id:'native-003', type:'AI', name:'TranslateAI', description:'Translates content between languages accurately', taskTypes:['translate'], walletAddress:'0x986008ac6580395ff496559880b6fcDDFEB9AeE9', reputationScore:97, isNative:true, isVerified:true, minBudget:'1.00' },
-      { id:'human-001', type:'Human', name:'Claire Jones', description:'Experienced researcher and report writer for startups and founders.', taskTypes:['research','report'], walletAddress:'0x0000000000000000000000000000000000000011', reputationScore:92, isNative:false, isVerified:true, minBudget:'2.50' },
-      { id:'human-002', type:'Human', name:'Sam Patel', description:'Human operator for compliance checks, writing, and manual workflow support.', taskTypes:['compliance','review','monitor'], walletAddress:'0x0000000000000000000000000000000000000022', reputationScore:90, isNative:false, isVerified:true, minBudget:'3.00' },
     ];
     renderAgents();
-    renderAgentSelect();
   }
 }
-
-const AGENT_ICONS = { summarize:'📄', report:'📊', translate:'🌐', analyze:'🔬', monitor:'👁' };
 
 function renderAgents() {
   const grid = document.getElementById('agentsGrid');
   grid.innerHTML = agents.map(a => {
     const isAI = a.type === 'AI';
     return `
-      <div class="agent-card" onclick="${isAI ? 'showPage(\'post\');showAiComingSoon()' : `showPage('post');selectAgent('${a.id}')`}">
+      <div class="agent-card" onclick="${isAI ? 'showPage(\'post\');showAiComingSoon()' : `showPage('post')`}">
         <div class="agent-header">
           <div class="agent-icon">${isAI ? AGENT_ICONS[a.taskTypes[0]] || '🤖' : '🧑'}</div>
           <div>
@@ -1083,114 +1196,72 @@ function renderAgents() {
   }).join('');
 }
 
-function renderAgentSelect() {
-  const grid = document.getElementById('agentSelectGrid');
-  const workerType = document.getElementById('workerType').value;
-
-  if (workerType === 'AI') {
-    // Show coming soon message inline
-    grid.innerHTML = `
-      <div style="grid-column:1/-1">
-        <div class="coming-soon-banner">
-          <div class="coming-soon-icon">🤖</div>
-          <div class="coming-soon-text">
-            <strong>AI Agent Automation — Coming Soon</strong>
-            <span>Our AI workers are in development. Please select "Human" worker type to post a job now.</span>
-          </div>
-        </div>
-      </div>
-    `;
-    return;
-  }
-
-  const humanAgents = agents.filter(a => a.type === 'Human');
-  if (!humanAgents.length) {
-    grid.innerHTML = '<div class="empty-state"><p>No human workers available yet.</p></div>';
-    return;
-  }
-
-  grid.innerHTML = humanAgents.map(a => `
-    <div class="agent-select-card" id="asel-${a.id}" onclick="selectAgent('${a.id}')">
-      <div class="agent-select-name">🧑 ${a.name}</div>
-      <div class="agent-select-desc">${a.taskTypes.join(', ')} · ${a.reputationScore}/100</div>
-    </div>
-  `).join('');
-}
-
-function selectAgent(id) {
-  selectedAgent = agents.find(a => a.id === id);
-  document.querySelectorAll('.agent-select-card').forEach(c => c.classList.remove('selected'));
-  const card = document.getElementById('asel-' + id);
-  if (card) card.classList.add('selected');
-}
-
-function handleWorkerTypeChange() {
-  const workerType = document.getElementById('workerType').value;
-  if (workerType === 'AI') {
-    showAiComingSoon();
-    // Reset back to Human
-    setTimeout(() => { document.getElementById('workerType').value = 'Human'; renderAgentSelect(); }, 100);
-    return;
-  }
-  selectedWorkerType = workerType;
-  selectedAgent = null;
-  document.querySelectorAll('.agent-select-card').forEach(c => c.classList.remove('selected'));
-  renderAgentSelect();
-}
-
-function handleJobAvailabilityChange() {
-  const availability = document.getElementById('jobAvailability').value;
-  isOpenJob = availability === 'open';
-  document.getElementById('agentSelectSection').style.display = isOpenJob ? 'none' : 'block';
-}
-
 // ── Available Jobs (Pick a Job page) ────────────────────────────
 async function loadAvailableJobs() {
+  const container = document.getElementById('availableJobs');
+  container.innerHTML = '<div class="empty-state"><p style="color:var(--muted)">Loading open jobs...</p></div>';
+
   try {
     const res = await fetch(`${API}/api/jobs/open`);
     const jobs = await res.json();
-    const container = document.getElementById('availableJobs');
+
     if (!Array.isArray(jobs) || !jobs.length) {
-      container.innerHTML = '<div class="empty-state"><p>No open jobs available right now. Check back soon!</p></div>';
+      container.innerHTML = `
+        <div class="empty-state">
+          <span class="empty-icon">📭</span>
+          <p>No open jobs right now. Check back soon or post one yourself!</p>
+          <button class="btn btn-primary" onclick="showPage('post')">Post a Job</button>
+        </div>`;
       return;
     }
 
-    // Filter only open AND open marketplace jobs (agent = zero address)
+    // Only status=0 (Open) jobs
     const openJobs = jobs.filter(j => j.status === 0);
 
     if (!openJobs.length) {
-      container.innerHTML = '<div class="empty-state"><p>No open marketplace jobs right now. All current jobs are assigned.</p></div>';
+      container.innerHTML = `
+        <div class="empty-state">
+          <span class="empty-icon">⏳</span>
+          <p>No open jobs available right now. All current jobs are in progress.</p>
+          <button class="btn btn-primary" style="margin-top:8px" onclick="showPage('post')">Post a Job</button>
+        </div>`;
       return;
     }
 
-    container.innerHTML = '<div class="jobs-list">' + openJobs.map(j => `
-      <div class="job-card" onclick="openJobModal(${j.id})">
-        <div>
-          <div class="job-title">${j.title}</div>
-          <div class="job-meta">
-            <span>📂 ${j.category}</span>
-            <span>👤 ${j.workerTypeLabel}</span>
-            <span>⏰ ${timeLeft(j.deadline)}</span>
-            <span>Posted by ${shortAddr(j.client)}</span>
+    container.innerHTML = '<div class="open-jobs-grid">' + openJobs.map(j => `
+      <div class="open-job-card" onclick="openJobModal(${j.id})">
+        <div class="open-job-top">
+          <div>
+            <div class="open-job-title">${j.title}</div>
+            <span class="badge badge-open" style="margin-top:4px">Open</span>
           </div>
-          <div style="font-size:12px;color:var(--muted);margin-top:6px;max-width:500px">${j.description?.slice(0,100)}${j.description?.length > 100 ? '...' : ''}</div>
+          <div class="open-job-budget">${j.budget} USDC</div>
         </div>
-        <div class="job-right">
-          <div class="job-budget">${j.budget} USDC</div>
-          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end">
-            <span class="badge ${STATUS_CLASS[j.status]}">${j.statusLabel}</span>
-            ${currentWallet
-              ? currentWallet.toLowerCase() === j.client.toLowerCase()
-                ? '<span style="font-size:11px;color:var(--muted);font-family:var(--font-mono)">Your job</span>'
-                : `<button class="btn btn-primary btn-sm" onclick="event.stopPropagation();claimJob(${j.id})">Claim Job</button>`
-              : '<button class="btn btn-outline btn-sm" onclick="event.stopPropagation();connectWallet()">Connect to Claim</button>'
-            }
-          </div>
+        <div class="open-job-desc">${j.description?.slice(0,120)}${j.description?.length > 120 ? '...' : ''}</div>
+        <div class="open-job-meta">
+          <span>📂 ${j.category}</span>
+          <span>👤 ${j.workerTypeLabel || 'Human'}</span>
+          <span>⏰ ${timeLeft(j.deadline)}</span>
+          <span>by ${shortAddr(j.client)}</span>
+        </div>
+        <div class="open-job-footer">
+          <span style="font-family:var(--font-mono);font-size:11px;color:var(--muted)">Job #${j.id}</span>
+          ${currentWallet
+            ? currentWallet.toLowerCase() === j.client?.toLowerCase()
+              ? '<span style="font-size:12px;color:var(--muted);font-family:var(--font-mono)">Your job</span>'
+              : `<button class="btn btn-primary btn-sm" onclick="event.stopPropagation();claimJob(${j.id})">Claim Job →</button>`
+            : `<button class="btn btn-outline btn-sm" onclick="event.stopPropagation();connectWallet()">Connect to Claim</button>`
+          }
         </div>
       </div>
     `).join('') + '</div>';
   } catch(e) {
-    document.getElementById('availableJobs').innerHTML = '<div class="empty-state"><p>Could not load open jobs. Backend may be starting up — try refreshing.</p></div>';
+    container.innerHTML = `
+      <div class="empty-state">
+        <span class="empty-icon">⚠️</span>
+        <p>Could not load open jobs. Backend may be starting up — try refreshing.</p>
+        <button class="btn btn-outline btn-sm" style="margin-top:8px" onclick="loadAvailableJobs()">Try Again</button>
+      </div>`;
   }
 }
 
@@ -1205,7 +1276,7 @@ async function claimJob(jobId) {
     const jobAbi = [{ name: 'claimJob', type: 'function', stateMutability: 'nonpayable', inputs: [{ name: 'jobId', type: 'uint256' }], outputs: [] }];
     const jobContract = new ethers.Contract(JOB_BOARD, jobAbi, signer);
     const tx = await jobContract.claimJob(BigInt(jobId));
-    const receipt = await tx.wait();
+    await tx.wait();
     toast('Job Claimed! 🎉', 'Go to "Jobs I\'m Working On" in your dashboard to submit your work', 'success');
     closeModal();
     await loadAvailableJobs();
@@ -1245,7 +1316,7 @@ async function confirmSubmitDeliverable() {
     const abi = ['function submitDeliverable(uint256 jobId, string deliverableHash)'];
     const contract = new ethers.Contract(JOB_BOARD, abi, signer);
     const tx = await contract.submitDeliverable(BigInt(pendingDeliverableJobId), deliverable);
-    const receipt = await tx.wait();
+    await tx.wait();
     toast('Deliverable Submitted! ✅', 'The client will review and approve to release your payment', 'success');
     closeDeliverableModal();
     closeModal();
@@ -1283,7 +1354,7 @@ async function loadRecentJobs() {
       container.innerHTML = '<div class="empty-state"><p>No jobs yet. Be the first to post one.</p></div>';
       return;
     }
-    container.innerHTML = jobs.slice(-10).reverse().map(j => `
+    container.innerHTML = '<div class="jobs-list">' + jobs.slice(-10).reverse().map(j => `
       <div class="job-card" onclick="openJobModal(${j.id})">
         <div>
           <div class="job-title">${j.title}</div>
@@ -1298,7 +1369,7 @@ async function loadRecentJobs() {
           <span class="badge ${STATUS_CLASS[j.status]}">${j.statusLabel}</span>
         </div>
       </div>
-    `).join('');
+    `).join('') + '</div>';
   } catch(e) {
     document.getElementById('recentJobs').innerHTML = '<div class="empty-state"><p>Connect backend to see live jobs</p></div>';
   }
@@ -1306,31 +1377,245 @@ async function loadRecentJobs() {
 
 // ── Load Campaigns ───────────────────────────────────────────────
 async function loadCampaigns() {
+  const container = document.getElementById('campaignsList');
+  container.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:20px 0">Loading campaigns...</div>';
   try {
     const res = await fetch(`${API}/api/campaigns`);
     const campaigns = await res.json();
-    const container = document.getElementById('campaignsList');
+
     if (!campaigns.length) {
-      container.innerHTML = '<div class="empty-state"><p>No campaigns yet. Be the first to create one.</p></div>';
+      container.innerHTML = `
+        <div class="empty-state" style="grid-column:1/-1">
+          <span class="empty-icon">🏆</span>
+          <p>No campaigns yet. Launch the first bounty!</p>
+          <button class="btn btn-gold" style="margin-top:8px" onclick="showPage('create-campaign')">Create Campaign</button>
+        </div>`;
       return;
     }
+
     container.innerHTML = campaigns.map(c => `
-      <div class="job-card" onclick="openCampaignModal(${c.id})">
-        <div>
-          <div class="job-title">${c.title}</div>
-          <div class="job-meta">
-            <span>Creator: ${shortAddr(c.creator)}</span>
-            <span>${timeLeft(c.deadline)}</span>
+      <div class="campaign-card" onclick="openCampaignModal(${c.id})">
+        <div class="campaign-header">
+          <div>
+            <div class="campaign-title">${c.title}</div>
+            <span class="badge ${c.expired ? 'badge-rejected' : 'badge-campaign'}">${c.expired ? '⏹ Expired' : '🟡 Active'}</span>
           </div>
+          <div class="campaign-prize">${c.prizePool} USDC</div>
         </div>
-        <div class="job-right">
-          <div class="job-budget">${c.prizePool} USDC</div>
-          <span class="badge ${c.expired ? 'badge-rejected' : 'badge-funded'}">${c.expired ? 'Expired' : 'Active'}</span>
+        <div class="campaign-desc">${c.description?.slice(0,120)}${c.description?.length > 120 ? '...' : ''}</div>
+        <div class="campaign-meta">
+          <span>👤 by ${shortAddr(c.creator)}</span>
+          <span>⏰ ${timeLeft(c.deadline)}</span>
+          ${c.maxParticipants > 0 ? `<span>👥 max ${c.maxParticipants} entries</span>` : '<span>👥 Unlimited entries</span>'}
+          ${c.entryFee > 0 ? `<span>🎟 ${c.entryFee} USDC entry</span>` : '<span>🎟 Free entry</span>'}
+        </div>
+        <div style="margin-top:14px;display:flex;justify-content:flex-end">
+          <span class="btn btn-sm" style="background:rgba(246,201,14,0.1);color:var(--gold);border:1px solid rgba(246,201,14,0.2);pointer-events:none;font-family:var(--font-mono);font-size:11px">View & Participate →</span>
         </div>
       </div>
     `).join('');
   } catch(e) {
-    document.getElementById('campaignsList').innerHTML = '<div class="empty-state"><p>Could not load campaigns.</p></div>';
+    container.innerHTML = '<div class="empty-state"><p>Could not load campaigns.</p></div>';
+  }
+}
+
+// ── Campaign Modal ───────────────────────────────────────────────
+async function openCampaignModal(id) {
+  const modal = document.getElementById('campaignModal');
+  const body = document.getElementById('campaignModalBody');
+  const actions = document.getElementById('campaignModalActions');
+  body.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:20px">Loading campaign details...</div>';
+  actions.innerHTML = '';
+  modal.classList.add('open');
+
+  try {
+    const res = await fetch(`${API}/api/campaigns/${id}`);
+    let campaign;
+    if (res.ok) {
+      campaign = await res.json();
+    } else {
+      // Fallback: load from the campaigns list
+      const listRes = await fetch(`${API}/api/campaigns`);
+      const list = await listRes.json();
+      campaign = list.find(c => c.id == id);
+    }
+
+    if (!campaign) {
+      body.innerHTML = '<div class="empty-state"><p>Campaign not found.</p></div>';
+      return;
+    }
+
+    currentCampaignData = campaign;
+
+    // Load entries if available
+    let entries = [];
+    try {
+      const entryRes = await fetch(`${API}/api/campaigns/${id}/entries`);
+      if (entryRes.ok) entries = await entryRes.json();
+    } catch(e) {}
+
+    const isCreator = currentWallet?.toLowerCase() === campaign.creator?.toLowerCase();
+    const isExpired = campaign.expired || (campaign.deadline && Date.now() > campaign.deadline);
+
+    body.innerHTML = `
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+        <div class="modal-title" style="margin-bottom:0">${campaign.title}</div>
+        <span class="badge ${isExpired ? 'badge-rejected' : 'badge-campaign'}">${isExpired ? 'Expired' : 'Active'}</span>
+      </div>
+      <div class="modal-subtitle">${campaign.description || 'No description provided.'}</div>
+
+      <div class="campaign-prize-hero">
+        <div class="prize-label">Total Prize Pool</div>
+        <div class="prize-amount">${campaign.prizePool} USDC</div>
+      </div>
+
+      <div class="campaign-info-grid">
+        <div class="campaign-info-cell">
+          <div class="ci-label">Creator</div>
+          <div class="ci-val">${shortAddr(campaign.creator)}</div>
+        </div>
+        <div class="campaign-info-cell">
+          <div class="ci-label">Time Left</div>
+          <div class="ci-val">${timeLeft(campaign.deadline)}</div>
+        </div>
+        <div class="campaign-info-cell">
+          <div class="ci-label">Entry Fee</div>
+          <div class="ci-val">${campaign.entryFee > 0 ? campaign.entryFee + ' USDC' : 'Free'}</div>
+        </div>
+        <div class="campaign-info-cell">
+          <div class="ci-label">Max Participants</div>
+          <div class="ci-val">${campaign.maxParticipants > 0 ? campaign.maxParticipants : 'Unlimited'}</div>
+        </div>
+      </div>
+
+      <div class="section-divider">📋 Submissions (${entries.length})</div>
+      ${entries.length ? `
+        <div class="entries-list">
+          ${entries.map(e => `
+            <div class="entry-card">
+              <div class="entry-top">
+                <span class="entry-author">${shortAddr(e.participant || e.submitter)}</span>
+                <span class="entry-time">${e.submittedAt ? formatDate(e.submittedAt) : ''}</span>
+              </div>
+              <div class="entry-text">${e.entry || e.content || e.deliverable || '—'}</div>
+              ${isCreator && !isExpired ? `<button class="btn btn-success btn-sm" style="margin-top:8px" onclick="selectCampaignWinner(${id}, '${e.participant || e.submitter}')">Select as Winner 🏆</button>` : ''}
+            </div>
+          `).join('')}
+        </div>
+      ` : `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:20px;text-align:center;color:var(--muted);font-size:13px;margin-bottom:8px">No entries yet — be the first to submit!</div>`}
+
+      <div class="detail-row" style="margin-top:8px">
+        <span class="detail-key">View onchain</span>
+        <span class="detail-val"><a class="tx-link" href="${EXPLORER}/address/${JOB_BOARD}" target="_blank">Arcscan ↗</a></span>
+      </div>
+    `;
+
+    actions.innerHTML = '';
+
+    if (!isExpired && currentWallet && !isCreator) {
+      actions.innerHTML += `<button class="btn btn-gold" style="flex:1" onclick="openCampaignEntryModal(${id})">🏆 Submit My Entry</button>`;
+    }
+
+    if (!currentWallet) {
+      actions.innerHTML += `<button class="btn btn-primary" style="flex:1" onclick="connectWallet();closeCampaignModal()">Connect Wallet to Participate</button>`;
+    }
+
+    if (isCreator) {
+      actions.innerHTML += `<span style="font-size:12px;color:var(--muted);font-family:var(--font-mono);align-self:center">You created this campaign</span>`;
+    }
+
+    actions.innerHTML += `<button class="btn btn-outline" onclick="closeCampaignModal()">Close</button>`;
+
+  } catch(e) {
+    body.innerHTML = `<div class="empty-state"><p>Could not load campaign details.<br><small style="font-family:var(--font-mono)">${e.message}</small></p></div>`;
+    actions.innerHTML = `<button class="btn btn-outline" onclick="closeCampaignModal()">Close</button>`;
+  }
+}
+
+function closeCampaignModal(e) {
+  if (!e || e.target === document.getElementById('campaignModal')) {
+    document.getElementById('campaignModal').classList.remove('open');
+    currentCampaignData = null;
+  }
+}
+
+// ── Campaign Entry ────────────────────────────────────────────────
+function openCampaignEntryModal(campaignId) {
+  pendingCampaignEntryId = campaignId;
+  document.getElementById('campaignEntryInput').value = '';
+  document.getElementById('campaignEntryModal').classList.add('open');
+}
+
+function closeCampaignEntryModal(e) {
+  if (!e || e.target === document.getElementById('campaignEntryModal')) {
+    document.getElementById('campaignEntryModal').classList.remove('open');
+    pendingCampaignEntryId = null;
+  }
+}
+
+async function confirmSubmitCampaignEntry() {
+  if (!currentWallet) { toast('Connect Wallet', 'Please connect your wallet first', 'error'); return; }
+  const entry = document.getElementById('campaignEntryInput').value.trim();
+  if (!entry) { toast('Empty Entry', 'Please enter your submission', 'error'); return; }
+  if (!pendingCampaignEntryId) return;
+
+  const btn = document.getElementById('submitCampaignEntryBtn');
+  btn.disabled = true;
+  btn.textContent = 'Submitting...';
+
+  try {
+    toast('Submitting Entry...', 'Confirm the transaction in your wallet', 'info');
+    const provider = new ethers.BrowserProvider(window.ethereum);
+    const signer = await provider.getSigner();
+
+    // Try contract call first
+    const abi = ['function submitCampaignEntry(uint256 campaignId, string entry)'];
+    const contract = new ethers.Contract(JOB_BOARD, abi, signer);
+    const tx = await contract.submitCampaignEntry(BigInt(pendingCampaignEntryId), entry);
+    await tx.wait();
+
+    toast('Entry Submitted! 🏆', 'The campaign creator will review all entries and pick winners', 'success');
+    closeCampaignEntryModal();
+    // Refresh campaign modal
+    await openCampaignModal(pendingCampaignEntryId);
+  } catch(e) {
+    // If contract call fails, fall back to API
+    try {
+      const res = await fetch(`${API}/api/campaigns/${pendingCampaignEntryId}/entries`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ participant: currentWallet, entry })
+      });
+      if (res.ok) {
+        toast('Entry Submitted! 🏆', 'The campaign creator will review all entries and pick winners', 'success');
+        closeCampaignEntryModal();
+        await openCampaignModal(pendingCampaignEntryId);
+      } else {
+        throw new Error('API submission failed');
+      }
+    } catch(e2) {
+      toast('Submission Failed', e.message?.slice(0,100) || 'Transaction failed', 'error');
+    }
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Submit Entry';
+}
+
+async function selectCampaignWinner(campaignId, winnerAddress) {
+  if (!currentWallet) return;
+  try {
+    toast('Selecting winner...', 'Confirm in your wallet', 'info');
+    const provider = new ethers.BrowserProvider(window.ethereum);
+    const signer = await provider.getSigner();
+    const abi = ['function selectCampaignWinner(uint256 campaignId, address winner)'];
+    const contract = new ethers.Contract(JOB_BOARD, abi, signer);
+    const tx = await contract.selectCampaignWinner(BigInt(campaignId), winnerAddress);
+    await tx.wait();
+    toast('Winner Selected! 🏆', 'Prize has been released to the winner', 'success');
+    await openCampaignModal(campaignId);
+  } catch(e) {
+    toast('Failed', e.message?.slice(0,80), 'error');
   }
 }
 
@@ -1349,7 +1634,7 @@ async function loadReviewBoard() {
       } catch { return { ...worker, reviews: [], average: '—' }; }
     }));
 
-    container.innerHTML = workerCards.map(worker => {
+    container.innerHTML = '<div class="agents-grid">' + workerCards.map(worker => {
       const isAI = worker.type === 'AI';
       return `
         <div class="agent-card" onclick="openWorkerReviewModal('${worker.walletAddress}')">
@@ -1369,7 +1654,7 @@ async function loadReviewBoard() {
           </div>
         </div>
       `;
-    }).join('');
+    }).join('') + '</div>';
   } catch(e) {
     container.innerHTML = '<div class="empty-state"><p>Could not load review board.</p></div>';
   }
@@ -1400,8 +1685,6 @@ async function submitJob() {
 
   const workerType = document.getElementById('workerType').value;
   if (workerType === 'AI') { showAiComingSoon(); return; }
-
-  if (!isOpenJob && !selectedAgent) { toast('Select a Worker', 'Please choose who will do the work', 'error'); return; }
 
   const title = document.getElementById('jobTitle').value.trim();
   const desc = document.getElementById('jobDesc').value.trim();
@@ -1456,8 +1739,10 @@ async function submitJob() {
     }];
 
     const jobContract = new ethers.Contract(JOB_BOARD, jobAbi, signer);
-    const agentAddress = isOpenJob ? ethers.ZeroAddress : selectedAgent.walletAddress;
-    const workerTypeValue = 1; // Always Human for now
+    // Always open marketplace — address(0) means anyone can claim
+    const agentAddress = ethers.ZeroAddress;
+    const workerTypeValue = 1; // Human
+
     const jobTx = await jobContract.postAndFundJob({
       agent: agentAddress,
       title,
@@ -1475,10 +1760,6 @@ async function submitJob() {
     document.getElementById('jobTitle').value = '';
     document.getElementById('jobDesc').value = '';
     document.getElementById('budget').value = '';
-    selectedAgent = null;
-    document.getElementById('jobAvailability').value = 'assigned';
-    handleJobAvailabilityChange();
-    document.querySelectorAll('.agent-select-card').forEach(c => c.classList.remove('selected'));
 
     await loadStats();
     await loadRecentJobs();
@@ -1547,6 +1828,7 @@ async function loadDashboard() {
   if (!currentWallet) {
     document.getElementById('dashboardContent').innerHTML = `
       <div class="empty-state">
+        <span class="empty-icon">🔌</span>
         <p>Connect your wallet to see your jobs</p>
         <button class="btn btn-primary" onclick="connectWallet()">Connect Wallet</button>
       </div>`;
@@ -1581,6 +1863,7 @@ function renderDashboardJobs(jobs) {
   if (!jobs.length) {
     container.innerHTML = `
       <div class="empty-state">
+        <span class="empty-icon">${isWorkerTab ? '💼' : '📋'}</span>
         <p>${isWorkerTab ? 'You haven\'t claimed any jobs yet.' : 'You haven\'t posted any jobs yet.'}</p>
         <button class="btn btn-primary" onclick="showPage('${isWorkerTab ? 'pick' : 'post'}')">
           ${isWorkerTab ? 'Browse Open Jobs' : 'Post Your First Job'}
@@ -1593,13 +1876,9 @@ function renderDashboardJobs(jobs) {
     const isClient = currentWallet?.toLowerCase() === j.client?.toLowerCase();
     const isWorker = currentWallet?.toLowerCase() === j.agent?.toLowerCase();
 
-    // Worker actions
     let workerActions = '';
     if (isWorker && j.status === 1) {
-      workerActions = `
-        <button class="btn btn-primary btn-sm" onclick="event.stopPropagation();openDeliverableModal(${j.id})">
-          Submit Work
-        </button>`;
+      workerActions = `<button class="btn btn-primary btn-sm" onclick="event.stopPropagation();openDeliverableModal(${j.id})">Submit Work</button>`;
     }
     if (isWorker && j.status === 2) {
       workerActions = `<span style="font-size:12px;color:var(--gold);font-family:var(--font-mono)">⏳ Awaiting approval</span>`;
@@ -1608,7 +1887,6 @@ function renderDashboardJobs(jobs) {
       workerActions = `<span style="font-size:12px;color:var(--success);font-family:var(--font-mono)">✅ Paid!</span>`;
     }
 
-    // Client actions
     let clientActions = '';
     if (isClient && j.status === 2) {
       clientActions = `
@@ -1665,17 +1943,18 @@ async function openJobModal(id) {
     const isClient = currentWallet?.toLowerCase() === job.client?.toLowerCase();
     const isWorker = currentWallet?.toLowerCase() === job.agent?.toLowerCase();
 
-    // Open job — anyone can claim
     if (job.status === 0 && currentWallet && !isClient) {
-      actions.innerHTML = `<button class="btn btn-primary" style="flex:1" onclick="claimJob(${id})">Claim This Job</button>`;
+      actions.innerHTML = `<button class="btn btn-primary" style="flex:1" onclick="claimJob(${id})">Claim This Job →</button>`;
     }
 
-    // Worker can submit deliverable
+    if (!currentWallet && job.status === 0) {
+      actions.innerHTML = `<button class="btn btn-primary" style="flex:1" onclick="connectWallet();closeModal()">Connect Wallet to Claim</button>`;
+    }
+
     if (isWorker && job.status === 1) {
       actions.innerHTML = `<button class="btn btn-primary" style="flex:1" onclick="openDeliverableModal(${id});closeModal()">Submit My Work</button>`;
     }
 
-    // Client can approve/reject submitted work
     if (isClient && job.status === 2) {
       actions.innerHTML = `
         <button class="btn btn-success" style="flex:1" onclick="approveJob(${id});closeModal()">✓ Approve & Release Payment</button>
@@ -1683,12 +1962,10 @@ async function openJobModal(id) {
       `;
     }
 
-    // Client can leave review after completion
     if (isClient && job.status === 3) {
       actions.innerHTML += `<button class="btn btn-outline" style="flex:1" onclick="openReviewForm(${id})">Leave a Review</button>`;
     }
 
-    // Always add close button
     actions.innerHTML += `<button class="btn btn-outline btn-sm" onclick="closeModal()">Close</button>`;
 
     document.getElementById('jobModal').classList.add('open');
@@ -1787,7 +2064,6 @@ async function rejectJob(jobId) {
 // ── Init ─────────────────────────────────────────────────────────
 async function init() {
   await Promise.all([loadConfig(), loadAgents(), loadStats(), loadRecentJobs(), loadCampaigns()]);
-  handleJobAvailabilityChange();
 
   if (window.ethereum) {
     window.ethereum.on('accountsChanged', async accounts => {

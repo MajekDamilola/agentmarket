@@ -1347,7 +1347,7 @@ function renderDashboardJobs(jobs) {
     // Show chat button for active jobs where both parties exist
     const hasBothParties = j.client && j.agent && j.agent!=='0x0000000000000000000000000000000000000000';
     const chatBtn = (isClient||isWorker) && hasBothParties && j.status>0 && j.status<4
-      ? `<button class="btn btn-chat btn-xs" onclick="event.stopPropagation();openJobChat(${j.id},'${(j.title||'').replace(/'/g,"\\'")}','${j.client||''}','${j.agent||'')}')" >💬 Chat</button>`
+      ? `<button class="btn btn-chat btn-xs" onclick="event.stopPropagation();openJobChat(${j.id},'${(j.title||'').replace(/'/g,"\\'")}','${j.client||''}','${j.agent||''}')" >💬 Chat</button>`
       : '';
 
     return `

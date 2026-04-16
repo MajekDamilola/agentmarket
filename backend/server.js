@@ -17,7 +17,21 @@ const publicClient = createPublicClient({
 });
 
 // ─── Your deployed contract address (fill in after deploying) ────
-const JOB_BOARD_ADDRESS = process.env.JOB_BOARD_ADDRESS || "0x70586f1A7936190a6b325F98eB3F2e27eF81d628";
+const DEFAULT_JOB_BOARD_ADDRESS = "0x70586f1A7936190a6b325F98eB3F2e27eF81d628";
+const STALE_JOB_BOARD_ADDRESSES = new Set([
+  "0x42e4cc4836cdd7355a7ad600b51b054b03322d3f",
+  "0xbcd7d1502ead084d7c94a56417b5a8a7cb91d04c",
+]);
+
+function resolveJobBoardAddress(value) {
+  const address = (value || "").trim();
+  if (!address || STALE_JOB_BOARD_ADDRESSES.has(address.toLowerCase())) {
+    return DEFAULT_JOB_BOARD_ADDRESS;
+  }
+  return address;
+}
+
+const JOB_BOARD_ADDRESS = resolveJobBoardAddress(process.env.JOB_BOARD_ADDRESS);
 const USDC_ADDRESS = "0x3600000000000000000000000000000000000000";
 const IDENTITY_REGISTRY = "0x8004A818BFB912233c491871b3d84c89A494BD9e";
 const REPUTATION_REGISTRY = "0x8004B663056A597Dffe9eCcC1965A193B7388713";

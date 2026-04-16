@@ -640,11 +640,13 @@ let pendingCampaignEntryId = null;
 let currentCampaignId = null;
 let currentChatJobId = null;
 let currentCampaignChatId = null;
+let jobChatPoller = null;
+let campaignChatPoller = null;
 let profileData = {};
 
-// ─── LOCAL CHAT STORAGE ─────────────────────────────────────────
-// Messages stored locally per job or campaign.
-// Structure: { jobChat_<id>: [{from, text, ts}], campaignChat_<id>: [...] }
+// ─── SHARED CHAT STORAGE ─────────────────────────────────────────
+// Messages are saved through the backend so both parties see the same thread.
+// localStorage remains only as a small cache while the shared API loads.
 function getChatKey(jobId) { return `agentmarket_chat_job_${jobId}`; }
 function getCampaignChatKey(id) { return `agentmarket_chat_campaign_${id}`; }
 
@@ -654,12 +656,33 @@ function loadMessages(key) {
 function saveMessages(key, msgs) {
   localStorage.setItem(key, JSON.stringify(msgs));
 }
-function addMessage(key, from, text, isAnnouncement=false) {
-  const msgs = loadMessages(key);
-  const msg = { from, text, ts: Date.now(), isAnnouncement };
-  msgs.push(msg);
-  saveMessages(key, msgs);
-  return msg;
+function messageKey(message) {
+  return message.id || `${message.from}:${message.ts}:${message.text}`;
+}
+function mergeMessages(existing, incoming) {
+  const merged = new Map();
+  [...existing, ...incoming].forEach(message => merged.set(messageKey(message), message));
+  return [...merged.values()].sort((a,b) => (a.ts || 0) - (b.ts || 0));
+}
+async function fetchSharedMessages(roomType, roomId) {
+  const res = await fetch(`${API}/api/chats/${roomType}/${encodeURIComponent(roomId)}/messages`);
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || 'Could not load chat messages');
+  }
+  return await res.json();
+}
+async function postSharedMessage(roomType, roomId, text, isAnnouncement=false) {
+  const res = await fetch(`${API}/api/chats/${roomType}/${encodeURIComponent(roomId)}/messages`, {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({from: currentWallet, text, isAnnouncement}),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || 'Could not send message');
+  }
+  return await res.json();
 }
 
 // ── Utils ─────────────────────────────────────────────────────────
@@ -703,6 +726,15 @@ function timeLeft(ms) {
 function isDeadlineExpired(ms) { return ms && Date.now() > ms; }
 function formatTs(ts) { return new Date(ts).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}); }
 function formatDate(ts) { return new Date(ts).toLocaleString(); }
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, ch => ({
+    '&':'&amp;',
+    '<':'&lt;',
+    '>':'&gt;',
+    '"':'&quot;',
+    "'":'&#39;',
+  }[ch]));
+}
 
 // ── Wallet ─────────────────────────────────────────────────────────
 function updateWalletDisplay() {
@@ -1128,13 +1160,18 @@ function openJobChat(jobId, jobTitle, jobClient, jobWorker) {
   document.getElementById('chatSubtitle').textContent = `Job #${jobId} · ${canChat ? 'Poster & Worker' : 'Read-only — connect as poster or worker to message'}`;
   document.getElementById('chatInputRow').style.display = canChat ? 'flex' : 'none';
   renderJobChat(jobId);
+  startJobChatPolling(jobId);
   document.getElementById('chatModal').classList.add('open');
 }
 
-function renderJobChat(jobId) {
+async function renderJobChat(jobId) {
   const key = getChatKey(jobId);
-  const msgs = loadMessages(key);
+  let msgs = loadMessages(key);
   const container = document.getElementById('chatMessages');
+  try {
+    msgs = mergeMessages(msgs, await fetchSharedMessages('job', jobId));
+    saveMessages(key, msgs);
+  } catch {}
   if (!msgs.length) {
     container.innerHTML = '<div class="chat-empty">💬 No messages yet.<br/>Start the conversation!</div>';
     return;
@@ -1143,26 +1180,45 @@ function renderJobChat(jobId) {
     const isMine = currentWallet && m.from.toLowerCase() === currentWallet.toLowerCase();
     return `
       <div class="chat-msg ${isMine?'mine':'theirs'}">
-        <div class="chat-bubble">${m.text}</div>
+        <div class="chat-bubble">${escapeHtml(m.text)}</div>
         <div class="chat-meta">${shortAddr(m.from)} · ${formatTs(m.ts)}</div>
       </div>`;
   }).join('');
   container.scrollTop = container.scrollHeight;
 }
 
-function sendChatMessage() {
+async function sendChatMessage() {
   if (!currentWallet) { toast('Connect Wallet','','error'); return; }
   const input = document.getElementById('chatInput');
   const text = input.value.trim();
   if (!text) return;
-  addMessage(getChatKey(currentChatJobId), currentWallet, text);
-  input.value = '';
-  renderJobChat(currentChatJobId);
+  try {
+    const msg = await postSharedMessage('job', currentChatJobId, text);
+    const key = getChatKey(currentChatJobId);
+    saveMessages(key, mergeMessages(loadMessages(key), [msg]));
+    input.value = '';
+    await renderJobChat(currentChatJobId);
+  } catch(e) {
+    toast('Message Failed', e.message?.slice(0,100)||'Could not send message', 'error');
+  }
+}
+
+function startJobChatPolling(jobId) {
+  stopJobChatPolling();
+  jobChatPoller = setInterval(() => {
+    if (currentChatJobId === jobId) renderJobChat(jobId);
+  }, 3000);
+}
+
+function stopJobChatPolling() {
+  if (jobChatPoller) clearInterval(jobChatPoller);
+  jobChatPoller = null;
 }
 
 function closeChatModal(e) {
   if (!e||e.target===document.getElementById('chatModal')) {
     document.getElementById('chatModal').classList.remove('open');
+    stopJobChatPolling();
     currentChatJobId = null;
   }
 }
@@ -1176,13 +1232,18 @@ function openCampaignChat(campaignId, campaignTitle, creatorAddr) {
   const announceBtnRow = document.getElementById('campaignAnnounceBtnRow');
   announceBtnRow.style.display = isCreator ? 'block' : 'none';
   renderCampaignChat(campaignId);
+  startCampaignChatPolling(campaignId);
   document.getElementById('campaignChatModal').classList.add('open');
 }
 
-function renderCampaignChat(campaignId) {
+async function renderCampaignChat(campaignId) {
   const key = getCampaignChatKey(campaignId);
-  const msgs = loadMessages(key);
+  let msgs = loadMessages(key);
   const container = document.getElementById('campaignChatMessages');
+  try {
+    msgs = mergeMessages(msgs, await fetchSharedMessages('campaign', campaignId));
+    saveMessages(key, msgs);
+  } catch {}
   if (!msgs.length) {
     container.innerHTML = '<div class="chat-empty">📢 No messages yet.<br/>Campaign chat is open to all participants.</div>';
     return;
@@ -1193,40 +1254,65 @@ function renderCampaignChat(campaignId) {
       return `
         <div class="announcement-card">
           <div class="ann-author">📢 Announcement from ${shortAddr(m.from)}</div>
-          <div class="ann-text">${m.text}</div>
+          <div class="ann-text">${escapeHtml(m.text)}</div>
           <div class="ann-time">${formatDate(m.ts)}</div>
         </div>`;
     }
     return `
       <div class="chat-msg ${isMine?'mine':'theirs'}">
-        <div class="chat-bubble">${m.text}</div>
+        <div class="chat-bubble">${escapeHtml(m.text)}</div>
         <div class="chat-meta">${shortAddr(m.from)} · ${formatTs(m.ts)}</div>
       </div>`;
   }).join('');
   container.scrollTop = container.scrollHeight;
 }
 
-function sendCampaignChatMessage() {
+async function sendCampaignChatMessage() {
   if (!currentWallet) { toast('Connect Wallet','','error'); return; }
   const input = document.getElementById('campaignChatInput');
   const text = input.value.trim();
   if (!text) return;
-  addMessage(getCampaignChatKey(currentCampaignChatId), currentWallet, text, false);
-  input.value = '';
-  renderCampaignChat(currentCampaignChatId);
+  try {
+    const msg = await postSharedMessage('campaign', currentCampaignChatId, text, false);
+    const key = getCampaignChatKey(currentCampaignChatId);
+    saveMessages(key, mergeMessages(loadMessages(key), [msg]));
+    input.value = '';
+    await renderCampaignChat(currentCampaignChatId);
+  } catch(e) {
+    toast('Message Failed', e.message?.slice(0,100)||'Could not send message', 'error');
+  }
 }
 
-function promptAnnouncement() {
+async function promptAnnouncement() {
   const text = prompt('Type your announcement to all participants:');
   if (!text?.trim()) return;
-  addMessage(getCampaignChatKey(currentCampaignChatId), currentWallet, text.trim(), true);
-  renderCampaignChat(currentCampaignChatId);
-  toast('Announcement posted 📢','All participants can now see it','success');
+  try {
+    const msg = await postSharedMessage('campaign', currentCampaignChatId, text.trim(), true);
+    const key = getCampaignChatKey(currentCampaignChatId);
+    saveMessages(key, mergeMessages(loadMessages(key), [msg]));
+    await renderCampaignChat(currentCampaignChatId);
+    toast('Announcement posted','All participants can now see it','success');
+  } catch(e) {
+    toast('Announcement Failed', e.message?.slice(0,100)||'Could not post announcement', 'error');
+  }
+}
+
+function startCampaignChatPolling(campaignId) {
+  stopCampaignChatPolling();
+  campaignChatPoller = setInterval(() => {
+    if (currentCampaignChatId === campaignId) renderCampaignChat(campaignId);
+  }, 3000);
+}
+
+function stopCampaignChatPolling() {
+  if (campaignChatPoller) clearInterval(campaignChatPoller);
+  campaignChatPoller = null;
 }
 
 function closeCampaignChatModal(e) {
   if (!e||e.target===document.getElementById('campaignChatModal')) {
     document.getElementById('campaignChatModal').classList.remove('open');
+    stopCampaignChatPolling();
     currentCampaignChatId = null;
   }
 }

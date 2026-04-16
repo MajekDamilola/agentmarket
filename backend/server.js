@@ -399,6 +399,82 @@ function sameAddress(a, b) {
   return a?.toLowerCase() === b?.toLowerCase();
 }
 
+const CHAT_ROOM_LIMIT = 300;
+const chatRooms = new Map();
+
+function normalizeAddress(address) {
+  const value = (address || "").trim();
+  if (!/^0x[a-fA-F0-9]{40}$/.test(value)) {
+    throw new Error("Invalid wallet address");
+  }
+  return value;
+}
+
+function normalizeRoomId(roomId) {
+  const value = Number.parseInt(roomId, 10);
+  if (!Number.isInteger(value) || value < 0) {
+    throw new Error("Invalid chat room");
+  }
+  return String(value);
+}
+
+function chatRoomKey(roomType, roomId) {
+  if (!["job", "campaign"].includes(roomType)) {
+    throw new Error("Invalid chat type");
+  }
+  return `${roomType}:${normalizeRoomId(roomId)}`;
+}
+
+function getChatMessages(roomType, roomId) {
+  return chatRooms.get(chatRoomKey(roomType, roomId)) || [];
+}
+
+function saveChatMessage(roomType, roomId, message) {
+  const key = chatRoomKey(roomType, roomId);
+  const messages = chatRooms.get(key) || [];
+  messages.push(message);
+  chatRooms.set(key, messages.slice(-CHAT_ROOM_LIMIT));
+  return message;
+}
+
+async function assertCanPostChatMessage(roomType, roomId, from, isAnnouncement) {
+  if (roomType === "job") {
+    const job = await publicClient.readContract({
+      address: JOB_BOARD_ADDRESS,
+      abi: JOB_BOARD_ABI,
+      functionName: "getJob",
+      args: [BigInt(roomId)],
+    });
+    if (!sameAddress(from, job.client) && !sameAddress(from, job.agent)) {
+      throw new Error("Only the poster and worker can message on this job");
+    }
+    return;
+  }
+
+  const campaign = await publicClient.readContract({
+    address: JOB_BOARD_ADDRESS,
+    abi: JOB_BOARD_ABI,
+    functionName: "getCampaign",
+    args: [BigInt(roomId)],
+  });
+
+  if (isAnnouncement && !sameAddress(from, campaign.creator)) {
+    throw new Error("Only the campaign creator can post announcements");
+  }
+
+  const participants = await publicClient.readContract({
+    address: JOB_BOARD_ADDRESS,
+    abi: JOB_BOARD_ABI,
+    functionName: "getCampaignParticipants",
+    args: [BigInt(roomId)],
+  });
+
+  const isParticipant = participants.some(participant => sameAddress(participant, from));
+  if (!isParticipant && !sameAddress(from, campaign.creator)) {
+    throw new Error("Only campaign participants can message here");
+  }
+}
+
 async function getAllFormattedJobs() {
   const jobs = await publicClient.readContract({
     address: JOB_BOARD_ADDRESS,
@@ -455,6 +531,48 @@ app.get("/api/config", (req, res) => {
     usdcAddress: USDC_ADDRESS,
     explorerUrl: "https://testnet.arcscan.app"
   });
+});
+
+// Shared chat messages for jobs and campaigns.
+// This keeps both wallets in sync instead of each browser storing its own private localStorage copy.
+app.get("/api/chats/:roomType/:roomId/messages", (req, res) => {
+  try {
+    res.json(getChatMessages(req.params.roomType, req.params.roomId));
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+app.post("/api/chats/:roomType/:roomId/messages", async (req, res) => {
+  try {
+    const roomType = req.params.roomType;
+    const roomId = normalizeRoomId(req.params.roomId);
+    const from = normalizeAddress(req.body?.from);
+    const text = String(req.body?.text || "").trim();
+    const isAnnouncement = Boolean(req.body?.isAnnouncement);
+
+    if (!text) {
+      return res.status(400).json({ error: "Message cannot be empty" });
+    }
+    if (text.length > 1000) {
+      return res.status(400).json({ error: "Message is too long" });
+    }
+
+    await assertCanPostChatMessage(roomType, roomId, from, isAnnouncement);
+
+    const message = saveChatMessage(roomType, roomId, {
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
+      from,
+      text,
+      ts: Date.now(),
+      isAnnouncement,
+    });
+
+    res.status(201).json(message);
+  } catch (err) {
+    const status = err.message?.startsWith("Only ") ? 403 : 400;
+    res.status(status).json({ error: err.message });
+  }
 });
 
 // Get all jobs

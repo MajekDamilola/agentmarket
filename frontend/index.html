@@ -609,7 +609,13 @@ const LOCAL_HOSTS = new Set(['', 'localhost', '127.0.0.1']);
 const API = window.AGENTMARKET_API || (LOCAL_HOSTS.has(window.location.hostname) ? LOCAL_API : PROD_API);
 const EXPLORER = 'https://testnet.arcscan.app';
 const USDC = '0x3600000000000000000000000000000000000000';
-let JOB_BOARD = window.JOB_BOARD_ADDRESS || '0x42e4cC4836cDd7355a7aD600B51B054b03322D3f';
+const OPEN_MARKETPLACE_JOB_BOARD = '0xBCD7d1502eAD084D7c94a56417b5a8a7cB91d04c';
+const LEGACY_JOB_BOARDS = new Set(['0x42e4cc4836cdd7355a7ad600b51b054b03322d3f']);
+function resolveJobBoardAddress(address) {
+  const candidate = (address || OPEN_MARKETPLACE_JOB_BOARD).trim();
+  return LEGACY_JOB_BOARDS.has(candidate.toLowerCase()) ? OPEN_MARKETPLACE_JOB_BOARD : candidate;
+}
+let JOB_BOARD = resolveJobBoardAddress(window.JOB_BOARD_ADDRESS);
 
 const STATUS = ['Open','In Progress','Submitted','Completed','Rejected','Cancelled'];
 const STATUS_CLASS = ['badge-open','badge-funded','badge-submitted','badge-completed','badge-rejected','badge-rejected'];
@@ -980,7 +986,6 @@ async function claimJob(jobId) {
 // ── Cancel Job ─────────────────────────────────────────────────────
 async function cancelJob(jobId) {
   if (!currentWallet) return;
-  if (!confirm('Cancel this job and reclaim your USDC?')) return;
   try {
     toast('Cancelling...','Confirm in your wallet','info');
     const provider = new ethers.BrowserProvider(window.ethereum);
@@ -1681,9 +1686,26 @@ async function createCampaign() {
 async function loadReviewBoard() {
   const container=document.getElementById('reviewBoard');
   try {
-    const res=await fetch(`${API}/api/agents`);
-    const workers=res.ok?await res.json():[];
-    if(!workers.length){container.innerHTML='<div class="empty-state"><p>No workers yet.</p></div>';return;}
+    const [agentsRes,jobsRes]=await Promise.all([
+      fetch(`${API}/api/agents`),
+      fetch(`${API}/api/jobs`),
+    ]);
+    const agents=agentsRes.ok?await agentsRes.json():[];
+    const jobs=jobsRes.ok?await jobsRes.json():[];
+    const completedByWorker=jobs.reduce((acc,j)=>{
+      if(j.status===3&&j.agent){
+        const key=j.agent.toLowerCase();
+        acc[key]=(acc[key]||0)+1;
+      }
+      return acc;
+    },{});
+    const workers=agents.filter(w=>{
+      const address=w.walletAddress?.toLowerCase();
+      const completedCount=completedByWorker[address]||w.completedJobs||0;
+      const hasProfile=Boolean(w.name?.trim()&&w.description?.trim());
+      return w.type==='Human'&&w.isVerified&&!w.isNative&&hasProfile&&completedCount>0;
+    });
+    if(!workers.length){container.innerHTML='<div class="empty-state"><p>No verified human workers with completed jobs yet.</p></div>';return;}
     const cards=await Promise.all(workers.map(async w=>{
       try{const r=await fetch(`${API}/api/worker/${w.walletAddress}/reviews`);const reviews=r.ok?await r.json():[];const avg=reviews.length?(reviews.reduce((s,r)=>s+r.rating,0)/reviews.length).toFixed(1):'—';return{...w,reviews,avg};}
       catch{return{...w,reviews:[],avg:'—'};}
@@ -1720,7 +1742,7 @@ async function loadConfig() {
   try {
     const res=await fetch(`${API}/api/config`);
     const c=await res.json();
-    if(c.jobBoardAddress) JOB_BOARD=c.jobBoardAddress;
+    if(c.jobBoardAddress) JOB_BOARD=resolveJobBoardAddress(c.jobBoardAddress);
   } catch{}
 }
 

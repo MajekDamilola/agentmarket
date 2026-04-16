@@ -985,17 +985,31 @@ async function cancelJob(jobId) {
     toast('Cancelling...','Confirm in your wallet','info');
     const provider = new ethers.BrowserProvider(window.ethereum);
     const signer = await provider.getSigner();
-    let tx;
+
+    let job = null;
     try {
-      const c1 = new ethers.Contract(JOB_BOARD, ['function cancelJob(uint256)'], signer);
-      tx = await c1.cancelJob(BigInt(jobId));
-    } catch {
-      const c2 = new ethers.Contract(JOB_BOARD, ['function rejectJob(uint256)'], signer);
-      tx = await c2.rejectJob(BigInt(jobId));
+      const res = await fetch(`${API}/api/jobs/${jobId}`);
+      if (res.ok) job = await res.json();
+    } catch {}
+
+    let contract;
+    let tx;
+    if (job?.status === 1) {
+      if (!isDeadlineExpired(job.deadline)) {
+        toast('Deadline Not Passed','You can reclaim funds after the deadline expires','error');
+        return;
+      }
+      contract = new ethers.Contract(JOB_BOARD, ['function claimExpiredJob(uint256)'], signer);
+      tx = await contract.claimExpiredJob(BigInt(jobId));
+    } else if (job?.status === 2) {
+      contract = new ethers.Contract(JOB_BOARD, ['function rejectJob(uint256)'], signer);
+      tx = await contract.rejectJob(BigInt(jobId));
+    } else {
+      contract = new ethers.Contract(JOB_BOARD, ['function cancelJob(uint256)'], signer);
+      tx = await contract.cancelJob(BigInt(jobId));
     }
     await tx.wait();
 
-    // ✅ FIX: Optimistically update local state so dashboard reflects immediately
     _markJobCancelledLocally(jobId);
 
     toast('Job Cancelled ✅','USDC refunded to your wallet','success');

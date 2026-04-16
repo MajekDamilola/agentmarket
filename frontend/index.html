@@ -609,13 +609,7 @@ const LOCAL_HOSTS = new Set(['', 'localhost', '127.0.0.1']);
 const API = window.AGENTMARKET_API || (LOCAL_HOSTS.has(window.location.hostname) ? LOCAL_API : PROD_API);
 const EXPLORER = 'https://testnet.arcscan.app';
 const USDC = '0x3600000000000000000000000000000000000000';
-const OPEN_MARKETPLACE_JOB_BOARD = '0xBCD7d1502eAD084D7c94a56417b5a8a7cB91d04c';
-const LEGACY_JOB_BOARDS = new Set(['0x42e4cc4836cdd7355a7ad600b51b054b03322d3f']);
-function resolveJobBoardAddress(address) {
-  const candidate = (address || OPEN_MARKETPLACE_JOB_BOARD).trim();
-  return LEGACY_JOB_BOARDS.has(candidate.toLowerCase()) ? OPEN_MARKETPLACE_JOB_BOARD : candidate;
-}
-let JOB_BOARD = resolveJobBoardAddress(window.JOB_BOARD_ADDRESS);
+let JOB_BOARD = window.JOB_BOARD_ADDRESS || '0x42e4cC4836cDd7355a7aD600B51B054b03322D3f';
 
 const STATUS = ['Open','In Progress','Submitted','Completed','Rejected','Cancelled'];
 const STATUS_CLASS = ['badge-open','badge-funded','badge-submitted','badge-completed','badge-rejected','badge-rejected'];
@@ -1240,13 +1234,38 @@ async function submitJob() {
   const deadlineHours = BigInt(Math.max(1, Math.ceil(deadlineMins/60)));
 
   const btn = document.getElementById('postBtn');
-  btn.disabled=true; btn.textContent='Approving USDC...';
+  btn.disabled=true; btn.textContent='Checking Contract...';
 
   try {
     const budgetWei = ethers.parseUnits(budget.toFixed(6), 6);
     toast('Step 1/2','Approving USDC — confirm in wallet','info');
     const provider = new ethers.BrowserProvider(window.ethereum);
     const signer = await provider.getSigner();
+
+    const openJobParams = {
+      agent: ethers.ZeroAddress, title, description: desc, category,
+      workerType: 1, budget: budgetWei, deadlineHours,
+      milestoneDescriptions: [], milestonePercentages: []
+    };
+    const preflightAbi = [{
+      inputs:[{components:[
+        {name:'agent',type:'address'},{name:'title',type:'string'},{name:'description',type:'string'},
+        {name:'category',type:'string'},{name:'workerType',type:'uint8'},{name:'budget',type:'uint256'},
+        {name:'deadlineHours',type:'uint256'},{name:'milestoneDescriptions',type:'string[]'},{name:'milestonePercentages',type:'uint256[]'}
+      ],name:'params',type:'tuple'}],
+      name:'postAndFundJob',outputs:[{name:'',type:'uint256'}],stateMutability:'nonpayable',type:'function'
+    }];
+    const preflightContract = new ethers.Contract(JOB_BOARD, preflightAbi, signer);
+    try {
+      await preflightContract.postAndFundJob.estimateGas(openJobParams);
+    } catch(preflightErr) {
+      const reason = preflightErr.reason||preflightErr.shortMessage||preflightErr.message||'';
+      if (reason.toLowerCase().includes('invalid agent address')) {
+        toast('Contract Requires Worker','This contract cannot post open marketplace jobs with no assigned worker. Redeploy the open-job contract or add worker selection.','error');
+        btn.disabled=false; btn.textContent='Fund Escrow & Post Job';
+        return;
+      }
+    }
 
     const usdcContract = new ethers.Contract(USDC, ['function approve(address,uint256) returns(bool)'], signer);
     const approveTx = await usdcContract.approve(JOB_BOARD, budgetWei);
@@ -1742,7 +1761,7 @@ async function loadConfig() {
   try {
     const res=await fetch(`${API}/api/config`);
     const c=await res.json();
-    if(c.jobBoardAddress) JOB_BOARD=resolveJobBoardAddress(c.jobBoardAddress);
+    if(c.jobBoardAddress) JOB_BOARD=c.jobBoardAddress;
   } catch{}
 }
 

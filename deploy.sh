@@ -25,13 +25,14 @@ fi
 PRIVATE_KEY=${PRIVATE_KEY#0x}
 
 ARC_RPC="https://rpc.testnet.arc.network"
+FORGE_BIN="${FORGE_BIN:-forge}"
 
 echo "▸ Compiling contract..."
-/home/marhkson/.foundry/bin/forge build --contracts contracts/
+"$FORGE_BIN" build --contracts contracts/
 
 echo ""
 echo "▸ Deploying AgentJobBoard to Arc Testnet..."
-OUTPUT=$(/home/marhkson/.foundry/bin/forge create contracts/AgentJobBoard.sol:AgentJobBoard \
+OUTPUT=$("$FORGE_BIN" create contracts/AgentJobBoard.sol:AgentJobBoard \
   --rpc-url $ARC_RPC \
   --private-key $PRIVATE_KEY \
   --broadcast 2>&1)

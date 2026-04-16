@@ -609,7 +609,7 @@ const LOCAL_HOSTS = new Set(['', 'localhost', '127.0.0.1']);
 const API = window.AGENTMARKET_API || (LOCAL_HOSTS.has(window.location.hostname) ? LOCAL_API : PROD_API);
 const EXPLORER = 'https://testnet.arcscan.app';
 const USDC = '0x3600000000000000000000000000000000000000';
-let JOB_BOARD = window.JOB_BOARD_ADDRESS || '0x42e4cC4836cDd7355a7aD600B51B054b03322D3f';
+let JOB_BOARD = window.JOB_BOARD_ADDRESS || '0x70586f1A7936190a6b325F98eB3F2e27eF81d628';
 
 const STATUS = ['Open','In Progress','Submitted','Completed','Rejected','Cancelled'];
 const STATUS_CLASS = ['badge-open','badge-funded','badge-submitted','badge-completed','badge-rejected','badge-rejected'];
@@ -1238,7 +1238,7 @@ async function submitJob() {
 
   try {
     const budgetWei = ethers.parseUnits(budget.toFixed(6), 6);
-    toast('Step 1/2','Approving USDC — confirm in wallet','info');
+    toast('Checking Contract','Making sure this deployment accepts open marketplace jobs','info');
     const provider = new ethers.BrowserProvider(window.ethereum);
     const signer = await provider.getSigner();
 
@@ -1261,13 +1261,14 @@ async function submitJob() {
     } catch(preflightErr) {
       const reason = preflightErr.reason||preflightErr.shortMessage||preflightErr.message||'';
       if (reason.toLowerCase().includes('invalid agent address')) {
-        toast('Contract Requires Worker','This contract cannot post open marketplace jobs with no assigned worker. Redeploy the open-job contract or add worker selection.','error');
+        toast('Contract Update Needed','The current deployed contract rejects open marketplace jobs. Redeploy contracts/AgentJobBoard.sol, then try again.','error');
         btn.disabled=false; btn.textContent='Fund Escrow & Post Job';
         return;
       }
     }
 
     const usdcContract = new ethers.Contract(USDC, ['function approve(address,uint256) returns(bool)'], signer);
+    toast('Step 1/2','Approving USDC - confirm in wallet','info');
     const approveTx = await usdcContract.approve(JOB_BOARD, budgetWei);
     await approveTx.wait();
 

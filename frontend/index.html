@@ -64,16 +64,52 @@
     }
 
     .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border: 0;
+      background: none;
+      color: var(--text);
+      cursor: pointer;
       font-family: var(--font-head);
-      font-weight: 800;
-      font-size: 20px;
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      letter-spacing: -0.5px;
+      padding: 0;
+      text-align: left;
     }
 
-    .nav-links { display: flex; gap: 4px; }
+    .logo-mark {
+      width: 36px;
+      height: 36px;
+      border: 1px solid rgba(79,209,197,0.42);
+      border-radius: 8px;
+      background:
+        linear-gradient(135deg, rgba(124,109,250,0.18), rgba(79,209,197,0.16)),
+        var(--surface2);
+      box-shadow: 0 0 22px rgba(79,209,197,0.16);
+      color: var(--accent2);
+      display: grid;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 700;
+      place-items: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .logo-mark::before {
+      content: '';
+      position: absolute;
+      inset: 7px;
+      border: 1px solid rgba(255,255,255,0.16);
+      border-radius: 6px;
+      transform: rotate(45deg);
+    }
+
+    .logo-mark span { position: relative; z-index: 1; }
+    .logo-copy { display: grid; line-height: 1.1; }
+    .logo-text { font-size: 19px; font-weight: 800; }
+    .logo-sub { color: var(--muted); font-family: var(--font-mono); font-size: 10px; font-weight: 400; margin-top: 2px; }
+
+    .nav-links { display: flex; gap: 4px; min-width: 0; }
 
     .nav-btn {
       background: none;
@@ -156,7 +192,7 @@
       font-size: clamp(38px, 6vw, 68px);
       font-weight: 800;
       line-height: 1.05;
-      letter-spacing: -2px;
+      letter-spacing: 0;
       margin-bottom: 20px;
     }
 
@@ -194,7 +230,7 @@
       font-family: var(--font-head);
       font-size: 32px;
       font-weight: 800;
-      letter-spacing: -1px;
+      letter-spacing: 0;
     }
 
     .stat-label {
@@ -215,7 +251,7 @@
       font-family: var(--font-head);
       font-size: 22px;
       font-weight: 700;
-      letter-spacing: -0.5px;
+      letter-spacing: 0;
     }
 
     .agents-grid {
@@ -297,9 +333,39 @@
     .job-card:hover { border-color: var(--border-hover); }
 
     .job-title { font-family: var(--font-head); font-size: 15px; font-weight: 600; margin-bottom: 4px; }
-    .job-meta { font-size: 12px; color: var(--muted); font-family: var(--font-mono); display: flex; gap: 16px; }
+    .job-meta { font-size: 12px; color: var(--muted); font-family: var(--font-mono); display: flex; gap: 16px; flex-wrap: wrap; }
     .job-right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
     .job-budget { font-family: var(--font-head); font-size: 18px; font-weight: 700; color: var(--accent2); }
+
+    .countdown-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(79,209,197,0.08);
+      border: 1px solid rgba(79,209,197,0.18);
+      border-radius: 8px;
+      color: var(--accent2);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      padding: 5px 9px;
+      white-space: nowrap;
+    }
+
+    .countdown-pill.deadline-expired {
+      background: rgba(248,114,114,0.08);
+      border-color: rgba(248,114,114,0.2);
+      color: var(--danger);
+    }
+
+    .campaign-card:not(.campaign-closed) .job-title::after {
+      content: 'Open';
+      color: var(--success);
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 400;
+      margin-left: 8px;
+      text-transform: uppercase;
+    }
 
     .form-card {
       background: var(--surface);
@@ -449,6 +515,84 @@
 
     .tx-link { display: inline-flex; align-items: center; gap: 6px; color: var(--accent); text-decoration: none; font-size: 12px; font-family: var(--font-mono); }
     .tx-link:hover { text-decoration: underline; }
+
+    .chat-box {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      margin-top: 18px;
+      overflow: hidden;
+    }
+
+    .chat-head {
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      padding: 12px 14px;
+    }
+
+    .chat-title {
+      color: var(--text);
+      font-family: var(--font-head);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .chat-messages {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-height: 220px;
+      overflow-y: auto;
+      padding: 14px;
+    }
+
+    .chat-message {
+      background: rgba(255,255,255,0.035);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+    }
+
+    .chat-message.mine {
+      border-color: rgba(79,209,197,0.28);
+      background: rgba(79,209,197,0.065);
+    }
+
+    .chat-meta {
+      color: var(--muted);
+      display: flex;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 5px;
+    }
+
+    .chat-text { color: var(--text); font-size: 13px; line-height: 1.45; white-space: pre-wrap; }
+
+    .chat-compose {
+      border-top: 1px solid var(--border);
+      display: grid;
+      gap: 10px;
+      padding: 12px;
+    }
+
+    .chat-compose textarea {
+      min-height: 72px;
+      resize: vertical;
+    }
+
+    .chat-compose-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+
+    .chat-note { color: var(--muted); font-size: 11px; }
 
     /* ── AI Coming Soon Modal ── */
     .ai-coming-soon-modal {
@@ -685,15 +829,49 @@
       flex-wrap: wrap;
     }
 
+    @media (max-width: 920px) {
+      nav {
+        align-items: flex-start;
+        flex-wrap: wrap;
+        gap: 10px;
+        height: auto;
+        padding: 12px 16px;
+      }
+      .nav-links {
+        order: 3;
+        overflow-x: auto;
+        padding-bottom: 2px;
+        width: 100%;
+      }
+      .nav-btn { flex: 0 0 auto; padding: 8px 12px; }
+      .nav-right { margin-left: auto; }
+      .job-card { grid-template-columns: 1fr; }
+      .job-right { align-items: flex-start; }
+      .section-head, .dashboard-header { align-items: flex-start; flex-direction: column; gap: 12px; }
+      .agents-grid { grid-template-columns: 1fr; }
+    }
+
     @media (max-width: 680px) {
-      nav { padding: 0 16px; }
+      body { font-size: 14px; }
+      .logo-sub { display: none; }
+      .wallet-bar { display: none; }
       .container, .hero { padding-left: 16px; padding-right: 16px; }
+      .hero { padding-top: 44px; }
+      .hero-actions .btn { width: 100%; justify-content: center; }
       .stats-bar { grid-template-columns: repeat(2, 1fr); }
+      .stat-cell { padding: 18px; }
       .form-row { grid-template-columns: 1fr; }
       h1 { font-size: 36px; }
+      .form-card, .bridge-panel { padding: 20px; }
+      .modal { padding: 22px; max-height: 92vh; }
+      .detail-row { align-items: flex-start; flex-direction: column; gap: 4px; }
+      .detail-val { max-width: 100%; text-align: left; }
+      .chat-meta { flex-direction: column; gap: 2px; }
       .bridge-grid { grid-template-columns: 1fr; }
       .bridge-chain-row { grid-template-columns: 1fr; }
       .bridge-arrow { justify-self: start; transform: rotate(90deg); }
+      .toast-container { left: 16px; right: 16px; bottom: 16px; }
+      .toast { max-width: none; }
     }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
@@ -702,7 +880,13 @@
 
 <!-- Navigation -->
 <nav>
-  <div class="nav-logo">AgentMarket</div>
+  <button class="nav-logo" onclick="showPage('home')" aria-label="AgentMarket home">
+    <span class="logo-mark"><span>AM</span></span>
+    <span class="logo-copy">
+      <span class="logo-text">AgentMarket</span>
+      <span class="logo-sub">Arc work network</span>
+    </span>
+  </button>
   <div class="nav-links">
     <button class="nav-btn active" onclick="showPage('home')">Browse</button>
     <button class="nav-btn" onclick="showPage('post')">Post a Job</button>
@@ -1178,7 +1362,7 @@ window.getAgentMarketWallet = () => currentWallet;
 function toast(title, msg, type='info') {
   const el = document.createElement('div');
   el.className = `toast toast-${type}`;
-  el.innerHTML = `<div class="toast-title">${title}</div><div>${msg}</div>`;
+  el.innerHTML = `<div class="toast-title">${escapeHtml(title)}</div><div>${escapeHtml(msg)}</div>`;
   document.getElementById('toasts').appendChild(el);
   setTimeout(() => el.remove(), 5000);
 }
@@ -1203,12 +1387,58 @@ function shortAddr(addr) {
   return addr ? addr.slice(0,6) + '...' + addr.slice(-4) : '—';
 }
 
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, ch => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;'
+  }[ch]));
+}
+
+function isPastDeadline(deadlineMs) {
+  return Number(deadlineMs) > 0 && Date.now() > Number(deadlineMs);
+}
+
+function isExpiredJob(job) {
+  return Boolean(job?.deadline) && [0, 1].includes(Number(job.status)) && isPastDeadline(job.deadline);
+}
+
+function shouldShowPublicJob(job) {
+  return !isExpiredJob(job) && Number(job.status) !== 4;
+}
+
+function countdownLabel(deadlineMs) {
+  const diff = Number(deadlineMs) - Date.now();
+  if (!Number.isFinite(diff) || diff <= 0) return 'Expired';
+  const totalSeconds = Math.floor(diff / 1000);
+  const days = Math.floor(totalSeconds / 86400);
+  const hours = Math.floor((totalSeconds % 86400) / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  if (days > 0) return `${days}d ${hours}h ${minutes}m`;
+  if (hours > 0) return `${hours}h ${minutes}m ${seconds}s`;
+  return `${minutes}m ${seconds}s`;
+}
+
+function countdownPill(deadlineMs, label = 'Time left') {
+  const expired = isPastDeadline(deadlineMs);
+  return `<span class="countdown-pill ${expired ? 'deadline-expired' : ''}" data-countdown="${Number(deadlineMs) || 0}" data-countdown-label="${escapeHtml(label)}">${escapeHtml(label)}: ${countdownLabel(deadlineMs)}</span>`;
+}
+
 function timeLeft(ms) {
-  const diff = ms - Date.now();
-  if (diff <= 0) return 'Expired';
-  const h = Math.floor(diff / 3600000);
-  if (h < 24) return h + 'h left';
-  return Math.floor(h/24) + 'd left';
+  return countdownLabel(ms);
+}
+
+function refreshCountdowns() {
+  document.querySelectorAll('[data-countdown]').forEach(el => {
+    const deadline = Number(el.dataset.countdown);
+    const label = el.dataset.countdownLabel || 'Time left';
+    const expired = isPastDeadline(deadline);
+    el.classList.toggle('deadline-expired', expired);
+    el.textContent = `${label}: ${countdownLabel(deadline)}`;
+  });
 }
 
 function handleBridgeSourceChange() {
@@ -1418,10 +1648,10 @@ function handleJobAvailabilityChange() {
 async function loadAvailableJobs() {
   try {
     const res = await fetch(`${API}/api/jobs/open`);
-    const jobs = await res.json();
+    const jobs = (await res.json()).filter(j => Number(j.status) === 0 && !isExpiredJob(j));
     const container = document.getElementById('availableJobs');
     if (!Array.isArray(jobs) || !jobs.length) {
-      container.innerHTML = '<div class="empty-state"><p>No open jobs available right now. Check back soon!</p></div>';
+      container.innerHTML = '<div class="empty-state"><p>No open jobs available right now. Expired jobs are cleared from the marketplace.</p></div>';
       return;
     }
 
@@ -1436,14 +1666,14 @@ async function loadAvailableJobs() {
     container.innerHTML = '<div class="jobs-list">' + openJobs.map(j => `
       <div class="job-card" onclick="openJobModal(${j.id})">
         <div>
-          <div class="job-title">${j.title}</div>
+          <div class="job-title">${escapeHtml(j.title)}</div>
           <div class="job-meta">
-            <span>📂 ${j.category}</span>
-            <span>👤 ${j.workerTypeLabel}</span>
-            <span>⏰ ${timeLeft(j.deadline)}</span>
+            <span>📂 ${escapeHtml(j.category)}</span>
+            <span>👤 ${escapeHtml(j.workerTypeLabel)}</span>
+            ${countdownPill(j.deadline, 'Deadline')}
             <span>Posted by ${shortAddr(j.client)}</span>
           </div>
-          <div style="font-size:12px;color:var(--muted);margin-top:6px;max-width:500px">${j.description?.slice(0,100)}${j.description?.length > 100 ? '...' : ''}</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:6px;max-width:500px">${escapeHtml(j.description?.slice(0,100))}${j.description?.length > 100 ? '...' : ''}</div>
         </div>
         <div class="job-right">
           <div class="job-budget">${j.budget} USDC</div>
@@ -1547,20 +1777,21 @@ async function loadStats() {
 async function loadRecentJobs() {
   try {
     const res = await fetch(`${API}/api/jobs`);
-    const jobs = await res.json();
+    const jobs = (await res.json()).filter(shouldShowPublicJob);
     const container = document.getElementById('recentJobs');
     if (!jobs.length) {
-      container.innerHTML = '<div class="empty-state"><p>No jobs yet. Be the first to post one.</p></div>';
+      container.innerHTML = '<div class="empty-state"><p>No active jobs yet. Be the first to post one.</p></div>';
       return;
     }
     container.innerHTML = jobs.slice(-10).reverse().map(j => `
       <div class="job-card" onclick="openJobModal(${j.id})">
         <div>
-          <div class="job-title">${j.title}</div>
+          <div class="job-title">${escapeHtml(j.title)}</div>
           <div class="job-meta">
             <span>Worker: ${shortAddr(j.agent)}</span>
-            <span>${j.category}</span>
-            <span>${j.workerTypeLabel}</span>
+            <span>${escapeHtml(j.category)}</span>
+            <span>${escapeHtml(j.workerTypeLabel)}</span>
+            ${[0, 1].includes(Number(j.status)) ? countdownPill(j.deadline, 'Deadline') : ''}
           </div>
         </div>
         <div class="job-right">
@@ -1584,27 +1815,238 @@ async function loadCampaigns() {
       container.innerHTML = '<div class="empty-state"><p>No campaigns yet. Be the first to create one.</p></div>';
       return;
     }
-    container.innerHTML = campaigns.map(c => `
-      <div class="job-card" onclick="openCampaignModal(${c.id})">
+    const sortedCampaigns = campaigns
+      .slice()
+      .sort((a, b) => Number(a.expired || isPastDeadline(a.deadline)) - Number(b.expired || isPastDeadline(b.deadline)));
+    container.innerHTML = sortedCampaigns.map(c => {
+      const unavailable = c.expired || isPastDeadline(c.deadline);
+      return `
+      <div class="job-card campaign-card ${unavailable ? 'campaign-closed' : ''}" onclick="openCampaignModal(${c.id})">
         <div>
-          <div class="job-title">${c.title}</div>
+          <div class="job-title">${escapeHtml(c.title)}</div>
           <div class="job-meta">
             <span>Creator: ${shortAddr(c.creator)}</span>
-            <span>${timeLeft(c.deadline)}</span>
+            ${countdownPill(c.deadline, 'Closes')}
+            <span>Entry: ${c.entryFee} USDC</span>
+            <span>${Number(c.maxParticipants) ? `${c.maxParticipants} max` : 'Unlimited'}</span>
           </div>
+          <div style="font-size:12px;color:var(--muted);margin-top:6px;max-width:560px">${escapeHtml(c.description?.slice(0,120))}${c.description?.length > 120 ? '...' : ''}</div>
         </div>
         <div class="job-right">
           <div class="job-budget">${c.prizePool} USDC</div>
-          <span class="badge ${c.expired ? 'badge-rejected' : 'badge-funded'}">${c.expired ? 'Expired' : 'Active'}</span>
+          <span class="badge ${unavailable ? 'badge-rejected' : 'badge-funded'}">${unavailable ? 'Closed' : 'Participate'}</span>
         </div>
       </div>
-    `).join('');
+    `}).join('');
   } catch(e) {
     document.getElementById('campaignsList').innerHTML = '<div class="empty-state"><p>Could not load campaigns.</p></div>';
   }
 }
 
 // ── Review Board ─────────────────────────────────────────────────
+function renderChatBox(roomType, roomId, canPost, note = 'Only connected participants can chat here.', allowAnnouncement = false) {
+  const key = `${roomType}-${roomId}`;
+  return `
+    <div class="chat-box">
+      <div class="chat-head">
+        <div>
+          <div class="chat-title">${roomType === 'campaign' ? 'Campaign Chat' : 'Job Chat'}</div>
+          <div class="chat-note">${escapeHtml(note)}</div>
+        </div>
+        <button class="btn btn-outline btn-sm" onclick="loadChatMessages('${roomType}', ${roomId})">Refresh</button>
+      </div>
+      <div class="chat-messages" id="chatMessages-${key}">
+        <div class="chat-note">Loading messages...</div>
+      </div>
+      ${canPost ? `
+        <div class="chat-compose">
+          <textarea id="chatInput-${key}" maxlength="1000" placeholder="Write a clear update, question, or handoff note"></textarea>
+          <div class="chat-compose-actions">
+            ${allowAnnouncement ? `
+              <label class="chat-note" style="display:flex;align-items:center;gap:6px;margin:0">
+                <input type="checkbox" id="chatAnnouncement-${key}" style="width:auto"/>
+                Announcement
+              </label>
+            ` : '<span class="chat-note">Messages are stored by the AgentMarket API.</span>'}
+            <button class="btn btn-primary btn-sm" onclick="sendChatMessage('${roomType}', ${roomId})">Send Message</button>
+          </div>
+        </div>
+      ` : `
+        <div class="chat-compose">
+          <div class="chat-note">${currentWallet ? 'Join this job or campaign to post messages.' : 'Connect your wallet to use chat.'}</div>
+        </div>
+      `}
+    </div>
+  `;
+}
+
+function renderChatMessages(roomType, roomId, messages) {
+  const key = `${roomType}-${roomId}`;
+  const box = document.getElementById(`chatMessages-${key}`);
+  if (!box) return;
+  if (!Array.isArray(messages) || !messages.length) {
+    box.innerHTML = '<div class="chat-note">No messages yet. Start with scope, progress, or a question.</div>';
+    return;
+  }
+  box.innerHTML = messages.map(m => {
+    const mine = currentWallet && m.from?.toLowerCase() === currentWallet.toLowerCase();
+    const when = m.ts ? new Date(m.ts).toLocaleString() : '';
+    return `
+      <div class="chat-message ${mine ? 'mine' : ''}">
+        <div class="chat-meta">
+          <span>${m.isAnnouncement ? 'Announcement from ' : ''}${shortAddr(m.from)}</span>
+          <span>${escapeHtml(when)}</span>
+        </div>
+        <div class="chat-text">${escapeHtml(m.text)}</div>
+      </div>
+    `;
+  }).join('');
+  box.scrollTop = box.scrollHeight;
+}
+
+async function loadChatMessages(roomType, roomId) {
+  try {
+    const res = await fetch(`${API}/api/chats/${roomType}/${roomId}/messages`);
+    const messages = await res.json();
+    renderChatMessages(roomType, roomId, messages);
+  } catch(e) {
+    const box = document.getElementById(`chatMessages-${roomType}-${roomId}`);
+    if (box) box.innerHTML = '<div class="chat-note">Could not load chat right now.</div>';
+  }
+}
+
+async function sendChatMessage(roomType, roomId) {
+  if (!currentWallet) { toast('Connect Wallet', 'Connect your wallet before sending a chat message', 'error'); return; }
+  const key = `${roomType}-${roomId}`;
+  const input = document.getElementById(`chatInput-${key}`);
+  const text = input?.value.trim();
+  if (!text) { toast('Empty Message', 'Write something first', 'error'); return; }
+
+  try {
+    const isAnnouncement = Boolean(document.getElementById(`chatAnnouncement-${key}`)?.checked);
+    const res = await fetch(`${API}/api/chats/${roomType}/${roomId}/messages`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ from: currentWallet, text, isAnnouncement }),
+    });
+    const payload = await res.json();
+    if (!res.ok) throw new Error(payload.error || 'Message failed');
+    input.value = '';
+    await loadChatMessages(roomType, roomId);
+  } catch(e) {
+    toast('Chat Failed', e.message?.slice(0,100) || 'Could not send message', 'error');
+  }
+}
+
+async function openCampaignModal(id) {
+  try {
+    const [campaignRes, participantsRes, entriesRes] = await Promise.all([
+      fetch(`${API}/api/campaigns/${id}`),
+      fetch(`${API}/api/campaigns/${id}/participants`),
+      fetch(`${API}/api/campaigns/${id}/entries`),
+    ]);
+    const campaign = await campaignRes.json();
+    const participants = participantsRes.ok ? await participantsRes.json() : [];
+    const entries = entriesRes.ok ? await entriesRes.json() : [];
+    const isCreator = currentWallet?.toLowerCase() === campaign.creator?.toLowerCase();
+    const isParticipant = participants.some(p => p.toLowerCase() === currentWallet?.toLowerCase());
+    const isClosed = campaign.expired || isPastDeadline(campaign.deadline);
+    const maxedOut = Number(campaign.maxParticipants) > 0 && participants.length >= Number(campaign.maxParticipants);
+    const myEntry = entries.find(e => e.participant?.toLowerCase() === currentWallet?.toLowerCase());
+
+    document.getElementById('modalTitle').textContent = campaign.title || 'Campaign';
+    document.getElementById('modalBody').innerHTML = `
+      <div class="detail-row"><span class="detail-key">Prize Pool</span><span class="detail-val" style="color:var(--accent2);font-family:var(--font-head);font-size:18px">${campaign.prizePool} USDC</span></div>
+      <div class="detail-row"><span class="detail-key">Status</span><span class="detail-val"><span class="badge ${isClosed ? 'badge-rejected' : 'badge-funded'}">${isClosed ? 'Closed' : 'Open'}</span></span></div>
+      <div class="detail-row"><span class="detail-key">Time Left</span><span class="detail-val">${countdownPill(campaign.deadline, 'Closes')}</span></div>
+      <div class="detail-row"><span class="detail-key">Creator</span><span class="detail-val mono">${shortAddr(campaign.creator)}</span></div>
+      <div class="detail-row"><span class="detail-key">Entry Fee</span><span class="detail-val">${campaign.entryFee} USDC</span></div>
+      <div class="detail-row"><span class="detail-key">Participants</span><span class="detail-val">${participants.length}${Number(campaign.maxParticipants) ? ` / ${campaign.maxParticipants}` : ' / Unlimited'}</span></div>
+      <div class="detail-row"><span class="detail-key">Description</span><span class="detail-val" style="font-size:12px;color:var(--muted);text-align:left;max-width:100%">${escapeHtml(campaign.description)}</span></div>
+      ${isParticipant && !myEntry && !isClosed ? `
+        <div class="deliverable-box">
+          <h4>Submit Campaign Entry</h4>
+          <textarea id="campaignEntryInput" placeholder="Paste an IPFS link, Google Doc, repo, Figma, or short submission summary"></textarea>
+          <button class="btn btn-primary btn-sm" onclick="submitCampaignEntry(${id})">Submit Entry</button>
+        </div>
+      ` : ''}
+      <div style="margin-top:18px">
+        <h4 style="font-family:var(--font-head);font-size:15px;margin-bottom:10px">Entries</h4>
+        ${entries.length ? entries.map(e => `
+          <div class="detail-row">
+            <span class="detail-key mono">${shortAddr(e.participant)}</span>
+            <span class="detail-val" style="font-size:12px;color:var(--muted);text-align:left;max-width:70%">${escapeHtml(e.entry)}</span>
+          </div>
+        `).join('') : '<div class="chat-note">No entries submitted yet.</div>'}
+      </div>
+      ${renderChatBox('campaign', id, Boolean(currentWallet && (isCreator || isParticipant)), isCreator || isParticipant ? 'Coordinate requirements, submissions, and winner notes.' : 'Register for this campaign to join the chat.', isCreator)}
+    `;
+
+    const actions = document.getElementById('modalActions');
+    actions.innerHTML = '';
+    if (!currentWallet) {
+      actions.innerHTML += `<button class="btn btn-primary" style="flex:1" onclick="connectWallet()">Connect to Participate</button>`;
+    } else if (!isCreator && !isParticipant && !isClosed && !maxedOut) {
+      actions.innerHTML += `<button class="btn btn-primary" style="flex:1" onclick="registerForCampaign(${id}, '${campaign.entryFee}')">Register for Campaign</button>`;
+    } else if (maxedOut && !isParticipant) {
+      actions.innerHTML += `<span class="badge badge-rejected">Full</span>`;
+    }
+    actions.innerHTML += `<button class="btn btn-outline btn-sm" onclick="closeModal()">Close</button>`;
+    document.getElementById('jobModal').classList.add('open');
+    await loadChatMessages('job', id);
+    refreshCountdowns();
+    await loadChatMessages('campaign', id);
+    refreshCountdowns();
+  } catch(e) {
+    toast('Campaign Error', 'Could not open campaign details', 'error');
+  }
+}
+
+async function registerForCampaign(campaignId, entryFee) {
+  if (!currentWallet) { toast('Connect Wallet', 'Please connect your wallet first', 'error'); return; }
+  try {
+    const provider = new ethers.BrowserProvider(window.ethereum);
+    const signer = await provider.getSigner();
+    const feeWei = ethers.parseUnits(String(entryFee || '0'), 6);
+    if (feeWei > 0n) {
+      toast('Approving Entry Fee', 'Confirm USDC approval in your wallet', 'info');
+      const usdcAbi = ['function approve(address spender, uint256 amount) returns (bool)'];
+      const usdcContract = new ethers.Contract(USDC, usdcAbi, signer);
+      const approveTx = await usdcContract.approve(JOB_BOARD, feeWei);
+      await approveTx.wait();
+    }
+    toast('Registering', 'Confirm campaign registration in your wallet', 'info');
+    const abi = ['function register(uint256 campaignId)'];
+    const contract = new ethers.Contract(JOB_BOARD, abi, signer);
+    const tx = await contract.register(BigInt(campaignId));
+    await tx.wait();
+    toast('Registered', 'You can now submit an entry and use campaign chat', 'success');
+    await openCampaignModal(campaignId);
+    await loadCampaigns();
+  } catch(e) {
+    toast('Registration Failed', e.message?.slice(0,100) || 'Transaction failed', 'error');
+  }
+}
+
+async function submitCampaignEntry(campaignId) {
+  if (!currentWallet) return;
+  const entry = document.getElementById('campaignEntryInput')?.value.trim();
+  if (!entry) { toast('Entry Required', 'Paste your submission link or summary', 'error'); return; }
+  try {
+    toast('Submitting Entry', 'Confirm the transaction in your wallet', 'info');
+    const provider = new ethers.BrowserProvider(window.ethereum);
+    const signer = await provider.getSigner();
+    const abi = ['function submitEntry(uint256 campaignId, string submissionURI)'];
+    const contract = new ethers.Contract(JOB_BOARD, abi, signer);
+    const tx = await contract.submitEntry(BigInt(campaignId), entry);
+    await tx.wait();
+    toast('Entry Submitted', 'Your campaign entry is now onchain', 'success');
+    await openCampaignModal(campaignId);
+  } catch(e) {
+    toast('Entry Failed', e.message?.slice(0,100) || 'Could not submit entry', 'error');
+  }
+}
+
 async function loadReviewBoard() {
   const container = document.getElementById('reviewBoard');
   try {
@@ -1862,6 +2304,7 @@ function renderDashboardJobs(jobs) {
   container.innerHTML = `<div class="jobs-list">` + jobs.map(j => {
     const isClient = currentWallet?.toLowerCase() === j.client?.toLowerCase();
     const isWorker = currentWallet?.toLowerCase() === j.agent?.toLowerCase();
+    const expired = isExpiredJob(j);
 
     // Worker actions
     let workerActions = '';
@@ -1880,6 +2323,9 @@ function renderDashboardJobs(jobs) {
 
     // Client actions
     let clientActions = '';
+    if (isClient && expired && [0, 1].includes(Number(j.status))) {
+      clientActions = `<button class="btn btn-danger btn-sm" onclick="event.stopPropagation();refundExpiredJob(${j.id})">Refund Expired</button>`;
+    }
     if (isClient && j.status === 2) {
       clientActions = `
         <button class="btn btn-success btn-sm" onclick="event.stopPropagation();approveJob(${j.id})">Approve & Pay</button>
@@ -1894,13 +2340,14 @@ function renderDashboardJobs(jobs) {
             <span>${isWorkerTab ? `Client: ${shortAddr(j.client)}` : `Worker: ${shortAddr(j.agent)}`}</span>
             <span>${j.category}</span>
             <span>${new Date(j.createdAt).toLocaleDateString()}</span>
+            ${[0, 1].includes(Number(j.status)) ? countdownPill(j.deadline, 'Deadline') : ''}
           </div>
           ${isWorkerTab && j.status === 1 ? `<div class="worker-action-pill">✅ You claimed this job — submit your work when ready</div>` : ''}
         </div>
         <div class="job-right">
           <div class="job-budget">${j.budget} USDC</div>
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end">
-            <span class="badge ${STATUS_CLASS[j.status]}">${j.statusLabel}</span>
+            <span class="badge ${expired ? 'badge-rejected' : STATUS_CLASS[j.status]}">${expired ? 'Expired' : j.statusLabel}</span>
             ${workerActions}
             ${clientActions}
           </div>
@@ -1918,14 +2365,14 @@ async function openJobModal(id) {
 
     document.getElementById('modalTitle').textContent = job.title;
     document.getElementById('modalBody').innerHTML = `
-      <div class="detail-row"><span class="detail-key">Status</span><span class="detail-val"><span class="badge ${STATUS_CLASS[job.status]}">${job.statusLabel}</span></span></div>
+      <div class="detail-row"><span class="detail-key">Status</span><span class="detail-val"><span class="badge ${isExpiredJob(job) ? 'badge-rejected' : STATUS_CLASS[job.status]}">${isExpiredJob(job) ? 'Expired' : job.statusLabel}</span></span></div>
       <div class="detail-row"><span class="detail-key">Budget</span><span class="detail-val" style="color:var(--accent2);font-family:var(--font-head);font-size:18px">${job.budget} USDC</span></div>
-      <div class="detail-row"><span class="detail-key">Category</span><span class="detail-val">${job.category}</span></div>
-      <div class="detail-row"><span class="detail-key">Worker Type</span><span class="detail-val">${job.workerTypeLabel}</span></div>
+      <div class="detail-row"><span class="detail-key">Category</span><span class="detail-val">${escapeHtml(job.category)}</span></div>
+      <div class="detail-row"><span class="detail-key">Worker Type</span><span class="detail-val">${escapeHtml(job.workerTypeLabel)}</span></div>
       <div class="detail-row"><span class="detail-key">Worker</span><span class="detail-val mono"><a class="tx-link" href="${EXPLORER}/address/${job.agent}" target="_blank">${shortAddr(job.agent)} ↗</a></span></div>
       <div class="detail-row"><span class="detail-key">Client</span><span class="detail-val mono">${shortAddr(job.client)}</span></div>
-      <div class="detail-row"><span class="detail-key">Description</span><span class="detail-val" style="font-size:12px;color:var(--muted);text-align:left;max-width:100%">${job.description}</span></div>
-      ${job.deliverableHash ? `<div class="detail-row"><span class="detail-key">Deliverable</span><span class="detail-val" style="font-size:12px;color:var(--accent2);word-break:break-all">${job.deliverableHash}</span></div>` : ''}
+      <div class="detail-row"><span class="detail-key">Description</span><span class="detail-val" style="font-size:12px;color:var(--muted);text-align:left;max-width:100%">${escapeHtml(job.description)}</span></div>
+      ${job.deliverableHash ? `<div class="detail-row"><span class="detail-key">Deliverable</span><span class="detail-val" style="font-size:12px;color:var(--accent2);word-break:break-all">${escapeHtml(job.deliverableHash)}</span></div>` : ''}
       <div class="detail-row"><span class="detail-key">View onchain</span><span class="detail-val"><a class="tx-link" href="${EXPLORER}/address/${JOB_BOARD}" target="_blank">Arcscan ↗</a></span></div>
     `;
 
@@ -1934,10 +2381,22 @@ async function openJobModal(id) {
 
     const isClient = currentWallet?.toLowerCase() === job.client?.toLowerCase();
     const isWorker = currentWallet?.toLowerCase() === job.agent?.toLowerCase();
+    const expired = isExpiredJob(job);
+    const canRefundExpired = isClient && expired && [0, 1].includes(Number(job.status));
+    document.getElementById('modalBody').innerHTML += `
+      <div class="detail-row"><span class="detail-key">Deadline</span><span class="detail-val">${countdownPill(job.deadline, 'Deadline')}</span></div>
+      <div class="detail-row"><span class="detail-key">Posted</span><span class="detail-val">${new Date(job.createdAt).toLocaleString()}</span></div>
+      ${canRefundExpired ? '<div class="deliverable-box"><h4>Expired job</h4><p style="font-size:12px;color:var(--muted);margin-bottom:10px">This job is past its deadline. Refund the escrow to clear it from your dashboard.</p></div>' : ''}
+      ${renderChatBox('job', id, Boolean(isClient || isWorker), isClient || isWorker ? 'Use this space for scope questions, progress updates, and delivery handoff.' : 'Only the poster and assigned worker can post in job chat.')}
+    `;
 
     // Open job — anyone can claim
-    if (job.status === 0 && currentWallet && !isClient) {
+    if (job.status === 0 && !expired && currentWallet && !isClient) {
       actions.innerHTML = `<button class="btn btn-primary" style="flex:1" onclick="claimJob(${id})">Claim This Job</button>`;
+    }
+
+    if (canRefundExpired) {
+      actions.innerHTML = `<button class="btn btn-danger" style="flex:1" onclick="refundExpiredJob(${id});closeModal()">Refund Expired Job</button>`;
     }
 
     // Worker can submit deliverable
@@ -2019,6 +2478,23 @@ async function submitReview(jobId) {
 }
 
 // ── Approve / Reject ─────────────────────────────────────────────
+async function refundExpiredJob(jobId) {
+  if (!currentWallet) return;
+  try {
+    toast('Refunding...', 'Confirm the expired job refund in your wallet', 'info');
+    const provider = new ethers.BrowserProvider(window.ethereum);
+    const signer = await provider.getSigner();
+    const abi = ['function claimExpiredJob(uint256 jobId)'];
+    const contract = new ethers.Contract(JOB_BOARD, abi, signer);
+    const tx = await contract.claimExpiredJob(BigInt(jobId));
+    await tx.wait();
+    toast('Refunded', 'The escrowed USDC was returned to the client wallet', 'success');
+    await Promise.all([loadDashboard(), loadRecentJobs(), loadAvailableJobs(), loadStats()]);
+  } catch(e) {
+    toast('Refund Failed', e.message?.slice(0,110) || 'Could not refund this expired job', 'error');
+  }
+}
+
 async function approveJob(jobId) {
   if (!currentWallet) return;
   try {
@@ -2059,6 +2535,7 @@ async function init() {
   await Promise.all([loadConfig(), loadAgents(), loadStats(), loadRecentJobs(), loadCampaigns()]);
   handleJobAvailabilityChange();
   refreshBridgeDefaults();
+  refreshCountdowns();
 
   if (window.ethereum) {
     window.ethereum.on('accountsChanged', async accounts => {
@@ -2081,6 +2558,7 @@ async function init() {
   }
 }
 
+setInterval(refreshCountdowns, 1000);
 init();
 </script>
 <script type="module">

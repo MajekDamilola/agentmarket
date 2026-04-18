@@ -340,7 +340,10 @@ contract AgentJobBoard {
 
     function claimExpiredJob(uint256 jobId) external onlyClient(jobId) {
         Job storage job = jobs[jobId];
-        require(job.status == JobStatus.Funded, "Job not in funded state");
+        require(
+            job.status == JobStatus.Open || job.status == JobStatus.Funded,
+            "Job is not refundable"
+        );
         require(block.timestamp > job.deadline, "Deadline not reached yet");
 
         job.status = JobStatus.Rejected;

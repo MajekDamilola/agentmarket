@@ -67,6 +67,9 @@ function sameAddress(a, b) {
 }
 
 function formatJob(job) {
+  const status = Number(job.status);
+  const deadline = Number(job.deadline) * 1000;
+  const isExpired = deadline > 0 && [0, 1].includes(status) && Date.now() > deadline;
   return {
     id: Number(job.id),
     client: job.client,
@@ -79,13 +82,14 @@ function formatJob(job) {
     taskType: job.taskType,
     budget: formatUnits(job.budget, 6),
     budgetRaw: job.budget.toString(),
-    status: Number(job.status),
-    statusLabel: STATUS_LABELS[Number(job.status)],
+    status,
+    statusLabel: STATUS_LABELS[status],
+    isExpired,
     deliverableHash: job.deliverableHash,
     createdAt: Number(job.createdAt) * 1000,
     completedAt: Number(job.completedAt) * 1000,
     pickedAt: Number(job.pickedAt) * 1000,
-    deadline: Number(job.deadline) * 1000,
+    deadline,
     milestonesCount: Number(job.milestonesCount),
     completedMilestones: Number(job.completedMilestones),
     explorerUrl: `https://testnet.arcscan.app/address/${JOB_BOARD_ADDRESS}`,
@@ -255,7 +259,7 @@ app.get("/api/jobs", async (req, res) => {
 app.get("/api/jobs/open", async (req, res) => {
   try {
     const jobs = await getAllFormattedJobs();
-    res.json(jobs.filter(job => job.status === 0));
+    res.json(jobs.filter(job => job.status === 0 && !job.isExpired));
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 

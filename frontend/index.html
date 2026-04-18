@@ -700,9 +700,10 @@
 
     .bridge-grid {
       display: grid;
-      grid-template-columns: minmax(0, 0.9fr) minmax(320px, 1.1fr);
-      gap: 28px;
-      align-items: start;
+      grid-template-columns: 1fr;
+      gap: 18px;
+      margin: 0 auto;
+      max-width: 780px;
     }
 
     .bridge-panel {
@@ -712,7 +713,45 @@
       padding: 24px;
     }
 
-    .bridge-card { max-width: none; border-radius: 8px; }
+    .bridge-card {
+      border-radius: 8px;
+      max-width: none;
+      overflow: hidden;
+      padding: 0;
+    }
+
+    .bridge-card-head {
+      border-bottom: 1px solid var(--border);
+      padding: 24px 24px 18px;
+    }
+
+    .bridge-title-row {
+      align-items: center;
+      display: flex;
+      gap: 14px;
+      margin-bottom: 12px;
+    }
+
+    .bridge-mark {
+      align-items: center;
+      background: rgba(79, 209, 165, 0.09);
+      border: 1px solid rgba(79, 209, 165, 0.28);
+      border-radius: 8px;
+      color: var(--accent2);
+      display: flex;
+      font-family: var(--font-head);
+      font-size: 13px;
+      font-weight: 800;
+      height: 44px;
+      justify-content: center;
+      line-height: 1;
+      width: 44px;
+    }
+
+    .bridge-title {
+      font-size: 28px;
+      margin: 0;
+    }
 
     .bridge-kicker {
       color: var(--accent2);
@@ -729,6 +768,16 @@
       max-width: 540px;
     }
 
+    .bridge-route {
+      align-items: stretch;
+      background: rgba(255, 255, 255, 0.02);
+      border-bottom: 1px solid var(--border);
+      display: grid;
+      gap: 10px;
+      grid-template-columns: 1fr auto 1fr;
+      padding: 18px 24px;
+    }
+
     .bridge-chain-row {
       display: grid;
       grid-template-columns: 1fr auto 1fr;
@@ -737,12 +786,13 @@
       margin: 22px 0;
     }
 
-    .bridge-chain-box {
+    .bridge-chain-box,
+    .bridge-route-node,
+    .bridge-summary-item {
       background: var(--surface2);
       border: 1px solid var(--border);
       border-radius: 8px;
       padding: 14px;
-      min-height: 86px;
     }
 
     .bridge-chain-label {
@@ -758,11 +808,57 @@
       font-weight: 700;
     }
 
-    .bridge-arrow {
+    .bridge-arrow,
+    .bridge-route-arrow {
       align-self: center;
       color: var(--accent2);
       font-family: var(--font-mono);
       font-size: 16px;
+    }
+
+    .bridge-card-body {
+      padding: 24px;
+    }
+
+    .bridge-form-grid {
+      display: grid;
+      gap: 16px;
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .bridge-form-grid .span-full {
+      grid-column: 1 / -1;
+    }
+
+    .bridge-summary-grid {
+      display: grid;
+      gap: 10px;
+      grid-template-columns: repeat(3, 1fr);
+      margin: 18px 0;
+    }
+
+    .bridge-summary-item span {
+      color: var(--muted);
+      display: block;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      margin-bottom: 8px;
+    }
+
+    .bridge-summary-item strong {
+      color: var(--text);
+      display: block;
+      font-size: 13px;
+      overflow-wrap: anywhere;
+    }
+
+    .bridge-help {
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.6;
+      margin-top: 16px;
+      padding-top: 14px;
     }
 
     .bridge-check-row {
@@ -863,13 +959,19 @@
       .form-row { grid-template-columns: 1fr; }
       h1 { font-size: 36px; }
       .form-card, .bridge-panel { padding: 20px; }
+      .bridge-card { padding: 0; }
+      .bridge-card-head, .bridge-card-body, .bridge-route { padding-left: 18px; padding-right: 18px; }
+      .bridge-title-row { align-items: flex-start; }
       .modal { padding: 22px; max-height: 92vh; }
       .detail-row { align-items: flex-start; flex-direction: column; gap: 4px; }
       .detail-val { max-width: 100%; text-align: left; }
       .chat-meta { flex-direction: column; gap: 2px; }
       .bridge-grid { grid-template-columns: 1fr; }
+      .bridge-form-grid, .bridge-summary-grid { grid-template-columns: 1fr; }
+      .bridge-route { grid-template-columns: 1fr; }
       .bridge-chain-row { grid-template-columns: 1fr; }
-      .bridge-arrow { justify-self: start; transform: rotate(90deg); }
+      .bridge-arrow, .bridge-route-arrow { justify-self: start; transform: rotate(90deg); }
+      .bridge-actions .btn { flex: 1 1 100%; justify-content: center; }
       .toast-container { left: 16px; right: 16px; bottom: 16px; }
       .toast { max-width: none; }
     }
@@ -1052,87 +1154,94 @@
 <div class="page" id="page-bridge">
   <div class="container">
     <div class="bridge-grid">
-      <div class="bridge-panel">
-        <div class="bridge-kicker">Circle CCTP to Arc</div>
-        <h2 style="font-size:28px;margin-bottom:8px">Bridge USDC to Arc</h2>
-        <p class="bridge-copy">Move native USDC from supported EVM testnets into Arc Testnet, then use it to post jobs, fund campaigns, or pay workers in AgentMarket.</p>
+      <div class="form-card bridge-card">
+        <div class="bridge-card-head">
+          <div class="bridge-title-row">
+            <div class="bridge-mark">USDC</div>
+            <div>
+              <div class="bridge-kicker">Circle CCTP to Arc</div>
+              <h2 class="bridge-title">Bridge USDC to Arc</h2>
+            </div>
+          </div>
+          <p class="bridge-copy">Move native USDC from supported EVM testnets into Arc Testnet, then use it to post jobs, fund campaigns, or pay workers in AgentMarket.</p>
+        </div>
 
-        <div class="bridge-chain-row">
-          <div class="bridge-chain-box">
+        <div class="bridge-route" aria-label="Bridge route">
+          <div class="bridge-route-node">
             <div class="bridge-chain-label">From</div>
             <div class="bridge-chain-name" id="bridgeSourceName">Ethereum Sepolia</div>
-            <p style="font-size:12px;color:var(--muted);margin-top:6px">Your connected EVM wallet signs on the source chain.</p>
           </div>
-          <div class="bridge-arrow">-&gt;</div>
-          <div class="bridge-chain-box">
+          <div class="bridge-route-arrow">-&gt;</div>
+          <div class="bridge-route-node">
             <div class="bridge-chain-label">To</div>
             <div class="bridge-chain-name">Arc Testnet</div>
-            <p style="font-size:12px;color:var(--muted);margin-top:6px">USDC arrives at the recipient address on Arc.</p>
           </div>
         </div>
 
-        <div class="detail-row">
-          <span class="detail-key">Connected wallet</span>
-          <span class="detail-val mono" id="bridgeWalletHint">Connect your EVM wallet</span>
-        </div>
-        <div class="detail-row">
-          <span class="detail-key">Destination token</span>
-          <span class="detail-val mono">native USDC on Arc</span>
-        </div>
-        <div class="detail-row">
-          <span class="detail-key">Bridge route</span>
-          <span class="detail-val mono">CCTP burn and mint</span>
-        </div>
+        <div class="bridge-card-body">
+          <div class="bridge-form-grid">
+            <div class="form-group span-full">
+              <label>Source Chain</label>
+              <select id="bridgeSourceChain" onchange="handleBridgeSourceChange()">
+                <option value="Ethereum_Sepolia">Ethereum Sepolia</option>
+                <option value="Base_Sepolia">Base Sepolia</option>
+                <option value="Arbitrum_Sepolia">Arbitrum Sepolia</option>
+                <option value="Avalanche_Fuji">Avalanche Fuji</option>
+                <option value="Polygon_Amoy_Testnet">Polygon Amoy</option>
+              </select>
+            </div>
 
-        <p class="bridge-copy">You need USDC and source-chain gas on the selected source network. The bridge will ask for wallet confirmations for approval and burn steps.</p>
-      </div>
+            <div class="form-group">
+              <label>Amount (USDC)</label>
+              <input type="number" id="bridgeAmount" placeholder="1.00" min="0.01" step="0.01"/>
+            </div>
+            <div class="form-group">
+              <label>Speed</label>
+              <select id="bridgeSpeed">
+                <option value="FAST">Fast</option>
+                <option value="SLOW">Standard</option>
+              </select>
+            </div>
 
-      <div class="form-card bridge-card">
-        <div class="form-group">
-          <label>Source Chain</label>
-          <select id="bridgeSourceChain" onchange="handleBridgeSourceChange()">
-            <option value="Ethereum_Sepolia">Ethereum Sepolia</option>
-            <option value="Base_Sepolia">Base Sepolia</option>
-            <option value="Arbitrum_Sepolia">Arbitrum Sepolia</option>
-            <option value="Avalanche_Fuji">Avalanche Fuji</option>
-            <option value="Polygon_Amoy_Testnet">Polygon Amoy</option>
-          </select>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label>Amount (USDC)</label>
-            <input type="number" id="bridgeAmount" placeholder="1.00" min="0.01" step="0.01"/>
+            <div class="form-group span-full">
+              <label>Arc Recipient</label>
+              <input type="text" id="bridgeRecipient" placeholder="0x..."/>
+              <p style="font-size:12px;color:var(--muted);margin-top:6px">Leave as your connected wallet, or send to another Arc EVM address.</p>
+            </div>
           </div>
-          <div class="form-group">
-            <label>Speed</label>
-            <select id="bridgeSpeed">
-              <option value="FAST">Fast</option>
-              <option value="SLOW">Standard</option>
-            </select>
+
+          <div class="bridge-summary-grid">
+            <div class="bridge-summary-item">
+              <span>Wallet</span>
+              <strong class="mono" id="bridgeWalletHint">Connect your EVM wallet</strong>
+            </div>
+            <div class="bridge-summary-item">
+              <span>Destination Token</span>
+              <strong>Native USDC</strong>
+            </div>
+            <div class="bridge-summary-item">
+              <span>Route</span>
+              <strong>CCTP burn and mint</strong>
+            </div>
           </div>
-        </div>
 
-        <div class="form-group">
-          <label>Arc Recipient</label>
-          <input type="text" id="bridgeRecipient" placeholder="0x..."/>
-          <p style="font-size:12px;color:var(--muted);margin-top:6px">Leave as your connected wallet, or send to another Arc EVM address.</p>
-        </div>
+          <label class="bridge-check-row">
+            <input type="checkbox" id="bridgeUseForwarder" checked/>
+            <span>Use Circle forwarding when available so the destination mint can finish without manually signing on Arc.</span>
+          </label>
 
-        <label class="bridge-check-row">
-          <input type="checkbox" id="bridgeUseForwarder" checked/>
-          <span>Use Circle forwarding when available so the destination mint can be completed without manually signing on Arc.</span>
-        </label>
+          <div class="bridge-actions">
+            <button class="btn btn-outline" onclick="estimateArcBridge()" id="bridgeEstimateBtn">Estimate</button>
+            <button class="btn btn-primary" onclick="runArcBridge()" id="bridgeBtn">Bridge to Arc</button>
+            <button class="btn btn-outline" onclick="switchBridgeToArc()" id="bridgeSwitchBtn">Switch to Arc</button>
+          </div>
 
-        <div class="bridge-actions">
-          <button class="btn btn-outline" onclick="estimateArcBridge()" id="bridgeEstimateBtn">Estimate</button>
-          <button class="btn btn-primary" onclick="runArcBridge()" id="bridgeBtn">Bridge to Arc</button>
-          <button class="btn btn-outline" onclick="switchBridgeToArc()" id="bridgeSwitchBtn">Switch to Arc</button>
-        </div>
+          <div class="bridge-status info" id="bridgeStatus">
+            <div class="bridge-status-title">Checking bridge SDK</div>
+            <div>Connect your wallet while the bridge client loads.</div>
+          </div>
 
-        <div class="bridge-status info" id="bridgeStatus">
-          <div class="bridge-status-title">Bridge SDK loading</div>
-          <div>Connect your wallet, choose a source chain, and estimate before you bridge.</div>
+          <p class="bridge-help">You need USDC and source-chain gas on the selected network. Your wallet will ask for each approval and burn confirmation.</p>
         </div>
       </div>
     </div>
@@ -1457,16 +1566,38 @@ function refreshBridgeDefaults() {
   window.arcBridgeRefresh?.();
 }
 
+window.arcBridgeReady = false;
+window.arcBridgeLoading = true;
+window.arcBridgeLoadError = '';
+
+function setBridgeUiStatus(title, body, type = 'info') {
+  const status = document.getElementById('bridgeStatus');
+  if (!status) return;
+  status.className = `bridge-status ${type}`;
+  status.innerHTML = `<div class="bridge-status-title">${escapeHtml(title)}</div><div>${body}</div>`;
+}
+
+function showBridgeSdkNotice() {
+  const error = window.arcBridgeLoadError ? `<div style="margin-top:6px">${escapeHtml(window.arcBridgeLoadError)}</div>` : '';
+  const isLoading = window.arcBridgeLoading && !window.arcBridgeReady;
+  const title = isLoading ? 'Bridge SDK still starting' : 'Bridge SDK unavailable';
+  const body = isLoading
+    ? 'The bridge client is still loading. If this message stays here, refresh the page and check that the browser can reach the Circle SDK bundle.'
+    : `The Circle Bridge Kit bundle did not load in this browser. Refresh the page, disable blocking extensions, or try again from a stable connection.${error}`;
+  setBridgeUiStatus(title, body, isLoading ? 'info' : 'error');
+  toast(title, isLoading ? 'Still waiting for Circle Bridge Kit.' : 'Circle Bridge Kit could not load.', isLoading ? 'info' : 'error');
+}
+
 function estimateArcBridge() {
-  toast('Bridge SDK Loading', 'Wait a moment for Circle Bridge Kit to finish loading, then try again.', 'info');
+  showBridgeSdkNotice();
 }
 
 function runArcBridge() {
-  toast('Bridge SDK Loading', 'Wait a moment for Circle Bridge Kit to finish loading, then try again.', 'info');
+  showBridgeSdkNotice();
 }
 
 function switchBridgeToArc() {
-  toast('Bridge SDK Loading', 'Wait a moment for Circle Bridge Kit to finish loading, then try again.', 'info');
+  showBridgeSdkNotice();
 }
 
 // ── Wallet ───────────────────────────────────────────────────────
@@ -2562,12 +2693,22 @@ setInterval(refreshCountdowns, 1000);
 init();
 </script>
 <script type="module">
-import { BridgeKit } from "https://esm.sh/@circle-fin/bridge-kit@1.8.2?bundle&target=es2022";
-import { ArcTestnet, ArbitrumSepolia, AvalancheFuji, BaseSepolia, EthereumSepolia, PolygonAmoy } from "https://esm.sh/@circle-fin/bridge-kit@1.8.2/chains?bundle&target=es2022";
-import { createViemAdapterFromProvider } from "https://esm.sh/@circle-fin/adapter-viem-v2@1.8.2?bundle&target=es2022";
+const BRIDGE_SDK_URLS = {
+  kit: 'https://esm.sh/@circle-fin/bridge-kit@1.8.2?bundle&target=es2022',
+  adapter: 'https://esm.sh/@circle-fin/adapter-viem-v2@1.8.2?bundle&target=es2022',
+};
 
-const bridgeKit = new BridgeKit();
-const SUPPORTED_EVM_CHAINS = [EthereumSepolia, BaseSepolia, ArbitrumSepolia, AvalancheFuji, PolygonAmoy, ArcTestnet];
+const bridgeState = {
+  bridgeKit: null,
+  createAdapter: null,
+  error: '',
+  loading: true,
+  ready: false,
+  supportedChains: [],
+};
+
+window.arcBridgeReady = false;
+window.arcBridgeLoading = true;
 
 const BRIDGE_CHAIN_PARAMS = {
   Ethereum_Sepolia: {
@@ -2655,6 +2796,8 @@ function setBridgeStatus(title, body, type = 'info') {
   status.innerHTML = `<div class="bridge-status-title">${escapeHtml(title)}</div><div>${body}</div>`;
 }
 
+window.setBridgeUiStatus = setBridgeStatus;
+
 function setBridgeBusy(isBusy, label = 'Bridge to Arc') {
   const bridgeBtn = getBridgeEl('bridgeBtn');
   const estimateBtn = getBridgeEl('bridgeEstimateBtn');
@@ -2663,6 +2806,30 @@ function setBridgeBusy(isBusy, label = 'Bridge to Arc') {
     bridgeBtn.textContent = isBusy ? label : 'Bridge to Arc';
   }
   if (estimateBtn) estimateBtn.disabled = isBusy;
+}
+
+function bridgeErrorMessage(err) {
+  return String(err?.shortMessage || err?.details || err?.message || 'Bridge request failed.');
+}
+
+function withBridgeTimeout(promise, label) {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => {
+      window.setTimeout(() => reject(new Error(`${label} took too long to load.`)), 15000);
+    }),
+  ]);
+}
+
+function showBridgeSdkUnavailable(showToast = true) {
+  const title = bridgeState.loading ? 'Bridge SDK still starting' : 'Bridge SDK unavailable';
+  const body = bridgeState.loading
+    ? 'The bridge client is still loading. If this message stays here, refresh the page and confirm your browser can reach the Circle SDK bundle.'
+    : `The Circle Bridge Kit bundle did not load in this browser. Refresh the page, disable blocking extensions, or try again from a stable connection.${bridgeState.error ? `<div style="margin-top:6px">${escapeHtml(bridgeState.error)}</div>` : ''}`;
+  setBridgeStatus(title, body, bridgeState.loading ? 'info' : 'error');
+  if (showToast) {
+    bridgeToast(title, bridgeState.loading ? 'Still waiting for Circle Bridge Kit.' : 'Circle Bridge Kit could not load.', bridgeState.loading ? 'info' : 'error');
+  }
 }
 
 function getBridgeInputs() {
@@ -2708,11 +2875,12 @@ async function ensureWalletChain(chainId) {
 }
 
 async function createBridgeAdapter() {
-  return await createViemAdapterFromProvider({
+  if (!bridgeState.createAdapter) throw new Error('Bridge adapter is not ready yet.');
+  return await bridgeState.createAdapter({
     provider: window.ethereum,
     capabilities: {
       addressContext: 'user-controlled',
-      supportedChains: SUPPORTED_EVM_CHAINS,
+      supportedChains: bridgeState.supportedChains,
     },
   });
 }
@@ -2774,10 +2942,6 @@ function renderBridgeResult(result) {
   setBridgeStatus(`Bridge ${state}`, stepsHtml, type);
 }
 
-function bridgeErrorMessage(err) {
-  return String(err?.shortMessage || err?.details || err?.message || 'Bridge request failed.');
-}
-
 window.arcBridgeRefresh = () => {
   const wallet = window.getAgentMarketWallet?.();
   const recipient = getBridgeEl('bridgeRecipient');
@@ -2786,12 +2950,26 @@ window.arcBridgeRefresh = () => {
   if (hint) hint.textContent = wallet ? `${wallet.slice(0, 6)}...${wallet.slice(-4)}` : 'Connect your EVM wallet';
 };
 
+window.estimateArcBridge = () => showBridgeSdkUnavailable();
+window.runArcBridge = () => showBridgeSdkUnavailable();
+
+window.switchBridgeToArc = async () => {
+  try {
+    await ensureWalletConnected();
+    await ensureWalletChain('Arc_Testnet');
+    bridgeToast('Switched to Arc', 'Your wallet is now on Arc Testnet.', 'success');
+  } catch (err) {
+    bridgeToast('Switch Failed', bridgeErrorMessage(err).slice(0, 110), 'error');
+  }
+};
+
+function installBridgeHandlers() {
 window.estimateArcBridge = async () => {
   try {
     setBridgeBusy(true, 'Estimating...');
     setBridgeStatus('Preparing estimate', 'Your wallet may ask to switch to the selected source chain.', 'info');
     const { params } = await prepareBridgeParams();
-    const estimate = await bridgeKit.estimate(params);
+    const estimate = await bridgeState.bridgeKit.estimate(params);
     setBridgeStatus('Estimate ready', formatBridgeEstimate(estimate), 'success');
   } catch (err) {
     setBridgeStatus('Estimate failed', escapeHtml(bridgeErrorMessage(err)), 'error');
@@ -2807,7 +2985,7 @@ window.runArcBridge = async () => {
     setBridgeStatus('Bridge in progress', 'Confirm each wallet prompt. Keep this tab open until the result appears.', 'info');
     const { params, inputs } = await prepareBridgeParams();
     bridgeToast('Bridge Started', `Moving ${inputs.amount} USDC to Arc Testnet`, 'info');
-    const result = await bridgeKit.bridge(params);
+    const result = await bridgeState.bridgeKit.bridge(params);
     renderBridgeResult(result);
     if (String(result?.state || '').toLowerCase().includes('success')) {
       bridgeToast('Bridge Complete', 'USDC was minted on Arc Testnet.', 'success');
@@ -2821,19 +2999,63 @@ window.runArcBridge = async () => {
     setBridgeBusy(false);
   }
 };
+}
 
-window.switchBridgeToArc = async () => {
+async function initBridgeSdk() {
   try {
-    await ensureWalletConnected();
-    await ensureWalletChain('Arc_Testnet');
-    bridgeToast('Switched to Arc', 'Your wallet is now on Arc Testnet.', 'success');
-  } catch (err) {
-    bridgeToast('Switch Failed', bridgeErrorMessage(err).slice(0, 110), 'error');
-  }
-};
+    setBridgeStatus('Checking bridge SDK', 'Loading Circle Bridge Kit in your browser.', 'info');
+    const [kitModule, adapterModule] = await Promise.all([
+      withBridgeTimeout(import(BRIDGE_SDK_URLS.kit), 'Circle Bridge Kit'),
+      withBridgeTimeout(import(BRIDGE_SDK_URLS.adapter), 'Circle Viem adapter'),
+    ]);
 
-setBridgeStatus('Bridge ready', 'Connect your wallet, choose a source chain, and estimate before you bridge.', 'info');
+    const {
+      BridgeKit,
+      ArcTestnet,
+      ArbitrumSepolia,
+      AvalancheFuji,
+      BaseSepolia,
+      EthereumSepolia,
+      PolygonAmoy,
+    } = kitModule;
+    const { createViemAdapterFromProvider } = adapterModule;
+
+    if (!BridgeKit || !createViemAdapterFromProvider) {
+      throw new Error('Circle Bridge Kit did not expose the expected browser exports.');
+    }
+
+    bridgeState.bridgeKit = new BridgeKit();
+    bridgeState.createAdapter = createViemAdapterFromProvider;
+    bridgeState.supportedChains = [
+      EthereumSepolia,
+      BaseSepolia,
+      ArbitrumSepolia,
+      AvalancheFuji,
+      PolygonAmoy,
+      ArcTestnet,
+    ].filter(Boolean);
+    bridgeState.ready = true;
+    bridgeState.loading = false;
+    bridgeState.error = '';
+    window.arcBridgeReady = true;
+    window.arcBridgeLoading = false;
+    window.arcBridgeLoadError = '';
+    installBridgeHandlers();
+    setBridgeStatus('Bridge ready', 'Connect your wallet, choose a source chain, and estimate before you bridge.', 'info');
+    window.arcBridgeRefresh();
+  } catch (err) {
+    bridgeState.ready = false;
+    bridgeState.loading = false;
+    bridgeState.error = bridgeErrorMessage(err);
+    window.arcBridgeReady = false;
+    window.arcBridgeLoading = false;
+    window.arcBridgeLoadError = bridgeState.error;
+    showBridgeSdkUnavailable(false);
+  }
+}
+
 window.arcBridgeRefresh();
+initBridgeSdk();
 </script>
 </body>
 </html>

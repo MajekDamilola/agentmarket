@@ -169,6 +169,21 @@ That's it. Your app is running.
 
 ---
 
+## PHASE 4.5 - Bridge USDC to Arc
+
+AgentMarket now includes a `Bridge USDC` page in the app navigation.
+
+1. Open the site over HTTP, for example `http://localhost:8080`.
+2. Connect MetaMask.
+3. Choose a supported source chain: Ethereum Sepolia, Base Sepolia, Arbitrum Sepolia, Avalanche Fuji, or Polygon Amoy.
+4. Enter the USDC amount and Arc recipient address.
+5. Click `Estimate`, then `Bridge to Arc`.
+6. Confirm each wallet prompt. Circle CCTP handles the native USDC burn on the source chain and mint on Arc Testnet.
+
+You need source-chain USDC plus native gas on the selected source chain. After the bridge finishes, use `Switch to Arc` before posting jobs or funding campaigns.
+
+---
+
 ## PHASE 5 — Test the full flow
 
 Here's how to test a complete job from start to finish:

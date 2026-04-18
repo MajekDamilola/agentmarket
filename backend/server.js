@@ -206,12 +206,13 @@ app.get("/api/config", (req, res) => {
     usdcAddress: USDC_ADDRESS,
     explorerUrl: "https://testnet.arcscan.app",
     bridgeSupportedChains: [
-      { id: "Ethereum_Sepolia", name: "Ethereum Sepolia", icon: "⟠", testnet: true },
-      { id: "Base_Sepolia", name: "Base Sepolia", icon: "🔵", testnet: true },
-      { id: "Arbitrum_Sepolia", name: "Arbitrum Sepolia", icon: "🔷", testnet: true },
-      { id: "Avalanche_Fuji", name: "Avalanche Fuji", icon: "🔺", testnet: true },
-      { id: "Polygon_Amoy", name: "Polygon Amoy", icon: "💜", testnet: true },
-      { id: "Solana_Devnet", name: "Solana Devnet", icon: "◎", testnet: true },
+      { id: "Ethereum_Sepolia", name: "Ethereum Sepolia", chainId: 11155111, type: "evm", testnet: true },
+      { id: "Base_Sepolia", name: "Base Sepolia", chainId: 84532, type: "evm", testnet: true },
+      { id: "Arbitrum_Sepolia", name: "Arbitrum Sepolia", chainId: 421614, type: "evm", testnet: true },
+      { id: "Avalanche_Fuji", name: "Avalanche Fuji", chainId: 43113, type: "evm", testnet: true },
+      { id: "Polygon_Amoy_Testnet", name: "Polygon Amoy", chainId: 80002, type: "evm", testnet: true },
+      { id: "Arc_Testnet", name: "Arc Testnet", chainId: 5042002, type: "evm", destination: true, testnet: true },
+      { id: "Solana_Devnet", name: "Solana Devnet", type: "solana", testnet: true },
     ],
   });
 });

@@ -7,9 +7,16 @@
     "dev": "node --watch server.js"
   },
   "dependencies": {
+    "@circle-fin/adapter-circle-wallets": "^1.2.5",
+    "@circle-fin/adapter-ethers-v6": "^1.6.4",
+    "@circle-fin/adapter-solana-kit": "^1.4.4",
+    "@circle-fin/adapter-viem-v2": "^1.8.2",
+    "@circle-fin/bridge-kit": "^1.8.2",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
+    "ethers": "^6.16.0",
     "express": "^4.19.2",
-    "viem": "^2.21.0"
+    "solana": "^3.0.0",
+    "viem": "^2.48.1"
   }
 }

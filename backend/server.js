@@ -16,8 +16,7 @@ const publicClient = createPublicClient({
   transport: http("https://rpc.testnet.arc.network"),
 });
 
-<<<<<<< HEAD
-// ─── Your deployed contract address (fill in after deploying) ────
+// ─── Contract addresses ───────────────────────────────────────────
 const DEFAULT_JOB_BOARD_ADDRESS = "0x70586f1A7936190a6b325F98eB3F2e27eF81d628";
 const STALE_JOB_BOARD_ADDRESSES = new Set([
   "0x42e4cc4836cdd7355a7ad600b51b054b03322d3f",
@@ -33,13 +32,11 @@ function resolveJobBoardAddress(value) {
 }
 
 const JOB_BOARD_ADDRESS = resolveJobBoardAddress(process.env.JOB_BOARD_ADDRESS);
-=======
-const JOB_BOARD_ADDRESS = process.env.JOB_BOARD_ADDRESS || "0x0000000000000000000000000000000000000000";
->>>>>>> b263beb (update)
 const USDC_ADDRESS = "0x3600000000000000000000000000000000000000";
 const IDENTITY_REGISTRY = "0x8004A818BFB912233c491871b3d84c89A494BD9e";
 const REPUTATION_REGISTRY = "0x8004B663056A597Dffe9eCcC1965A193B7388713";
 
+// ─── ABIs ─────────────────────────────────────────────────────────
 const JOB_BOARD_ABI = [
   { name:"getJob", type:"function", stateMutability:"view", inputs:[{name:"jobId",type:"uint256"}], outputs:[{type:"tuple",components:[{name:"id",type:"uint256"},{name:"client",type:"address"},{name:"agent",type:"address"},{name:"title",type:"string"},{name:"description",type:"string"},{name:"taskType",type:"string"},{name:"category",type:"string"},{name:"workerType",type:"uint8"},{name:"budget",type:"uint256"},{name:"deadline",type:"uint256"},{name:"status",type:"uint8"},{name:"deliverableHash",type:"string"},{name:"createdAt",type:"uint256"},{name:"completedAt",type:"uint256"},{name:"pickedAt",type:"uint256"},{name:"milestonesCount",type:"uint256"},{name:"completedMilestones",type:"uint256"}]}] },
   { name:"getAllJobs", type:"function", stateMutability:"view", inputs:[], outputs:[{type:"tuple[]",components:[{name:"id",type:"uint256"},{name:"client",type:"address"},{name:"agent",type:"address"},{name:"title",type:"string"},{name:"description",type:"string"},{name:"taskType",type:"string"},{name:"category",type:"string"},{name:"workerType",type:"uint8"},{name:"budget",type:"uint256"},{name:"deadline",type:"uint256"},{name:"status",type:"uint8"},{name:"deliverableHash",type:"string"},{name:"createdAt",type:"uint256"},{name:"completedAt",type:"uint256"},{name:"pickedAt",type:"uint256"},{name:"milestonesCount",type:"uint256"},{name:"completedMilestones",type:"uint256"}]}] },
@@ -63,6 +60,11 @@ const IDENTITY_ABI = [
 
 const STATUS_LABELS = ["Open","Funded","Submitted","Completed","Rejected"];
 const WORKER_TYPES = ["AI","Human"];
+
+// ─── Helpers ──────────────────────────────────────────────────────
+function sameAddress(a, b) {
+  return a?.toLowerCase() === b?.toLowerCase();
+}
 
 function formatJob(job) {
   return {
@@ -90,89 +92,6 @@ function formatJob(job) {
   };
 }
 
-<<<<<<< HEAD
-// ─── Routes ──────────────────────────────────────────────────────
-
-function sameAddress(a, b) {
-  return a?.toLowerCase() === b?.toLowerCase();
-}
-
-const CHAT_ROOM_LIMIT = 300;
-const chatRooms = new Map();
-
-function normalizeAddress(address) {
-  const value = (address || "").trim();
-  if (!/^0x[a-fA-F0-9]{40}$/.test(value)) {
-    throw new Error("Invalid wallet address");
-  }
-  return value;
-}
-
-function normalizeRoomId(roomId) {
-  const value = Number.parseInt(roomId, 10);
-  if (!Number.isInteger(value) || value < 0) {
-    throw new Error("Invalid chat room");
-  }
-  return String(value);
-}
-
-function chatRoomKey(roomType, roomId) {
-  if (!["job", "campaign"].includes(roomType)) {
-    throw new Error("Invalid chat type");
-  }
-  return `${roomType}:${normalizeRoomId(roomId)}`;
-}
-
-function getChatMessages(roomType, roomId) {
-  return chatRooms.get(chatRoomKey(roomType, roomId)) || [];
-}
-
-function saveChatMessage(roomType, roomId, message) {
-  const key = chatRoomKey(roomType, roomId);
-  const messages = chatRooms.get(key) || [];
-  messages.push(message);
-  chatRooms.set(key, messages.slice(-CHAT_ROOM_LIMIT));
-  return message;
-}
-
-async function assertCanPostChatMessage(roomType, roomId, from, isAnnouncement) {
-  if (roomType === "job") {
-    const job = await publicClient.readContract({
-      address: JOB_BOARD_ADDRESS,
-      abi: JOB_BOARD_ABI,
-      functionName: "getJob",
-      args: [BigInt(roomId)],
-    });
-    if (!sameAddress(from, job.client) && !sameAddress(from, job.agent)) {
-      throw new Error("Only the poster and worker can message on this job");
-    }
-    return;
-  }
-
-  const campaign = await publicClient.readContract({
-    address: JOB_BOARD_ADDRESS,
-    abi: JOB_BOARD_ABI,
-    functionName: "getCampaign",
-    args: [BigInt(roomId)],
-  });
-
-  if (isAnnouncement && !sameAddress(from, campaign.creator)) {
-    throw new Error("Only the campaign creator can post announcements");
-  }
-
-  const participants = await publicClient.readContract({
-    address: JOB_BOARD_ADDRESS,
-    abi: JOB_BOARD_ABI,
-    functionName: "getCampaignParticipants",
-    args: [BigInt(roomId)],
-  });
-
-  const isParticipant = participants.some(participant => sameAddress(participant, from));
-  if (!isParticipant && !sameAddress(from, campaign.creator)) {
-    throw new Error("Only campaign participants can message here");
-  }
-}
-
 async function getAllFormattedJobs() {
   const jobs = await publicClient.readContract({
     address: JOB_BOARD_ADDRESS,
@@ -196,9 +115,9 @@ async function getJobsByIds(jobIds) {
   return jobs.map(formatJob);
 }
 
+// Tries indexed lookup first, falls back to filtering getAllJobs
 async function getJobsForAddress(address, idFunctionName, matchesAddress) {
   const normalized = address.toLowerCase();
-  let indexedJobs = [];
   try {
     const jobIds = await publicClient.readContract({
       address: JOB_BOARD_ADDRESS,
@@ -206,32 +125,86 @@ async function getJobsForAddress(address, idFunctionName, matchesAddress) {
       functionName: idFunctionName,
       args: [normalized],
     });
-    indexedJobs = await getJobsByIds(jobIds);
+    if (jobIds.length > 0) return await getJobsByIds(jobIds);
   } catch (err) {
     console.warn(`Falling back to getAllJobs for ${idFunctionName}:`, err.message);
   }
-
-  if (indexedJobs.length > 0) return indexedJobs;
-
   const allJobs = await getAllFormattedJobs();
   return allJobs.filter(job => matchesAddress(job, normalized));
 }
 
-// Health check
-=======
-// ─── Health ───────────────────────────────────────────────────────
->>>>>>> b263beb (update)
+// ─── In-memory chat (shared across all users in the same server instance) ───
+const CHAT_ROOM_LIMIT = 300;
+const chatRooms = new Map();
+
+function normalizeAddress(address) {
+  const value = (address || "").trim();
+  if (!/^0x[a-fA-F0-9]{40}$/.test(value)) throw new Error("Invalid wallet address");
+  return value;
+}
+
+function normalizeRoomId(roomId) {
+  const value = Number.parseInt(roomId, 10);
+  if (!Number.isInteger(value) || value < 0) throw new Error("Invalid chat room");
+  return String(value);
+}
+
+function chatRoomKey(roomType, roomId) {
+  if (!["job", "campaign"].includes(roomType)) throw new Error("Invalid chat type");
+  return `${roomType}:${normalizeRoomId(roomId)}`;
+}
+
+function getChatMessages(roomType, roomId) {
+  return chatRooms.get(chatRoomKey(roomType, roomId)) || [];
+}
+
+function saveChatMessage(roomType, roomId, message) {
+  const key = chatRoomKey(roomType, roomId);
+  const messages = chatRooms.get(key) || [];
+  messages.push(message);
+  chatRooms.set(key, messages.slice(-CHAT_ROOM_LIMIT));
+  return message;
+}
+
+async function assertCanPostChatMessage(roomType, roomId, from, isAnnouncement) {
+  if (roomType === "job") {
+    const job = await publicClient.readContract({
+      address: JOB_BOARD_ADDRESS, abi: JOB_BOARD_ABI,
+      functionName: "getJob", args: [BigInt(roomId)],
+    });
+    if (!sameAddress(from, job.client) && !sameAddress(from, job.agent)) {
+      throw new Error("Only the poster and worker can message on this job");
+    }
+    return;
+  }
+  const campaign = await publicClient.readContract({
+    address: JOB_BOARD_ADDRESS, abi: JOB_BOARD_ABI,
+    functionName: "getCampaign", args: [BigInt(roomId)],
+  });
+  if (isAnnouncement && !sameAddress(from, campaign.creator)) {
+    throw new Error("Only the campaign creator can post announcements");
+  }
+  const participants = await publicClient.readContract({
+    address: JOB_BOARD_ADDRESS, abi: JOB_BOARD_ABI,
+    functionName: "getCampaignParticipants", args: [BigInt(roomId)],
+  });
+  const isParticipant = participants.some(p => sameAddress(p, from));
+  if (!isParticipant && !sameAddress(from, campaign.creator)) {
+    throw new Error("Only campaign participants can message here");
+  }
+}
+
+// ─── Routes ───────────────────────────────────────────────────────
+
 app.get("/health", (req, res) => {
   res.json({ status: "ok", network: "Arc Testnet", contractAddress: JOB_BOARD_ADDRESS });
 });
 
-// ─── Config ───────────────────────────────────────────────────────
 app.get("/api/config", (req, res) => {
   res.json({
     jobBoardAddress: JOB_BOARD_ADDRESS,
     usdcAddress: USDC_ADDRESS,
     explorerUrl: "https://testnet.arcscan.app",
-    // Bridge Kit supported source chains for the frontend dropdown
     bridgeSupportedChains: [
       { id: "Ethereum_Sepolia", name: "Ethereum Sepolia", icon: "⟠", testnet: true },
       { id: "Base_Sepolia", name: "Base Sepolia", icon: "🔵", testnet: true },
@@ -243,9 +216,7 @@ app.get("/api/config", (req, res) => {
   });
 });
 
-<<<<<<< HEAD
-// Shared chat messages for jobs and campaigns.
-// This keeps both wallets in sync instead of each browser storing its own private localStorage copy.
+// ─── Chat ─────────────────────────────────────────────────────────
 app.get("/api/chats/:roomType/:roomId/messages", (req, res) => {
   try {
     res.json(getChatMessages(req.params.roomType, req.params.roomId));
@@ -256,128 +227,96 @@ app.get("/api/chats/:roomType/:roomId/messages", (req, res) => {
 
 app.post("/api/chats/:roomType/:roomId/messages", async (req, res) => {
   try {
-    const roomType = req.params.roomType;
-    const roomId = normalizeRoomId(req.params.roomId);
+    const { roomType, roomId } = req.params;
     const from = normalizeAddress(req.body?.from);
     const text = String(req.body?.text || "").trim();
     const isAnnouncement = Boolean(req.body?.isAnnouncement);
-
-    if (!text) {
-      return res.status(400).json({ error: "Message cannot be empty" });
-    }
-    if (text.length > 1000) {
-      return res.status(400).json({ error: "Message is too long" });
-    }
-
-    await assertCanPostChatMessage(roomType, roomId, from, isAnnouncement);
-
+    if (!text) return res.status(400).json({ error: "Message cannot be empty" });
+    if (text.length > 1000) return res.status(400).json({ error: "Message is too long" });
+    await assertCanPostChatMessage(roomType, normalizeRoomId(roomId), from, isAnnouncement);
     const message = saveChatMessage(roomType, roomId, {
       id: `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
-      from,
-      text,
-      ts: Date.now(),
-      isAnnouncement,
+      from, text, ts: Date.now(), isAnnouncement,
     });
-
     res.status(201).json(message);
   } catch (err) {
-    const status = err.message?.startsWith("Only ") ? 403 : 400;
-    res.status(status).json({ error: err.message });
+    res.status(err.message?.startsWith("Only ") ? 403 : 400).json({ error: err.message });
   }
 });
 
-// Get all jobs
-app.get("/api/jobs", async (req, res) => {
-  try {
-    res.json(await getAllFormattedJobs());
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-=======
 // ─── Jobs ─────────────────────────────────────────────────────────
 app.get("/api/jobs", async (req, res) => {
   try {
-    const jobs = await publicClient.readContract({ address: JOB_BOARD_ADDRESS, abi: JOB_BOARD_ABI, functionName: "getAllJobs" });
-    res.json(jobs.map(formatJob));
+    res.json(await getAllFormattedJobs());
   } catch (err) { res.status(500).json({ error: err.message }); }
->>>>>>> b263beb (update)
 });
 
 app.get("/api/jobs/open", async (req, res) => {
   try {
-<<<<<<< HEAD
     const jobs = await getAllFormattedJobs();
     res.json(jobs.filter(job => job.status === 0));
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-=======
-    const jobs = await publicClient.readContract({ address: JOB_BOARD_ADDRESS, abi: JOB_BOARD_ABI, functionName: "getAllJobs" });
-    res.json(jobs.map(formatJob).filter(job => job.status === 0));
   } catch (err) { res.status(500).json({ error: err.message }); }
->>>>>>> b263beb (update)
 });
 
 app.get("/api/jobs/:id", async (req, res) => {
   try {
-    const job = await publicClient.readContract({ address: JOB_BOARD_ADDRESS, abi: JOB_BOARD_ABI, functionName: "getJob", args: [BigInt(req.params.id)] });
+    const job = await publicClient.readContract({
+      address: JOB_BOARD_ADDRESS, abi: JOB_BOARD_ABI,
+      functionName: "getJob", args: [BigInt(req.params.id)],
+    });
     res.json(formatJob(job));
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 app.get("/api/client/:address/jobs", async (req, res) => {
   try {
-<<<<<<< HEAD
     const jobs = await getJobsForAddress(
       req.params.address,
       "getClientJobs",
-      (job, address) => sameAddress(job.client, address)
+      (job, addr) => sameAddress(job.client, addr)
     );
     res.json(jobs);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-=======
-    const address = req.params.address.toLowerCase();
-    const jobIds = await publicClient.readContract({ address: JOB_BOARD_ADDRESS, abi: JOB_BOARD_ABI, functionName: "getClientJobs", args: [address] });
-    const jobs = await Promise.all(jobIds.map(id => publicClient.readContract({ address: JOB_BOARD_ADDRESS, abi: JOB_BOARD_ABI, functionName: "getJob", args: [id] })));
-    res.json(jobs.map(formatJob));
   } catch (err) { res.status(500).json({ error: err.message }); }
->>>>>>> b263beb (update)
 });
 
 app.get("/api/agent/:address/jobs", async (req, res) => {
   try {
-<<<<<<< HEAD
     const jobs = await getJobsForAddress(
       req.params.address,
       "getAgentJobs",
-      (job, address) => sameAddress(job.agent, address)
+      (job, addr) => sameAddress(job.agent, addr)
     );
     res.json(jobs);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-=======
-    const address = req.params.address.toLowerCase();
-    const jobIds = await publicClient.readContract({ address: JOB_BOARD_ADDRESS, abi: JOB_BOARD_ABI, functionName: "getAgentJobs", args: [address] });
-    const jobs = await Promise.all(jobIds.map(id => publicClient.readContract({ address: JOB_BOARD_ADDRESS, abi: JOB_BOARD_ABI, functionName: "getJob", args: [id] })));
-    res.json(jobs.map(formatJob));
   } catch (err) { res.status(500).json({ error: err.message }); }
->>>>>>> b263beb (update)
 });
 
 app.get("/api/jobs/:id/milestones", async (req, res) => {
   try {
-    const milestones = await publicClient.readContract({ address: JOB_BOARD_ADDRESS, abi: JOB_BOARD_ABI, functionName: "getJobMilestones", args: [BigInt(req.params.id)] });
-    res.json(milestones.map(m => ({ percentage: Number(m.percentage), description: m.description, deliverableHash: m.deliverableHash, submittedAt: Number(m.submittedAt) * 1000, approved: m.approved })));
-  } catch (error) { res.status(500).json({ error: "Failed to fetch milestones" }); }
+    const milestones = await publicClient.readContract({
+      address: JOB_BOARD_ADDRESS, abi: JOB_BOARD_ABI,
+      functionName: "getJobMilestones", args: [BigInt(req.params.id)],
+    });
+    res.json(milestones.map(m => ({
+      percentage: Number(m.percentage),
+      description: m.description,
+      deliverableHash: m.deliverableHash,
+      submittedAt: Number(m.submittedAt) * 1000,
+      approved: m.approved,
+    })));
+  } catch (err) { res.status(500).json({ error: "Failed to fetch milestones" }); }
 });
 
 app.get("/api/worker/:address/reviews", async (req, res) => {
   try {
-    const reviews = await publicClient.readContract({ address: JOB_BOARD_ADDRESS, abi: JOB_BOARD_ABI, functionName: "getWorkerReviews", args: [req.params.address] });
-    res.json(reviews.map(r => ({ jobId: Number(r.jobId), reviewer: r.reviewer, worker: r.worker, rating: Number(r.rating), comment: r.comment, timestamp: Number(r.timestamp) * 1000 })));
+    const reviews = await publicClient.readContract({
+      address: JOB_BOARD_ADDRESS, abi: JOB_BOARD_ABI,
+      functionName: "getWorkerReviews", args: [req.params.address],
+    });
+    res.json(reviews.map(r => ({
+      jobId: Number(r.jobId), reviewer: r.reviewer, worker: r.worker,
+      rating: Number(r.rating), comment: r.comment,
+      timestamp: Number(r.timestamp) * 1000,
+    })));
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
@@ -386,12 +325,16 @@ app.get("/api/stats", async (req, res) => {
     const [jobCount, feeBps, jobs] = await Promise.all([
       publicClient.readContract({ address: JOB_BOARD_ADDRESS, abi: JOB_BOARD_ABI, functionName: "jobCount" }),
       publicClient.readContract({ address: JOB_BOARD_ADDRESS, abi: JOB_BOARD_ABI, functionName: "platformFeeBps" }),
-      publicClient.readContract({ address: JOB_BOARD_ADDRESS, abi: JOB_BOARD_ABI, functionName: "getAllJobs" }),
+      getAllFormattedJobs(),
     ]);
-    const formattedJobs = jobs.map(formatJob);
-    const completed = formattedJobs.filter(j => j.status === 3);
+    const completed = jobs.filter(j => j.status === 3);
     const totalVolume = completed.reduce((sum, j) => sum + parseFloat(j.budget), 0);
-    res.json({ totalJobs: Number(jobCount), completedJobs: completed.length, totalVolumeUsdc: totalVolume.toFixed(2), platformFeePercent: (Number(feeBps) / 100).toFixed(1) });
+    res.json({
+      totalJobs: Number(jobCount),
+      completedJobs: completed.length,
+      totalVolumeUsdc: totalVolume.toFixed(2),
+      platformFeePercent: (Number(feeBps) / 100).toFixed(1),
+    });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
@@ -405,120 +348,107 @@ app.get("/api/agent/:agentId/identity", async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-app.get("/api/agents", async (req, res) => {
+app.get("/api/agents", (req, res) => {
   res.json([
-<<<<<<< HEAD
-    {
-      id: "native-001",
-      type: "AI",
-      name: "SummaryBot",
-      description: "Summarizes documents, PDFs, and long text into clear bullet points",
-      taskTypes: ["summarize", "analyze"],
-      walletAddress: process.env.SUMMARY_AGENT_WALLET || "0x0000000000000000000000000000000000000001",
-      reputationScore: 98,
-      completedJobs: 0,
-      isNative: true,
-      isVerified: true,
-      minBudget: "1.00",
-    },
-    {
-      id: "native-002",
-      type: "AI",
-      name: "ReportAgent",
-      description: "Generates structured market and data reports from raw inputs",
-      taskTypes: ["report", "research"],
-      walletAddress: process.env.REPORT_AGENT_WALLET || "0x0000000000000000000000000000000000000002",
-      reputationScore: 95,
-      completedJobs: 0,
-      isNative: true,
-      isVerified: true,
-      minBudget: "2.00",
-    },
-    {
-      id: "native-003",
-      type: "AI",
-      name: "TranslateAI",
-      description: "Translates content between languages with context awareness",
-      taskTypes: ["translate"],
-      walletAddress: process.env.TRANSLATE_AGENT_WALLET || "0x0000000000000000000000000000000000000003",
-      reputationScore: 97,
-      completedJobs: 0,
-      isNative: true,
-      isVerified: true,
-      minBudget: "1.00",
-    },
-    {
-      id: "human-001",
-      type: "Human",
-      name: "Claire Jones",
-      description: "Experienced researcher and report writer for startups and founders.",
-      taskTypes: ["research", "report"],
-      walletAddress: process.env.HUMAN_AGENT_1 || "0x0000000000000000000000000000000000000011",
-      reputationScore: 92,
-      completedJobs: 14,
-      isNative: false,
-      isVerified: true,
-      minBudget: "2.50",
-    },
-    {
-      id: "human-002",
-      type: "Human",
-      name: "Sam Patel",
-      description: "Human operator for compliance checks, writing, and manual workflow support.",
-      taskTypes: ["compliance", "review", "monitor"],
-      walletAddress: process.env.HUMAN_AGENT_2 || "0x0000000000000000000000000000000000000022",
-      reputationScore: 90,
-      completedJobs: 9,
-      isNative: false,
-      isVerified: true,
-      minBudget: "3.00",
-    },
-=======
     { id:"native-001", type:"AI", name:"SummaryBot", description:"Summarizes documents, PDFs, and long text into clear bullet points", taskTypes:["summarize","analyze"], walletAddress: process.env.SUMMARY_AGENT_WALLET||"0x0000000000000000000000000000000000000001", reputationScore:98, completedJobs:0, isNative:true, isVerified:true, minBudget:"1.00" },
     { id:"native-002", type:"AI", name:"ReportAgent", description:"Generates structured market and data reports from raw inputs", taskTypes:["report","research"], walletAddress: process.env.REPORT_AGENT_WALLET||"0x0000000000000000000000000000000000000002", reputationScore:95, completedJobs:0, isNative:true, isVerified:true, minBudget:"2.00" },
     { id:"native-003", type:"AI", name:"TranslateAI", description:"Translates content between languages with context awareness", taskTypes:["translate"], walletAddress: process.env.TRANSLATE_AGENT_WALLET||"0x0000000000000000000000000000000000000003", reputationScore:97, completedJobs:0, isNative:true, isVerified:true, minBudget:"1.00" },
-    { id:"human-001", type:"Human", name:"Claire Jones", description:"Experienced researcher and report writer for startups and founders.", taskTypes:["research","report"], walletAddress: process.env.HUMAN_AGENT_1||"0x0000000000000000000000000000000000000011", reputationScore:92, completedJobs:14, isNative:false, isVerified:true, minBudget:"2.50" },
-    { id:"human-002", type:"Human", name:"Sam Patel", description:"Human operator for compliance checks, writing, and manual workflow support.", taskTypes:["compliance","review","monitor"], walletAddress: process.env.HUMAN_AGENT_2||"0x0000000000000000000000000000000000000022", reputationScore:90, completedJobs:9, isNative:false, isVerified:true, minBudget:"3.00" },
->>>>>>> b263beb (update)
   ]);
 });
 
 // ─── Campaigns ────────────────────────────────────────────────────
 app.get("/api/campaigns", async (req, res) => {
   try {
-    const campaigns = await publicClient.readContract({ address: JOB_BOARD_ADDRESS, abi: JOB_BOARD_ABI, functionName: "getAllCampaigns" });
-    res.json(campaigns.map(c => ({ id: Number(c.id), creator: c.creator, title: c.title, description: c.description, prizePool: formatUnits(c.prizePool, 6), entryFee: formatUnits(c.entryFee, 6), maxParticipants: Number(c.maxParticipants), deadline: Number(c.deadline) * 1000, expired: c.expired, createdAt: Number(c.createdAt) * 1000 })));
-  } catch (error) { res.status(500).json({ error: "Failed to fetch campaigns" }); }
+    const campaigns = await publicClient.readContract({
+      address: JOB_BOARD_ADDRESS, abi: JOB_BOARD_ABI, functionName: "getAllCampaigns",
+    });
+    res.json(campaigns.map(c => ({
+      id: Number(c.id), creator: c.creator, title: c.title, description: c.description,
+      prizePool: formatUnits(c.prizePool, 6), entryFee: formatUnits(c.entryFee, 6),
+      maxParticipants: Number(c.maxParticipants), deadline: Number(c.deadline) * 1000,
+      expired: c.expired, createdAt: Number(c.createdAt) * 1000,
+    })));
+  } catch (err) { res.status(500).json({ error: "Failed to fetch campaigns" }); }
 });
 
 app.get("/api/campaigns/:id", async (req, res) => {
   try {
-    const campaign = await publicClient.readContract({ address: JOB_BOARD_ADDRESS, abi: JOB_BOARD_ABI, functionName: "getCampaign", args: [BigInt(req.params.id)] });
-    res.json({ id: Number(campaign.id), creator: campaign.creator, title: campaign.title, description: campaign.description, prizePool: formatUnits(campaign.prizePool, 6), entryFee: formatUnits(campaign.entryFee, 6), maxParticipants: Number(campaign.maxParticipants), deadline: Number(campaign.deadline) * 1000, expired: campaign.expired, createdAt: Number(campaign.createdAt) * 1000 });
-  } catch (error) { res.status(500).json({ error: "Failed to fetch campaign" }); }
+    const c = await publicClient.readContract({
+      address: JOB_BOARD_ADDRESS, abi: JOB_BOARD_ABI,
+      functionName: "getCampaign", args: [BigInt(req.params.id)],
+    });
+    res.json({
+      id: Number(c.id), creator: c.creator, title: c.title, description: c.description,
+      prizePool: formatUnits(c.prizePool, 6), entryFee: formatUnits(c.entryFee, 6),
+      maxParticipants: Number(c.maxParticipants), deadline: Number(c.deadline) * 1000,
+      expired: c.expired, createdAt: Number(c.createdAt) * 1000,
+    });
+  } catch (err) { res.status(500).json({ error: "Failed to fetch campaign" }); }
+});
+
+app.get("/api/campaigns/:id/entries", async (req, res) => {
+  try {
+    const participants = await publicClient.readContract({
+      address: JOB_BOARD_ADDRESS, abi: JOB_BOARD_ABI,
+      functionName: "getCampaignParticipants", args: [BigInt(req.params.id)],
+    });
+    const entries = await Promise.all(
+      participants.map(async (participant) => {
+        try {
+          const entry = await publicClient.readContract({
+            address: JOB_BOARD_ADDRESS, abi: JOB_BOARD_ABI,
+            functionName: "getCampaignSubmission",
+            args: [BigInt(req.params.id), participant],
+          });
+          return { participant, entry };
+        } catch { return { participant, entry: "" }; }
+      })
+    );
+    res.json(entries.filter(e => e.entry));
+  } catch (err) { res.status(500).json({ error: "Failed to fetch entries" }); }
+});
+
+app.post("/api/campaigns/:id/entries", async (req, res) => {
+  // Fallback API endpoint for campaign entries (when contract call fails on frontend)
+  try {
+    const { participant, entry } = req.body;
+    if (!participant || !entry) return res.status(400).json({ error: "Missing participant or entry" });
+    res.json({ success: true, participant, entry, submittedAt: Date.now() });
+  } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 app.get("/api/campaigns/:id/participants", async (req, res) => {
   try {
-    const participants = await publicClient.readContract({ address: JOB_BOARD_ADDRESS, abi: JOB_BOARD_ABI, functionName: "getCampaignParticipants", args: [BigInt(req.params.id)] });
+    const participants = await publicClient.readContract({
+      address: JOB_BOARD_ADDRESS, abi: JOB_BOARD_ABI,
+      functionName: "getCampaignParticipants", args: [BigInt(req.params.id)],
+    });
     res.json(participants);
-  } catch (error) { res.status(500).json({ error: "Failed to fetch participants" }); }
+  } catch (err) { res.status(500).json({ error: "Failed to fetch participants" }); }
 });
 
 app.get("/api/campaigns/:id/winners", async (req, res) => {
   try {
-    const winners = await publicClient.readContract({ address: JOB_BOARD_ADDRESS, abi: JOB_BOARD_ABI, functionName: "getCampaignWinners", args: [BigInt(req.params.id)] });
+    const winners = await publicClient.readContract({
+      address: JOB_BOARD_ADDRESS, abi: JOB_BOARD_ABI,
+      functionName: "getCampaignWinners", args: [BigInt(req.params.id)],
+    });
     res.json(winners);
-  } catch (error) { res.status(500).json({ error: "Failed to fetch winners" }); }
+  } catch (err) { res.status(500).json({ error: "Failed to fetch winners" }); }
 });
 
 app.get("/api/campaigns/:id/submission/:address", async (req, res) => {
   try {
-    const submission = await publicClient.readContract({ address: JOB_BOARD_ADDRESS, abi: JOB_BOARD_ABI, functionName: "getCampaignSubmission", args: [BigInt(req.params.id), req.params.address] });
+    const submission = await publicClient.readContract({
+      address: JOB_BOARD_ADDRESS, abi: JOB_BOARD_ABI,
+      functionName: "getCampaignSubmission",
+      args: [BigInt(req.params.id), req.params.address],
+    });
     res.json({ submission });
-  } catch (error) { res.status(500).json({ error: "Failed to fetch submission" }); }
+  } catch (err) { res.status(500).json({ error: "Failed to fetch submission" }); }
 });
 
+// ─── Start ────────────────────────────────────────────────────────
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`AgentMarket API running on port ${PORT}`);

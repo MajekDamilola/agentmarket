@@ -703,17 +703,14 @@
       grid-template-columns: 1fr;
       gap: 18px;
       margin: 0 auto;
-      max-width: 780px;
-    }
-
-    .bridge-panel {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 24px;
+      max-width: 920px;
     }
 
     .bridge-card {
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.025), rgba(255,255,255,0.01)),
+        var(--surface);
+      border-color: rgba(255,255,255,0.09);
       border-radius: 8px;
       max-width: none;
       overflow: hidden;
@@ -722,7 +719,10 @@
 
     .bridge-card-head {
       border-bottom: 1px solid var(--border);
-      padding: 24px 24px 18px;
+      display: flex;
+      justify-content: space-between;
+      gap: 24px;
+      padding: 28px;
     }
 
     .bridge-title-row {
@@ -734,18 +734,18 @@
 
     .bridge-mark {
       align-items: center;
-      background: rgba(79, 209, 165, 0.09);
+      background: rgba(79, 209, 165, 0.1);
       border: 1px solid rgba(79, 209, 165, 0.28);
       border-radius: 8px;
       color: var(--accent2);
       display: flex;
       font-family: var(--font-head);
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 800;
-      height: 44px;
+      height: 48px;
       justify-content: center;
       line-height: 1;
-      width: 44px;
+      width: 48px;
     }
 
     .bridge-title {
@@ -757,25 +757,36 @@
       color: var(--accent2);
       font-family: var(--font-mono);
       font-size: 12px;
-      margin-bottom: 12px;
+      margin-bottom: 8px;
       text-transform: uppercase;
     }
 
     .bridge-copy {
       color: var(--muted);
       font-size: 14px;
-      margin-top: 12px;
+      line-height: 1.6;
+      margin-top: 10px;
       max-width: 540px;
+    }
+
+    .bridge-mode-pill {
+      align-self: flex-start;
+      border: 1px solid rgba(79,209,165,0.22);
+      border-radius: 8px;
+      color: var(--success);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      padding: 6px 10px;
+      white-space: nowrap;
     }
 
     .bridge-route {
       align-items: stretch;
-      background: rgba(255, 255, 255, 0.02);
       border-bottom: 1px solid var(--border);
       display: grid;
-      gap: 10px;
+      gap: 14px;
       grid-template-columns: 1fr auto 1fr;
-      padding: 18px 24px;
+      padding: 18px 28px;
     }
 
     .bridge-chain-row {
@@ -789,17 +800,15 @@
     .bridge-chain-box,
     .bridge-route-node,
     .bridge-summary-item {
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 14px;
+      min-width: 0;
     }
 
     .bridge-chain-label {
       color: var(--muted);
       font-family: var(--font-mono);
       font-size: 11px;
-      margin-bottom: 8px;
+      margin-bottom: 4px;
+      text-transform: uppercase;
     }
 
     .bridge-chain-name {
@@ -817,7 +826,7 @@
     }
 
     .bridge-card-body {
-      padding: 24px;
+      padding: 28px;
     }
 
     .bridge-form-grid {
@@ -830,19 +839,34 @@
       grid-column: 1 / -1;
     }
 
+    .bridge-form-grid .form-group { margin-bottom: 0; }
+
+    .bridge-field-note {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+      margin-top: 6px;
+    }
+
     .bridge-summary-grid {
       display: grid;
-      gap: 10px;
+      border-bottom: 1px solid var(--border);
+      border-top: 1px solid var(--border);
+      gap: 0;
       grid-template-columns: repeat(3, 1fr);
-      margin: 18px 0;
+      margin: 22px 0 18px;
     }
+
+    .bridge-summary-item { padding: 14px 18px; }
+    .bridge-summary-item + .bridge-summary-item { border-left: 1px solid var(--border); }
 
     .bridge-summary-item span {
       color: var(--muted);
       display: block;
       font-family: var(--font-mono);
       font-size: 11px;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
+      text-transform: uppercase;
     }
 
     .bridge-summary-item strong {
@@ -862,18 +886,22 @@
     }
 
     .bridge-check-row {
+      background: rgba(79,209,165,0.045);
+      border: 1px solid rgba(79,209,165,0.14);
+      border-radius: 8px;
       display: flex;
       gap: 10px;
       align-items: flex-start;
       color: var(--muted);
       font-size: 13px;
       margin-top: 2px;
+      padding: 12px 14px;
     }
 
     .bridge-check-row input { width: auto; margin-top: 4px; }
 
     .bridge-status {
-      background: var(--surface2);
+      background: rgba(255,255,255,0.025);
       border: 1px solid var(--border);
       border-radius: 8px;
       color: var(--muted);
@@ -961,13 +989,16 @@
       .form-card, .bridge-panel { padding: 20px; }
       .bridge-card { padding: 0; }
       .bridge-card-head, .bridge-card-body, .bridge-route { padding-left: 18px; padding-right: 18px; }
+      .bridge-card-head { flex-direction: column; gap: 14px; }
       .bridge-title-row { align-items: flex-start; }
+      .bridge-mode-pill { white-space: normal; }
       .modal { padding: 22px; max-height: 92vh; }
       .detail-row { align-items: flex-start; flex-direction: column; gap: 4px; }
       .detail-val { max-width: 100%; text-align: left; }
       .chat-meta { flex-direction: column; gap: 2px; }
       .bridge-grid { grid-template-columns: 1fr; }
       .bridge-form-grid, .bridge-summary-grid { grid-template-columns: 1fr; }
+      .bridge-summary-item + .bridge-summary-item { border-left: 0; border-top: 1px solid var(--border); }
       .bridge-route { grid-template-columns: 1fr; }
       .bridge-chain-row { grid-template-columns: 1fr; }
       .bridge-arrow, .bridge-route-arrow { justify-self: start; transform: rotate(90deg); }
@@ -1156,14 +1187,17 @@
     <div class="bridge-grid">
       <div class="form-card bridge-card">
         <div class="bridge-card-head">
-          <div class="bridge-title-row">
-            <div class="bridge-mark">USDC</div>
-            <div>
-              <div class="bridge-kicker">Circle CCTP to Arc</div>
-              <h2 class="bridge-title">Bridge USDC to Arc</h2>
+          <div>
+            <div class="bridge-title-row">
+              <div class="bridge-mark">USDC</div>
+              <div>
+                <div class="bridge-kicker">Circle CCTP to Arc</div>
+                <h2 class="bridge-title">Bridge USDC to Arc</h2>
+              </div>
             </div>
+            <p class="bridge-copy">Move native testnet USDC into Arc, then fund jobs, campaigns, and payouts from the same wallet.</p>
           </div>
-          <p class="bridge-copy">Move native USDC from supported EVM testnets into Arc Testnet, then use it to post jobs, fund campaigns, or pay workers in AgentMarket.</p>
+          <div class="bridge-mode-pill" id="bridgeModePill">Direct CCTP ready</div>
         </div>
 
         <div class="bridge-route" aria-label="Bridge route">
@@ -1206,7 +1240,7 @@
             <div class="form-group span-full">
               <label>Arc Recipient</label>
               <input type="text" id="bridgeRecipient" placeholder="0x..."/>
-              <p style="font-size:12px;color:var(--muted);margin-top:6px">Leave as your connected wallet, or send to another Arc EVM address.</p>
+              <p class="bridge-field-note">Use your connected wallet or any Arc EVM address.</p>
             </div>
           </div>
 
@@ -1221,13 +1255,13 @@
             </div>
             <div class="bridge-summary-item">
               <span>Route</span>
-              <strong>CCTP burn and mint</strong>
+              <strong id="bridgeRouteMode">CCTP v2 forwarding</strong>
             </div>
           </div>
 
           <label class="bridge-check-row">
             <input type="checkbox" id="bridgeUseForwarder" checked/>
-            <span>Use Circle forwarding when available so the destination mint can finish without manually signing on Arc.</span>
+            <span>Let Circle finish the Arc mint when forwarding is available.</span>
           </label>
 
           <div class="bridge-actions">
@@ -1237,11 +1271,11 @@
           </div>
 
           <div class="bridge-status info" id="bridgeStatus">
-            <div class="bridge-status-title">Checking bridge SDK</div>
-            <div>Connect your wallet while the bridge client loads.</div>
+            <div class="bridge-status-title">Bridge ready</div>
+            <div>Connect your wallet, estimate the route, then bridge USDC to Arc.</div>
           </div>
 
-          <p class="bridge-help">You need USDC and source-chain gas on the selected network. Your wallet will ask for each approval and burn confirmation.</p>
+          <p class="bridge-help">You need source-chain USDC plus gas on the selected network. Your wallet will ask for approval and burn confirmation.</p>
         </div>
       </div>
     </div>
@@ -2755,6 +2789,72 @@ const BRIDGE_CHAIN_PARAMS = {
   },
 };
 
+const CCTP_CHAIN_META = {
+  Ethereum_Sepolia: {
+    name: 'Ethereum Sepolia',
+    domain: 0,
+    usdc: '0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238',
+    tokenMessenger: '0x8fe6b999dc680ccfdd5bf7eb0974218be2542daa',
+    messageTransmitter: '0xe737e5cebeeba77efe34d4aa090756590b1ce275',
+  },
+  Base_Sepolia: {
+    name: 'Base Sepolia',
+    domain: 6,
+    usdc: '0x036CbD53842c5426634e7929541eC2318f3dCF7e',
+    tokenMessenger: '0x8fe6b999dc680ccfdd5bf7eb0974218be2542daa',
+    messageTransmitter: '0xe737e5cebeeba77efe34d4aa090756590b1ce275',
+  },
+  Arbitrum_Sepolia: {
+    name: 'Arbitrum Sepolia',
+    domain: 3,
+    usdc: '0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d',
+    tokenMessenger: '0x8FE6B999Dc680CcFDD5Bf7EB0974218be2542DAA',
+    messageTransmitter: '0xE737e5cEBEEBa77EFE34D4aa090756590b1CE275',
+  },
+  Avalanche_Fuji: {
+    name: 'Avalanche Fuji',
+    domain: 1,
+    usdc: '0x5425890298aed601595a70ab815c96711a31bc65',
+    tokenMessenger: '0x8fe6b999dc680ccfdd5bf7eb0974218be2542daa',
+    messageTransmitter: '0xe737e5cebeeba77efe34d4aa090756590b1ce275',
+  },
+  Polygon_Amoy_Testnet: {
+    name: 'Polygon Amoy',
+    domain: 7,
+    usdc: '0x41e94eb019c0762f9bfcf9fb1e58725bfb0e7582',
+    tokenMessenger: '0x8FE6B999Dc680CcFDD5Bf7EB0974218be2542DAA',
+    messageTransmitter: '0xE737e5cEBEEBa77EFE34D4aa090756590b1CE275',
+  },
+  Arc_Testnet: {
+    name: 'Arc Testnet',
+    domain: 26,
+    usdc: '0x3600000000000000000000000000000000000000',
+    tokenMessenger: '0x8FE6B999Dc680CcFDD5Bf7EB0974218be2542DAA',
+    messageTransmitter: '0xE737e5cEBEEBa77EFE34D4aa090756590b1CE275',
+  },
+};
+
+const CCTP_DESTINATION = 'Arc_Testnet';
+const CCTP_IRIS_BASE = 'https://iris-api-sandbox.circle.com';
+const CCTP_ZERO_BYTES32 = '0x0000000000000000000000000000000000000000000000000000000000000000';
+const CCTP_FORWARD_HOOK = '0x636374702d666f72776172640000000000000000000000000000000000000000';
+const CCTP_FINALITY = { FAST: 1000, SLOW: 2000 };
+
+const USDC_ERC20_ABI = [
+  'function allowance(address owner, address spender) view returns (uint256)',
+  'function approve(address spender, uint256 amount) returns (bool)',
+  'function balanceOf(address owner) view returns (uint256)',
+];
+
+const TOKEN_MESSENGER_V2_ABI = [
+  'function depositForBurn(uint256 amount,uint32 destinationDomain,bytes32 mintRecipient,address burnToken,bytes32 destinationCaller,uint256 maxFee,uint32 minFinalityThreshold)',
+  'function depositForBurnWithHook(uint256 amount,uint32 destinationDomain,bytes32 mintRecipient,address burnToken,bytes32 destinationCaller,uint256 maxFee,uint32 minFinalityThreshold,bytes hookData)',
+];
+
+const MESSAGE_TRANSMITTER_V2_ABI = [
+  'function receiveMessage(bytes message, bytes attestation) returns (bool)',
+];
+
 function bridgeToast(title, message, type = 'info') {
   window.toast?.(title, message, type);
 }
@@ -2806,6 +2906,311 @@ function setBridgeBusy(isBusy, label = 'Bridge to Arc') {
     bridgeBtn.textContent = isBusy ? label : 'Bridge to Arc';
   }
   if (estimateBtn) estimateBtn.disabled = isBusy;
+}
+
+function setBridgeMode(label) {
+  const pill = getBridgeEl('bridgeModePill');
+  if (pill) pill.textContent = label;
+}
+
+function refreshBridgeRouteMode() {
+  const route = getBridgeEl('bridgeRouteMode');
+  const useForwarder = Boolean(getBridgeEl('bridgeUseForwarder')?.checked);
+  if (route) route.textContent = useForwarder ? 'CCTP v2 forwarding' : 'CCTP v2 manual mint';
+}
+
+function bridgeDelay(ms) {
+  return new Promise(resolve => window.setTimeout(resolve, ms));
+}
+
+function requireEthers() {
+  if (!window.ethers) throw new Error('Ethers did not load. Refresh the page and try again.');
+  return window.ethers;
+}
+
+function parseUsdcAmount(amount) {
+  return requireEthers().parseUnits(amount, 6);
+}
+
+function formatUsdcMinor(value) {
+  const formatted = requireEthers().formatUnits(value, 6);
+  return formatted.replace(/\.0$/, '').replace(/(\.\d*?[1-9])0+$/, '$1');
+}
+
+function addressToBytes32(address) {
+  const ethersLib = requireEthers();
+  return ethersLib.zeroPadValue(ethersLib.getAddress(address), 32);
+}
+
+function bridgeTxUrl(chainId, txHash) {
+  const explorer = BRIDGE_CHAIN_PARAMS[chainId]?.blockExplorerUrls?.[0];
+  if (!explorer || !txHash) return '';
+  return `${explorer.replace(/\/$/, '')}/tx/${txHash}`;
+}
+
+function bridgeTxLink(chainId, txHash, label = 'view tx') {
+  const url = bridgeTxUrl(chainId, txHash);
+  if (!url) return `<span class="mono">${escapeHtml(txHash ? `${txHash.slice(0, 10)}...` : label)}</span>`;
+  return `<a class="tx-link" href="${escapeHtml(url)}" target="_blank" rel="noreferrer">${escapeHtml(label)}</a>`;
+}
+
+async function fetchCircleJson(url, { timeout = 10000 } = {}) {
+  const controller = new AbortController();
+  const timeoutId = window.setTimeout(() => controller.abort(), timeout);
+  try {
+    const res = await fetch(url, {
+      headers: { 'Content-Type': 'application/json' },
+      signal: controller.signal,
+    });
+    if (!res.ok) {
+      let detail = '';
+      try {
+        const body = await res.json();
+        detail = body?.message || body?.error || JSON.stringify(body);
+      } catch {}
+      throw new Error(`Circle API returned ${res.status}${detail ? `: ${detail}` : ''}`);
+    }
+    return await res.json();
+  } finally {
+    window.clearTimeout(timeoutId);
+  }
+}
+
+async function fetchCircleFeeTiers(sourceDomain, destinationDomain, forward = false) {
+  const url = `${CCTP_IRIS_BASE}/v2/burn/USDC/fees/${sourceDomain}/${destinationDomain}${forward ? '?forward=true' : ''}`;
+  const data = await fetchCircleJson(url, { timeout: 12000 });
+  if (!Array.isArray(data)) throw new Error('Circle fee response was not valid.');
+  return data;
+}
+
+function selectCircleFeeTier(tiers, finalityThreshold) {
+  const tier = tiers.find(item => Number(item?.finalityThreshold) === finalityThreshold);
+  if (!tier) throw new Error(`No Circle fee tier found for finality ${finalityThreshold}.`);
+  return tier;
+}
+
+function scaledBpsFromMinimumFee(value) {
+  const parsed = Number.parseFloat(String(value));
+  if (!Number.isFinite(parsed) || parsed < 0) throw new Error('Circle returned an invalid burn fee.');
+  return BigInt(Math.round(parsed * 100));
+}
+
+function calculateFastBurnFee(amountMinor, minimumFee) {
+  const baseFee = (minimumFee * amountMinor + 999999n) / 1000000n;
+  return baseFee + baseFee / 10n;
+}
+
+async function estimateCctpFees(inputs, amountMinor) {
+  const sourceMeta = CCTP_CHAIN_META[inputs.source];
+  const destinationMeta = CCTP_CHAIN_META[CCTP_DESTINATION];
+  if (!sourceMeta || !destinationMeta) throw new Error('Unsupported CCTP route.');
+
+  const finalityThreshold = CCTP_FINALITY[inputs.speed] || CCTP_FINALITY.FAST;
+  let providerFee = 0n;
+  let forwarderFee = 0n;
+
+  if (inputs.speed !== 'SLOW') {
+    const burnTiers = await fetchCircleFeeTiers(sourceMeta.domain, destinationMeta.domain, false);
+    const burnTier = selectCircleFeeTier(burnTiers, CCTP_FINALITY.FAST);
+    providerFee = calculateFastBurnFee(amountMinor, scaledBpsFromMinimumFee(burnTier.minimumFee));
+  }
+
+  if (inputs.useForwarder) {
+    const forwardTiers = await fetchCircleFeeTiers(sourceMeta.domain, destinationMeta.domain, true);
+    const forwardTier = selectCircleFeeTier(forwardTiers, finalityThreshold);
+    forwarderFee = BigInt(forwardTier.forwardFee?.high ?? 0);
+  }
+
+  return {
+    finalityThreshold,
+    providerFee,
+    forwarderFee,
+    maxFee: providerFee + forwarderFee,
+  };
+}
+
+function formatDirectEstimate(inputs, fees, amountMinor, balance, allowance) {
+  const netAmount = amountMinor > fees.maxFee ? amountMinor - fees.maxFee : 0n;
+  const sourceLabel = CCTP_CHAIN_META[inputs.source]?.name || inputs.source;
+  return `
+    <div>Route checked for ${escapeHtml(sourceLabel)} to Arc Testnet.</div>
+    <div class="bridge-step">
+      <span class="badge badge-funded">amount</span>
+      <div><strong>${escapeHtml(inputs.amount)} USDC</strong><div>Estimated Arc receipt: ${escapeHtml(formatUsdcMinor(netAmount))} USDC after Circle fees.</div></div>
+    </div>
+    <div class="bridge-step">
+      <span class="badge badge-submitted">fees</span>
+      <div><strong>${escapeHtml(formatUsdcMinor(fees.maxFee))} USDC max</strong><div>Burn: ${escapeHtml(formatUsdcMinor(fees.providerFee))} USDC. Forwarding: ${escapeHtml(formatUsdcMinor(fees.forwarderFee))} USDC.</div></div>
+    </div>
+    <div class="bridge-step">
+      <span class="badge ${balance >= amountMinor ? 'badge-completed' : 'badge-rejected'}">balance</span>
+      <div><strong>${escapeHtml(formatUsdcMinor(balance))} USDC</strong><div>${balance >= amountMinor ? 'Enough source USDC for this bridge.' : 'Add source-chain USDC before bridging.'}</div></div>
+    </div>
+    <div class="bridge-step">
+      <span class="badge ${allowance >= amountMinor ? 'badge-completed' : 'badge-submitted'}">approval</span>
+      <div><strong>${allowance >= amountMinor ? 'Already approved' : 'Approval needed'}</strong><div>Your wallet will only ask for approval if allowance is too low.</div></div>
+    </div>
+  `;
+}
+
+async function getBrowserSigner() {
+  if (!window.ethereum) throw new Error('Install MetaMask or another EVM wallet first.');
+  const provider = new (requireEthers()).BrowserProvider(window.ethereum);
+  return await provider.getSigner();
+}
+
+async function getSourceBalanceAndAllowance(sourceMeta, owner, amountMinor) {
+  const signer = await getBrowserSigner();
+  const usdc = new (requireEthers()).Contract(sourceMeta.usdc, USDC_ERC20_ABI, signer);
+  const [balance, allowance] = await Promise.all([
+    usdc.balanceOf(owner),
+    usdc.allowance(owner, sourceMeta.tokenMessenger),
+  ]);
+  return { usdc, balance, allowance, needsApproval: allowance < amountMinor };
+}
+
+async function pollCircleAttestation(sourceDomain, burnTxHash, { waitForForwarder = false } = {}) {
+  const url = `${CCTP_IRIS_BASE}/v2/messages/${sourceDomain}?transactionHash=${burnTxHash}`;
+  const maxAttempts = waitForForwarder ? 300 : 120;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    const data = await fetchCircleJson(url, { timeout: 12000 });
+    const messages = Array.isArray(data?.messages) ? data.messages : [];
+    const first = messages[0];
+    const complete = messages.find(message => message?.status === 'complete');
+
+    if (waitForForwarder) {
+      if (first?.forwardState === 'FAILED') throw new Error('Circle relayer could not complete the Arc mint.');
+      if (['CONFIRMED', 'COMPLETE'].includes(first?.forwardState) && first?.forwardTxHash) return first;
+    } else if (complete?.message && complete?.attestation) {
+      return complete;
+    }
+
+    if (attempt === 1 || attempt % 8 === 0) {
+      const title = waitForForwarder ? 'Waiting for Arc mint' : 'Waiting for attestation';
+      const body = waitForForwarder
+        ? `Burn confirmed. Circle relayer status: ${escapeHtml(first?.forwardState || 'pending')}.`
+        : `Burn confirmed. Circle attestation status: ${escapeHtml(first?.status || 'pending')}.`;
+      setBridgeStatus(title, body, 'info');
+    }
+    await bridgeDelay(4000);
+  }
+  throw new Error(waitForForwarder ? 'Timed out waiting for Circle relayer mint.' : 'Timed out waiting for Circle attestation.');
+}
+
+function renderDirectBridgeResult({ inputs, burnTxHash, mintTxHash, forwarded }) {
+  const sourceLabel = CCTP_CHAIN_META[inputs.source]?.name || inputs.source;
+  const steps = `
+    <div class="bridge-step">
+      <span class="badge badge-completed">burn</span>
+      <div><strong>${escapeHtml(sourceLabel)}</strong><div>${bridgeTxLink(inputs.source, burnTxHash, 'burn tx')}</div></div>
+    </div>
+    <div class="bridge-step">
+      <span class="badge badge-completed">mint</span>
+      <div><strong>${forwarded ? 'Circle forwarded to Arc' : 'Minted on Arc'}</strong><div>${bridgeTxLink(CCTP_DESTINATION, mintTxHash, 'mint tx')}</div></div>
+    </div>
+  `;
+  setBridgeStatus('Bridge complete', steps, 'success');
+}
+
+async function estimateArcBridgeDirect() {
+  try {
+    setBridgeBusy(true, 'Estimating...');
+    setBridgeStatus('Checking route', 'Reading Circle fees and your source-chain USDC balance.', 'info');
+    await ensureWalletConnected();
+    const inputs = getBridgeInputs();
+    const sourceMeta = CCTP_CHAIN_META[inputs.source];
+    if (!sourceMeta) throw new Error('Choose a supported source chain.');
+    await ensureWalletChain(inputs.source);
+    const signer = await getBrowserSigner();
+    const owner = await signer.getAddress();
+    const amountMinor = parseUsdcAmount(inputs.amount);
+    const [fees, account] = await Promise.all([
+      estimateCctpFees(inputs, amountMinor),
+      getSourceBalanceAndAllowance(sourceMeta, owner, amountMinor),
+    ]);
+    setBridgeStatus('Estimate ready', formatDirectEstimate(inputs, fees, amountMinor, account.balance, account.allowance), 'success');
+  } catch (err) {
+    setBridgeStatus('Estimate failed', escapeHtml(bridgeErrorMessage(err)), 'error');
+    bridgeToast('Estimate Failed', bridgeErrorMessage(err).slice(0, 110), 'error');
+  } finally {
+    setBridgeBusy(false);
+  }
+}
+
+async function runArcBridgeDirect() {
+  try {
+    setBridgeBusy(true, 'Bridging...');
+    await ensureWalletConnected();
+    const inputs = getBridgeInputs();
+    const sourceMeta = CCTP_CHAIN_META[inputs.source];
+    const destinationMeta = CCTP_CHAIN_META[CCTP_DESTINATION];
+    if (!sourceMeta || !destinationMeta) throw new Error('Unsupported CCTP route.');
+    const amountMinor = parseUsdcAmount(inputs.amount);
+    const fees = await estimateCctpFees(inputs, amountMinor);
+    if (amountMinor <= fees.maxFee) throw new Error('Amount must be greater than Circle bridge fees for this route.');
+
+    setBridgeStatus('Switching network', `Move your wallet to ${escapeHtml(sourceMeta.name)}.`, 'info');
+    await ensureWalletChain(inputs.source);
+    const signer = await getBrowserSigner();
+    const owner = await signer.getAddress();
+    const { usdc, balance, allowance } = await getSourceBalanceAndAllowance(sourceMeta, owner, amountMinor);
+    if (balance < amountMinor) throw new Error(`Not enough USDC on ${sourceMeta.name}.`);
+
+    if (allowance < amountMinor) {
+      setBridgeStatus('Approval needed', `Approve ${escapeHtml(inputs.amount)} USDC for Circle CCTP.`, 'info');
+      const approveTx = await usdc.approve(sourceMeta.tokenMessenger, amountMinor);
+      setBridgeStatus('Approving USDC', `Waiting for approval confirmation. ${bridgeTxLink(inputs.source, approveTx.hash, 'approval tx')}`, 'info');
+      await approveTx.wait();
+    }
+
+    const messenger = new (requireEthers()).Contract(sourceMeta.tokenMessenger, TOKEN_MESSENGER_V2_ABI, signer);
+    const burnArgs = [
+      amountMinor,
+      destinationMeta.domain,
+      addressToBytes32(inputs.recipient),
+      sourceMeta.usdc,
+      CCTP_ZERO_BYTES32,
+      fees.maxFee,
+      fees.finalityThreshold,
+    ];
+
+    setBridgeStatus('Burning source USDC', 'Confirm the burn transaction in your wallet.', 'info');
+    const burnTx = inputs.useForwarder
+      ? await messenger.depositForBurnWithHook(...burnArgs, CCTP_FORWARD_HOOK)
+      : await messenger.depositForBurn(...burnArgs);
+    setBridgeStatus('Burn submitted', `Waiting for burn confirmation. ${bridgeTxLink(inputs.source, burnTx.hash, 'burn tx')}`, 'info');
+    await burnTx.wait();
+
+    if (inputs.useForwarder) {
+      const relayed = await pollCircleAttestation(sourceMeta.domain, burnTx.hash, { waitForForwarder: true });
+      renderDirectBridgeResult({ inputs, burnTxHash: burnTx.hash, mintTxHash: relayed.forwardTxHash, forwarded: true });
+      bridgeToast('Bridge Complete', 'USDC was minted on Arc Testnet.', 'success');
+      return;
+    }
+
+    const attestation = await pollCircleAttestation(sourceMeta.domain, burnTx.hash);
+    setBridgeStatus('Mint on Arc', 'Switching to Arc so you can submit the mint transaction.', 'info');
+    await ensureWalletChain(CCTP_DESTINATION);
+    const arcSigner = await getBrowserSigner();
+    const transmitter = new (requireEthers()).Contract(destinationMeta.messageTransmitter, MESSAGE_TRANSMITTER_V2_ABI, arcSigner);
+    const mintTx = await transmitter.receiveMessage(attestation.message, attestation.attestation);
+    setBridgeStatus('Mint submitted', `Waiting for Arc confirmation. ${bridgeTxLink(CCTP_DESTINATION, mintTx.hash, 'mint tx')}`, 'info');
+    await mintTx.wait();
+    renderDirectBridgeResult({ inputs, burnTxHash: burnTx.hash, mintTxHash: mintTx.hash, forwarded: false });
+    bridgeToast('Bridge Complete', 'USDC was minted on Arc Testnet.', 'success');
+  } catch (err) {
+    setBridgeStatus('Bridge failed', escapeHtml(bridgeErrorMessage(err)), 'error');
+    bridgeToast('Bridge Failed', bridgeErrorMessage(err).slice(0, 110), 'error');
+  } finally {
+    setBridgeBusy(false);
+  }
+}
+
+function installCctpFallbackHandlers() {
+  window.estimateArcBridge = estimateArcBridgeDirect;
+  window.runArcBridge = runArcBridgeDirect;
+  setBridgeMode('Direct CCTP active');
+  refreshBridgeRouteMode();
 }
 
 function bridgeErrorMessage(err) {
@@ -2948,10 +3353,8 @@ window.arcBridgeRefresh = () => {
   if (recipient && wallet && !recipient.value) recipient.value = wallet;
   const hint = getBridgeEl('bridgeWalletHint');
   if (hint) hint.textContent = wallet ? `${wallet.slice(0, 6)}...${wallet.slice(-4)}` : 'Connect your EVM wallet';
+  refreshBridgeRouteMode();
 };
-
-window.estimateArcBridge = () => showBridgeSdkUnavailable();
-window.runArcBridge = () => showBridgeSdkUnavailable();
 
 window.switchBridgeToArc = async () => {
   try {
@@ -3003,7 +3406,7 @@ window.runArcBridge = async () => {
 
 async function initBridgeSdk() {
   try {
-    setBridgeStatus('Checking bridge SDK', 'Loading Circle Bridge Kit in your browser.', 'info');
+    setBridgeStatus('Bridge ready', 'Direct CCTP is active while Circle Bridge Kit loads in the background.', 'info');
     const [kitModule, adapterModule] = await Promise.all([
       withBridgeTimeout(import(BRIDGE_SDK_URLS.kit), 'Circle Bridge Kit'),
       withBridgeTimeout(import(BRIDGE_SDK_URLS.adapter), 'Circle Viem adapter'),
@@ -3041,6 +3444,7 @@ async function initBridgeSdk() {
     window.arcBridgeLoading = false;
     window.arcBridgeLoadError = '';
     installBridgeHandlers();
+    setBridgeMode('Bridge Kit active');
     setBridgeStatus('Bridge ready', 'Connect your wallet, choose a source chain, and estimate before you bridge.', 'info');
     window.arcBridgeRefresh();
   } catch (err) {
@@ -3050,10 +3454,13 @@ async function initBridgeSdk() {
     window.arcBridgeReady = false;
     window.arcBridgeLoading = false;
     window.arcBridgeLoadError = bridgeState.error;
-    showBridgeSdkUnavailable(false);
+    installCctpFallbackHandlers();
+    setBridgeStatus('Bridge ready', `Circle Bridge Kit did not load, so direct CCTP is active.${bridgeState.error ? `<div style="margin-top:6px">${escapeHtml(bridgeState.error)}</div>` : ''}`, 'info');
   }
 }
 
+getBridgeEl('bridgeUseForwarder')?.addEventListener('change', refreshBridgeRouteMode);
+installCctpFallbackHandlers();
 window.arcBridgeRefresh();
 initBridgeSdk();
 </script>

@@ -17,6 +17,10 @@
       --muted: #6b6b80;
       --accent: #7c6dfa;
       --accent2: #4fd1c5;
+      --brand-ice: #a6f6ff;
+      --brand-sky: #59c7ff;
+      --brand-mint: #7affc8;
+      --brand-ink: #0f1824;
       --gold: #f6c90e;
       --danger: #f87272;
       --success: #4fd1a5;
@@ -29,7 +33,10 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      background: var(--bg);
+      background:
+        radial-gradient(circle at top, rgba(89,199,255,0.08), transparent 32%),
+        radial-gradient(circle at 80% 15%, rgba(122,255,200,0.06), transparent 24%),
+        linear-gradient(180deg, #090b10 0%, #07080d 100%);
       color: var(--text);
       font-family: var(--font-body);
       font-size: 15px;
@@ -42,9 +49,20 @@
       position: fixed;
       inset: 0;
       background-image:
-        linear-gradient(rgba(124,109,250,0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(124,109,250,0.03) 1px, transparent 1px);
+        linear-gradient(rgba(89,199,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(89,199,255,0.03) 1px, transparent 1px);
       background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(circle at 10% 12%, rgba(89,199,255,0.07), transparent 28%),
+        radial-gradient(circle at 88% 20%, rgba(122,255,200,0.06), transparent 18%);
       pointer-events: none;
       z-index: 0;
     }
@@ -53,20 +71,20 @@
       position: sticky;
       top: 0;
       z-index: 100;
-      background: rgba(10,10,15,0.85);
+      background: rgba(8,10,15,0.84);
       backdrop-filter: blur(20px);
       border-bottom: 1px solid var(--border);
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      padding: 0 32px;
-      height: 64px;
+      gap: 20px;
+      padding: 12px 28px;
+      min-height: 72px;
     }
 
     .nav-logo {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 14px;
       border: 0;
       background: none;
       color: var(--text);
@@ -74,23 +92,23 @@
       font-family: var(--font-head);
       padding: 0;
       text-align: left;
+      flex-shrink: 0;
     }
 
     .logo-mark {
-      width: 36px;
-      height: 36px;
-      border: 1px solid rgba(79,209,197,0.42);
-      border-radius: 8px;
+      width: 48px;
+      height: 48px;
+      border: 1px solid rgba(166,246,255,0.16);
+      border-radius: 16px;
       background:
-        linear-gradient(135deg, rgba(124,109,250,0.18), rgba(79,209,197,0.16)),
-        var(--surface2);
-      box-shadow: 0 0 22px rgba(79,209,197,0.16);
-      color: var(--accent2);
-      display: grid;
-      font-family: var(--font-mono);
-      font-size: 12px;
-      font-weight: 700;
-      place-items: center;
+        linear-gradient(145deg, rgba(89,199,255,0.18), rgba(122,255,200,0.12)),
+        rgba(15,24,36,0.88);
+      box-shadow:
+        0 16px 36px rgba(8,13,22,0.5),
+        inset 0 1px 0 rgba(255,255,255,0.06);
+      display: flex;
+      align-items: center;
+      justify-content: center;
       position: relative;
       overflow: hidden;
     }
@@ -98,34 +116,100 @@
     .logo-mark::before {
       content: '';
       position: absolute;
-      inset: 7px;
-      border: 1px solid rgba(255,255,255,0.16);
-      border-radius: 6px;
-      transform: rotate(45deg);
+      inset: auto;
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(166,246,255,0.18), transparent 65%);
+      top: -26px;
+      right: -18px;
     }
 
-    .logo-mark span { position: relative; z-index: 1; }
-    .logo-copy { display: grid; line-height: 1.1; }
-    .logo-text { font-size: 19px; font-weight: 800; }
-    .logo-sub { color: var(--muted); font-family: var(--font-mono); font-size: 10px; font-weight: 400; margin-top: 2px; }
+    .logo-mark svg {
+      width: 28px;
+      height: 28px;
+      position: relative;
+      z-index: 1;
+    }
 
-    .nav-links { display: flex; gap: 4px; min-width: 0; }
+    .logo-copy { display: grid; gap: 2px; line-height: 1; }
+    .logo-text { font-size: 20px; font-weight: 800; letter-spacing: -0.04em; }
+    .logo-sub {
+      color: rgba(232,232,240,0.44);
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 400;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .nav-menu {
+      align-items: center;
+      display: flex;
+      flex: 1;
+      gap: 16px;
+      justify-content: space-between;
+      min-width: 0;
+    }
+
+    .nav-links { display: flex; gap: 6px; min-width: 0; }
 
     .nav-btn {
       background: none;
-      border: none;
-      color: var(--muted);
+      border: 1px solid transparent;
+      color: rgba(232,232,240,0.64);
       font-family: var(--font-body);
       font-size: 14px;
-      padding: 8px 16px;
-      border-radius: 8px;
+      padding: 10px 14px;
+      border-radius: 12px;
       cursor: pointer;
       transition: all 0.2s;
     }
-    .nav-btn:hover, .nav-btn.active { background: var(--surface2); color: var(--text); }
-    .nav-btn.active { color: var(--accent); }
+    .nav-btn:hover,
+    .nav-btn.active {
+      background: rgba(89,199,255,0.08);
+      border-color: rgba(166,246,255,0.1);
+      color: var(--text);
+    }
+    .nav-btn.active {
+      box-shadow: inset 0 0 0 1px rgba(166,246,255,0.05);
+      color: var(--brand-ice);
+    }
 
-    .nav-right { display: flex; align-items: center; gap: 12px; }
+    .nav-right { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+
+    .nav-toggle {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      width: 46px;
+      height: 46px;
+      margin-left: auto;
+      border-radius: 14px;
+      border: 1px solid rgba(166,246,255,0.14);
+      background: rgba(15,24,36,0.7);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+      cursor: pointer;
+    }
+
+    .nav-toggle span {
+      display: block;
+      width: 18px;
+      height: 2px;
+      border-radius: 999px;
+      background: var(--brand-ice);
+      transition: transform 0.2s, opacity 0.2s;
+    }
+
+    .nav-toggle span + span { margin-top: 5px; }
+
+    body.nav-open .nav-toggle span:first-child {
+      transform: translateY(3.5px) rotate(45deg);
+    }
+
+    body.nav-open .nav-toggle span:last-child {
+      transform: translateY(-3.5px) rotate(-45deg);
+    }
 
     .btn {
       display: inline-flex;
@@ -679,7 +763,18 @@
     .empty-state { text-align: center; padding: 60px 20px; color: var(--muted); }
     .empty-state p { margin-bottom: 16px; }
 
-    .wallet-bar { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 8px 14px; font-family: var(--font-mono); font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 8px; }
+    .wallet-bar {
+      background: rgba(15,24,36,0.72);
+      border: 1px solid rgba(166,246,255,0.1);
+      border-radius: 12px;
+      padding: 9px 14px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: rgba(232,232,240,0.64);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
     .wallet-dot { width: 7px; height: 7px; background: var(--success); border-radius: 50%; }
 
     .steps { display: flex; gap: 8px; margin-bottom: 28px; }
@@ -699,102 +794,163 @@
     }
 
     .bridge-grid {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 18px;
       margin: 0 auto;
-      max-width: 920px;
+      max-width: 1120px;
     }
 
     .bridge-card {
-      background:
-        linear-gradient(180deg, rgba(255,255,255,0.025), rgba(255,255,255,0.01)),
-        var(--surface);
-      border-color: rgba(255,255,255,0.09);
-      border-radius: 8px;
-      max-width: none;
+      background: linear-gradient(145deg, rgba(15,19,29,0.94), rgba(7,8,14,0.96));
+      border: 1px solid rgba(166,246,255,0.1);
+      border-radius: 30px;
+      box-shadow: 0 28px 80px rgba(0,0,0,0.42);
       overflow: hidden;
-      padding: 0;
+      padding: 22px;
+      position: relative;
     }
 
-    .bridge-card-head {
-      border-bottom: 1px solid var(--border);
+    .bridge-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at top left, rgba(89,199,255,0.18), transparent 32%),
+        radial-gradient(circle at 88% 14%, rgba(122,255,200,0.14), transparent 24%),
+        linear-gradient(180deg, rgba(255,255,255,0.03), transparent 36%);
+      pointer-events: none;
+    }
+
+    .bridge-shell {
+      display: grid;
+      gap: 22px;
+      grid-template-columns: minmax(0, 1.08fr) minmax(360px, 0.92fr);
+      position: relative;
+      z-index: 1;
+    }
+
+    .bridge-spotlight,
+    .bridge-card-body {
+      background: rgba(8,11,17,0.7);
+      border: 1px solid rgba(166,246,255,0.08);
+      border-radius: 24px;
+      backdrop-filter: blur(12px);
+    }
+
+    .bridge-spotlight {
       display: flex;
+      flex-direction: column;
+      gap: 22px;
+      overflow: hidden;
+      padding: 30px;
+      position: relative;
+    }
+
+    .bridge-spotlight::after {
+      content: '';
+      position: absolute;
+      width: 220px;
+      height: 220px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(89,199,255,0.18), transparent 68%);
+      right: -72px;
+      top: -54px;
+      pointer-events: none;
+    }
+
+    .bridge-topline {
+      align-items: center;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
       justify-content: space-between;
-      gap: 24px;
-      padding: 28px;
     }
 
     .bridge-title-row {
-      align-items: center;
+      align-items: flex-start;
       display: flex;
-      gap: 14px;
-      margin-bottom: 12px;
+      gap: 18px;
     }
 
     .bridge-mark {
       align-items: center;
-      background: rgba(79, 209, 165, 0.1);
-      border: 1px solid rgba(79, 209, 165, 0.28);
-      border-radius: 8px;
-      color: var(--accent2);
+      background:
+        linear-gradient(145deg, rgba(89,199,255,0.2), rgba(122,255,200,0.12)),
+        rgba(15,24,36,0.84);
+      border: 1px solid rgba(166,246,255,0.14);
+      border-radius: 20px;
       display: flex;
-      font-family: var(--font-head);
-      font-size: 12px;
-      font-weight: 800;
-      height: 48px;
+      flex: 0 0 auto;
+      height: 72px;
       justify-content: center;
-      line-height: 1;
-      width: 48px;
+      position: relative;
+      width: 72px;
+    }
+
+    .bridge-mark svg {
+      height: 34px;
+      width: 34px;
     }
 
     .bridge-title {
-      font-size: 28px;
+      font-size: clamp(34px, 5vw, 56px);
+      letter-spacing: -0.05em;
+      line-height: 0.95;
       margin: 0;
     }
 
     .bridge-kicker {
-      color: var(--accent2);
+      align-items: center;
+      background: rgba(89,199,255,0.08);
+      border: 1px solid rgba(166,246,255,0.14);
+      border-radius: 999px;
+      color: var(--brand-ice);
+      display: inline-flex;
       font-family: var(--font-mono);
-      font-size: 12px;
-      margin-bottom: 8px;
+      font-size: 11px;
+      gap: 8px;
+      letter-spacing: 0.14em;
+      padding: 8px 12px;
       text-transform: uppercase;
     }
 
+    .bridge-kicker::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--brand-mint);
+      box-shadow: 0 0 14px rgba(122,255,200,0.6);
+    }
+
     .bridge-copy {
-      color: var(--muted);
-      font-size: 14px;
+      color: rgba(232,232,240,0.68);
+      font-size: 16px;
       line-height: 1.6;
-      margin-top: 10px;
-      max-width: 540px;
+      margin-top: 12px;
+      max-width: 470px;
     }
 
     .bridge-mode-pill {
       align-self: flex-start;
-      border: 1px solid rgba(79,209,165,0.22);
-      border-radius: 8px;
-      color: var(--success);
+      background: rgba(122,255,200,0.08);
+      border: 1px solid rgba(122,255,200,0.16);
+      border-radius: 999px;
+      color: var(--brand-mint);
       font-family: var(--font-mono);
       font-size: 11px;
-      padding: 6px 10px;
+      letter-spacing: 0.1em;
+      padding: 8px 12px;
       white-space: nowrap;
     }
 
     .bridge-route {
       align-items: stretch;
-      border-bottom: 1px solid var(--border);
+      background: rgba(3,6,11,0.32);
+      border: 1px solid rgba(166,246,255,0.08);
+      border-radius: 22px;
       display: grid;
-      gap: 14px;
+      gap: 16px;
       grid-template-columns: 1fr auto 1fr;
-      padding: 18px 28px;
-    }
-
-    .bridge-chain-row {
-      display: grid;
-      grid-template-columns: 1fr auto 1fr;
-      gap: 12px;
-      align-items: stretch;
-      margin: 22px 0;
+      padding: 18px;
     }
 
     .bridge-chain-box,
@@ -803,35 +959,98 @@
       min-width: 0;
     }
 
+    .bridge-route-node {
+      background: rgba(255,255,255,0.02);
+      border-radius: 18px;
+      padding: 16px;
+    }
+
     .bridge-chain-label {
-      color: var(--muted);
+      color: rgba(232,232,240,0.42);
       font-family: var(--font-mono);
-      font-size: 11px;
-      margin-bottom: 4px;
+      font-size: 10px;
+      letter-spacing: 0.16em;
+      margin-bottom: 8px;
       text-transform: uppercase;
     }
 
     .bridge-chain-name {
       font-family: var(--font-head);
-      font-size: 17px;
+      font-size: 22px;
       font-weight: 700;
+      letter-spacing: -0.03em;
     }
 
     .bridge-arrow,
     .bridge-route-arrow {
       align-self: center;
-      color: var(--accent2);
+      background: linear-gradient(145deg, rgba(89,199,255,0.18), rgba(122,255,200,0.1));
+      border: 1px solid rgba(166,246,255,0.1);
+      border-radius: 999px;
+      color: var(--brand-ice);
+      display: grid;
       font-family: var(--font-mono);
-      font-size: 16px;
+      font-size: 18px;
+      height: 46px;
+      place-items: center;
+      width: 46px;
     }
 
     .bridge-card-body {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
       padding: 28px;
+    }
+
+    .bridge-console-head {
+      align-items: flex-start;
+      display: flex;
+      gap: 16px;
+      justify-content: space-between;
+    }
+
+    .bridge-console-kicker {
+      color: rgba(232,232,240,0.52);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+    }
+
+    .bridge-console-copy {
+      color: rgba(232,232,240,0.66);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .bridge-console-badge {
+      align-items: center;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(166,246,255,0.1);
+      border-radius: 999px;
+      color: var(--text);
+      display: inline-flex;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      gap: 8px;
+      padding: 8px 12px;
+      white-space: nowrap;
+    }
+
+    .bridge-console-badge::before {
+      content: '';
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--brand-sky);
+      box-shadow: 0 0 14px rgba(89,199,255,0.45);
     }
 
     .bridge-form-grid {
       display: grid;
-      gap: 16px;
+      gap: 14px;
       grid-template-columns: 1fr 1fr;
     }
 
@@ -841,101 +1060,141 @@
 
     .bridge-form-grid .form-group { margin-bottom: 0; }
 
+    .bridge-card-body label {
+      color: rgba(232,232,240,0.48);
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+    }
+
+    .bridge-card-body input,
+    .bridge-card-body select {
+      background: rgba(255,255,255,0.035);
+      border: 1px solid rgba(166,246,255,0.08);
+      border-radius: 16px;
+      font-size: 15px;
+      padding: 14px 16px;
+    }
+
+    .bridge-card-body input:focus,
+    .bridge-card-body select:focus {
+      border-color: rgba(166,246,255,0.34);
+      box-shadow: 0 0 0 4px rgba(89,199,255,0.08);
+    }
+
     .bridge-field-note {
-      color: var(--muted);
+      color: rgba(232,232,240,0.44);
       font-size: 12px;
       line-height: 1.5;
-      margin-top: 6px;
+      margin-top: 8px;
     }
 
     .bridge-summary-grid {
       display: grid;
-      border-bottom: 1px solid var(--border);
-      border-top: 1px solid var(--border);
-      gap: 0;
+      gap: 12px;
       grid-template-columns: repeat(3, 1fr);
-      margin: 22px 0 18px;
+      margin: 0;
     }
 
-    .bridge-summary-item { padding: 14px 18px; }
-    .bridge-summary-item + .bridge-summary-item { border-left: 1px solid var(--border); }
+    .bridge-summary-item {
+      background: rgba(255,255,255,0.025);
+      border: 1px solid rgba(166,246,255,0.08);
+      border-radius: 18px;
+      padding: 16px;
+    }
+    .bridge-summary-item + .bridge-summary-item { border-left: 0; }
 
     .bridge-summary-item span {
-      color: var(--muted);
+      color: rgba(232,232,240,0.42);
       display: block;
       font-family: var(--font-mono);
-      font-size: 11px;
-      margin-bottom: 6px;
+      font-size: 10px;
+      letter-spacing: 0.16em;
+      margin-bottom: 8px;
       text-transform: uppercase;
     }
 
     .bridge-summary-item strong {
       color: var(--text);
       display: block;
-      font-size: 13px;
+      font-size: 14px;
+      line-height: 1.5;
       overflow-wrap: anywhere;
     }
 
     .bridge-help {
-      border-top: 1px solid var(--border);
-      color: var(--muted);
+      color: rgba(232,232,240,0.44);
       font-size: 12px;
       line-height: 1.6;
-      margin-top: 16px;
-      padding-top: 14px;
+      margin-top: 2px;
     }
 
     .bridge-check-row {
-      background: rgba(79,209,165,0.045);
-      border: 1px solid rgba(79,209,165,0.14);
-      border-radius: 8px;
+      background: linear-gradient(180deg, rgba(122,255,200,0.08), rgba(89,199,255,0.05));
+      border: 1px solid rgba(122,255,200,0.14);
+      border-radius: 18px;
       display: flex;
       gap: 10px;
       align-items: flex-start;
-      color: var(--muted);
+      color: rgba(232,232,240,0.64);
       font-size: 13px;
       margin-top: 2px;
-      padding: 12px 14px;
+      padding: 14px 16px;
     }
 
     .bridge-check-row input { width: auto; margin-top: 4px; }
 
     .bridge-status {
-      background: rgba(255,255,255,0.025);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      color: var(--muted);
+      background: rgba(4,8,13,0.56);
+      border: 1px solid rgba(166,246,255,0.1);
+      border-radius: 18px;
+      color: rgba(232,232,240,0.66);
       font-size: 13px;
-      margin-top: 18px;
-      min-height: 58px;
-      padding: 14px;
+      margin-top: 2px;
+      min-height: 84px;
+      padding: 16px;
     }
 
-    .bridge-status.success { border-color: rgba(79,209,165,0.3); }
-    .bridge-status.error { border-color: rgba(248,114,114,0.35); }
-    .bridge-status.info { border-color: rgba(124,109,250,0.28); }
+    .bridge-status.success {
+      background: rgba(79,209,165,0.08);
+      border-color: rgba(79,209,165,0.22);
+    }
+    .bridge-status.error {
+      background: rgba(248,114,114,0.08);
+      border-color: rgba(248,114,114,0.25);
+    }
+    .bridge-status.info {
+      background: rgba(89,199,255,0.08);
+      border-color: rgba(89,199,255,0.22);
+    }
 
     .bridge-status-title {
       color: var(--text);
       font-weight: 600;
-      margin-bottom: 5px;
+      margin-bottom: 8px;
+    }
+
+    .bridge-status .tx-link,
+    .bridge-step .tx-link {
+      color: var(--brand-ice);
     }
 
     .bridge-step {
       display: grid;
-      grid-template-columns: 92px 1fr;
+      grid-template-columns: 84px 1fr;
       gap: 10px;
-      padding: 9px 0;
-      border-top: 1px solid var(--border);
+      padding: 11px 0;
+      border-top: 1px solid rgba(166,246,255,0.08);
     }
 
     .bridge-step:first-child { border-top: none; }
 
     .bridge-pre {
       background: rgba(0,0,0,0.18);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      color: var(--muted);
+      border: 1px solid rgba(166,246,255,0.08);
+      border-radius: 16px;
+      color: rgba(232,232,240,0.58);
       font-family: var(--font-mono);
       font-size: 11px;
       margin-top: 10px;
@@ -948,37 +1207,80 @@
 
     .bridge-actions {
       display: flex;
-      gap: 10px;
-      margin-top: 8px;
+      gap: 12px;
+      margin-top: 2px;
       flex-wrap: wrap;
+    }
+
+    .bridge-actions .btn {
+      flex: 1 1 0;
+      justify-content: center;
+      min-width: 132px;
+      padding: 12px 18px;
+    }
+
+    .bridge-actions .btn-outline {
+      border-color: rgba(166,246,255,0.12);
+    }
+
+    .bridge-actions .btn-primary {
+      background: linear-gradient(135deg, #58dbff 0%, #69bfff 48%, #7df3cf 100%);
+      box-shadow: 0 18px 38px rgba(89,199,255,0.2);
+      color: #071018;
+      font-weight: 700;
     }
 
     @media (max-width: 920px) {
       nav {
-        align-items: flex-start;
         flex-wrap: wrap;
-        gap: 10px;
-        height: auto;
-        padding: 12px 16px;
+        gap: 12px;
+        padding: 14px 16px;
       }
-      .nav-links {
+      .nav-toggle { display: inline-flex; }
+      .nav-menu {
+        background: rgba(8,11,17,0.96);
+        border: 1px solid rgba(166,246,255,0.12);
+        border-radius: 20px;
+        box-shadow: 0 22px 48px rgba(0,0,0,0.34);
+        display: none;
+        flex-direction: column;
+        gap: 14px;
         order: 3;
-        overflow-x: auto;
-        padding-bottom: 2px;
+        padding: 14px;
         width: 100%;
       }
-      .nav-btn { flex: 0 0 auto; padding: 8px 12px; }
-      .nav-right { margin-left: auto; }
+      body.nav-open .nav-menu { display: flex; }
+      .nav-links {
+        display: grid;
+        gap: 8px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        width: 100%;
+      }
+      .nav-btn {
+        background: rgba(255,255,255,0.02);
+        width: 100%;
+      }
+      .nav-right {
+        flex-wrap: wrap;
+        justify-content: space-between;
+        width: 100%;
+      }
+      .wallet-bar { flex: 1 1 100%; }
       .job-card { grid-template-columns: 1fr; }
       .job-right { align-items: flex-start; }
       .section-head, .dashboard-header { align-items: flex-start; flex-direction: column; gap: 12px; }
       .agents-grid { grid-template-columns: 1fr; }
+      .bridge-shell,
+      .bridge-form-grid,
+      .bridge-summary-grid,
+      .bridge-route { grid-template-columns: 1fr; }
+      .bridge-route-arrow { justify-self: start; transform: rotate(90deg); }
+      .bridge-console-head { flex-direction: column; }
     }
 
     @media (max-width: 680px) {
       body { font-size: 14px; }
       .logo-sub { display: none; }
-      .wallet-bar { display: none; }
       .container, .hero { padding-left: 16px; padding-right: 16px; }
       .hero { padding-top: 44px; }
       .hero-actions .btn { width: 100%; justify-content: center; }
@@ -987,22 +1289,32 @@
       .form-row { grid-template-columns: 1fr; }
       h1 { font-size: 36px; }
       .form-card, .bridge-panel { padding: 20px; }
-      .bridge-card { padding: 0; }
-      .bridge-card-head, .bridge-card-body, .bridge-route { padding-left: 18px; padding-right: 18px; }
-      .bridge-card-head { flex-direction: column; gap: 14px; }
-      .bridge-title-row { align-items: flex-start; }
+      .nav-links { grid-template-columns: 1fr; }
+      .nav-right { display: grid; gap: 10px; grid-template-columns: 1fr; }
+      .wallet-bar,
+      .nav-right .btn { width: 100%; justify-content: center; }
+      .bridge-card {
+        border-radius: 24px;
+        padding: 14px;
+      }
+      .bridge-spotlight,
+      .bridge-card-body {
+        border-radius: 20px;
+        padding: 20px;
+      }
+      .bridge-title-row {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 16px;
+      }
+      .bridge-title { font-size: 38px; }
       .bridge-mode-pill { white-space: normal; }
       .modal { padding: 22px; max-height: 92vh; }
       .detail-row { align-items: flex-start; flex-direction: column; gap: 4px; }
       .detail-val { max-width: 100%; text-align: left; }
       .chat-meta { flex-direction: column; gap: 2px; }
-      .bridge-grid { grid-template-columns: 1fr; }
-      .bridge-form-grid, .bridge-summary-grid { grid-template-columns: 1fr; }
-      .bridge-summary-item + .bridge-summary-item { border-left: 0; border-top: 1px solid var(--border); }
-      .bridge-route { grid-template-columns: 1fr; }
-      .bridge-chain-row { grid-template-columns: 1fr; }
-      .bridge-arrow, .bridge-route-arrow { justify-self: start; transform: rotate(90deg); }
-      .bridge-actions .btn { flex: 1 1 100%; justify-content: center; }
+      .bridge-summary-item + .bridge-summary-item { border-top: 0; }
+      .bridge-actions .btn { flex: 1 1 100%; min-width: 0; }
       .toast-container { left: 16px; right: 16px; bottom: 16px; }
       .toast { max-width: none; }
     }
@@ -1014,28 +1326,49 @@
 <!-- Navigation -->
 <nav>
   <button class="nav-logo" onclick="showPage('home')" aria-label="AgentMarket home">
-    <span class="logo-mark"><span>AM</span></span>
+    <span class="logo-mark" aria-hidden="true">
+      <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="agentMarketLogoGradient" x1="12" y1="12" x2="52" y2="52" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#A6F6FF"/>
+            <stop offset="0.55" stop-color="#59C7FF"/>
+            <stop offset="1" stop-color="#7AFFC8"/>
+          </linearGradient>
+        </defs>
+        <path d="M16 46L29.5 18.5C30.8 15.8 34.7 15.8 36 18.5L49 46" stroke="url(#agentMarketLogoGradient)" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M23 33H42" stroke="#E8E8F0" stroke-opacity="0.92" stroke-width="4.2" stroke-linecap="round"/>
+        <circle cx="16" cy="46" r="4.5" fill="#7AFFC8"/>
+        <circle cx="32.75" cy="13.5" r="4.5" fill="#A6F6FF"/>
+        <circle cx="49" cy="46" r="4.5" fill="#59C7FF"/>
+      </svg>
+    </span>
     <span class="logo-copy">
       <span class="logo-text">AgentMarket</span>
-      <span class="logo-sub">Arc work network</span>
+      <span class="logo-sub">Agent commerce on Arc</span>
     </span>
   </button>
-  <div class="nav-links">
-    <button class="nav-btn active" onclick="showPage('home')">Browse</button>
-    <button class="nav-btn" onclick="showPage('post')">Post a Job</button>
-    <button class="nav-btn" onclick="showPage('bridge')">Bridge USDC</button>
-    <button class="nav-btn" onclick="showPage('pick')">Pick a Job</button>
-    <button class="nav-btn" onclick="showPage('campaigns')">Campaigns</button>
-    <button class="nav-btn" onclick="showPage('reviews')">Reviews</button>
-    <button class="nav-btn" onclick="showPage('dashboard')">My Dashboard</button>
-  </div>
-  <div class="nav-right">
-    <div class="wallet-bar" id="walletDisplay">
-      <div class="wallet-dot"></div>
-      <span>Arc Testnet</span>
+  <button class="nav-toggle" id="navToggle" type="button" onclick="toggleMobileNav()" aria-label="Toggle navigation" aria-expanded="false" aria-controls="navMenu">
+    <span></span>
+    <span></span>
+  </button>
+  <div class="nav-menu" id="navMenu">
+    <div class="nav-links">
+      <button class="nav-btn active" data-page="home" onclick="showPage('home')">Browse</button>
+      <button class="nav-btn" data-page="post" onclick="showPage('post')">Post a Job</button>
+      <button class="nav-btn" data-page="bridge" onclick="showPage('bridge')">Bridge USDC</button>
+      <button class="nav-btn" data-page="pick" onclick="showPage('pick')">Pick a Job</button>
+      <button class="nav-btn" data-page="campaigns" onclick="showPage('campaigns')">Campaigns</button>
+      <button class="nav-btn" data-page="reviews" onclick="showPage('reviews')">Reviews</button>
+      <button class="nav-btn" data-page="dashboard" onclick="showPage('dashboard')">My Dashboard</button>
     </div>
-    <button class="btn btn-outline btn-sm" onclick="connectWallet()" id="connectBtn">Connect Wallet</button>
-    <button class="btn btn-outline btn-sm" onclick="disconnectWallet()" id="disconnectBtn" style="display:none">Disconnect</button>
+    <div class="nav-right">
+      <div class="wallet-bar" id="walletDisplay">
+        <div class="wallet-dot"></div>
+        <span>Arc Testnet</span>
+      </div>
+      <button class="btn btn-outline btn-sm" onclick="connectWallet()" id="connectBtn">Connect Wallet</button>
+      <button class="btn btn-outline btn-sm" onclick="disconnectWallet()" id="disconnectBtn" style="display:none">Disconnect</button>
+    </div>
   </div>
 </nav>
 
@@ -1185,97 +1518,123 @@
 <div class="page" id="page-bridge">
   <div class="container">
     <div class="bridge-grid">
-      <div class="form-card bridge-card">
-        <div class="bridge-card-head">
-          <div>
+      <div class="bridge-card">
+        <div class="bridge-shell">
+          <div class="bridge-spotlight">
+            <div class="bridge-topline">
+              <div class="bridge-kicker">Circle CCTP to Arc</div>
+              <div class="bridge-mode-pill" id="bridgeModePill">Direct CCTP ready</div>
+            </div>
+
             <div class="bridge-title-row">
-              <div class="bridge-mark">USDC</div>
+              <div class="bridge-mark" aria-hidden="true">
+                <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <defs>
+                    <linearGradient id="bridgeMarkGradient" x1="10" y1="14" x2="52" y2="50" gradientUnits="userSpaceOnUse">
+                      <stop stop-color="#A6F6FF"/>
+                      <stop offset="0.58" stop-color="#59C7FF"/>
+                      <stop offset="1" stop-color="#7AFFC8"/>
+                    </linearGradient>
+                  </defs>
+                  <circle cx="18" cy="22" r="7" fill="#A6F6FF" fill-opacity="0.9"/>
+                  <circle cx="46" cy="42" r="7" fill="#7AFFC8" fill-opacity="0.92"/>
+                  <path d="M24 22H40" stroke="url(#bridgeMarkGradient)" stroke-width="5" stroke-linecap="round"/>
+                  <path d="M34 16L46 22L34 28" stroke="#E8E8F0" stroke-width="3.8" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M18 28C18 39 26 46 38 46" stroke="url(#bridgeMarkGradient)" stroke-width="3.4" stroke-linecap="round"/>
+                </svg>
+              </div>
               <div>
-                <div class="bridge-kicker">Circle CCTP to Arc</div>
-                <h2 class="bridge-title">Bridge USDC to Arc</h2>
+                <h2 class="bridge-title">Bridge USDC into Arc</h2>
+                <p class="bridge-copy">A clean bridge flow for funding jobs, campaigns, and payouts from one wallet.</p>
               </div>
             </div>
-            <p class="bridge-copy">Move native testnet USDC into Arc, then fund jobs, campaigns, and payouts from the same wallet.</p>
-          </div>
-          <div class="bridge-mode-pill" id="bridgeModePill">Direct CCTP ready</div>
-        </div>
 
-        <div class="bridge-route" aria-label="Bridge route">
-          <div class="bridge-route-node">
-            <div class="bridge-chain-label">From</div>
-            <div class="bridge-chain-name" id="bridgeSourceName">Ethereum Sepolia</div>
-          </div>
-          <div class="bridge-route-arrow">-&gt;</div>
-          <div class="bridge-route-node">
-            <div class="bridge-chain-label">To</div>
-            <div class="bridge-chain-name">Arc Testnet</div>
-          </div>
-        </div>
-
-        <div class="bridge-card-body">
-          <div class="bridge-form-grid">
-            <div class="form-group span-full">
-              <label>Source Chain</label>
-              <select id="bridgeSourceChain" onchange="handleBridgeSourceChange()">
-                <option value="Ethereum_Sepolia">Ethereum Sepolia</option>
-                <option value="Base_Sepolia">Base Sepolia</option>
-                <option value="Arbitrum_Sepolia">Arbitrum Sepolia</option>
-                <option value="Avalanche_Fuji">Avalanche Fuji</option>
-                <option value="Polygon_Amoy_Testnet">Polygon Amoy</option>
-              </select>
+            <div class="bridge-route" aria-label="Bridge route">
+              <div class="bridge-route-node">
+                <div class="bridge-chain-label">From</div>
+                <div class="bridge-chain-name" id="bridgeSourceName">Ethereum Sepolia</div>
+              </div>
+              <div class="bridge-route-arrow">-&gt;</div>
+              <div class="bridge-route-node">
+                <div class="bridge-chain-label">To</div>
+                <div class="bridge-chain-name">Arc Testnet</div>
+              </div>
             </div>
 
-            <div class="form-group">
-              <label>Amount (USDC)</label>
-              <input type="number" id="bridgeAmount" placeholder="1.00" min="0.01" step="0.01"/>
-            </div>
-            <div class="form-group">
-              <label>Speed</label>
-              <select id="bridgeSpeed">
-                <option value="FAST">Fast</option>
-                <option value="SLOW">Standard</option>
-              </select>
-            </div>
-
-            <div class="form-group span-full">
-              <label>Arc Recipient</label>
-              <input type="text" id="bridgeRecipient" placeholder="0x..."/>
-              <p class="bridge-field-note">Use your connected wallet or any Arc EVM address.</p>
+            <div class="bridge-summary-grid">
+              <div class="bridge-summary-item">
+                <span>Wallet</span>
+                <strong class="mono" id="bridgeWalletHint">Connect your EVM wallet</strong>
+              </div>
+              <div class="bridge-summary-item">
+                <span>Destination Token</span>
+                <strong>Native USDC</strong>
+              </div>
+              <div class="bridge-summary-item">
+                <span>Route</span>
+                <strong id="bridgeRouteMode">CCTP v2 forwarding</strong>
+              </div>
             </div>
           </div>
 
-          <div class="bridge-summary-grid">
-            <div class="bridge-summary-item">
-              <span>Wallet</span>
-              <strong class="mono" id="bridgeWalletHint">Connect your EVM wallet</strong>
+          <div class="bridge-card-body">
+            <div class="bridge-console-head">
+              <div>
+                <div class="bridge-console-kicker">Transfer setup</div>
+                <p class="bridge-console-copy">Keep it simple: choose a source, set the amount, and bridge.</p>
+              </div>
+              <div class="bridge-console-badge">Arc native USDC</div>
             </div>
-            <div class="bridge-summary-item">
-              <span>Destination Token</span>
-              <strong>Native USDC</strong>
+
+            <div class="bridge-form-grid">
+              <div class="form-group span-full">
+                <label>Source Chain</label>
+                <select id="bridgeSourceChain" onchange="handleBridgeSourceChange()">
+                  <option value="Ethereum_Sepolia">Ethereum Sepolia</option>
+                  <option value="Base_Sepolia">Base Sepolia</option>
+                  <option value="Arbitrum_Sepolia">Arbitrum Sepolia</option>
+                  <option value="Avalanche_Fuji">Avalanche Fuji</option>
+                  <option value="Polygon_Amoy_Testnet">Polygon Amoy</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label>Amount (USDC)</label>
+                <input type="number" id="bridgeAmount" placeholder="1.00" min="0.01" step="0.01"/>
+              </div>
+              <div class="form-group">
+                <label>Speed</label>
+                <select id="bridgeSpeed">
+                  <option value="FAST">Fast</option>
+                  <option value="SLOW">Standard</option>
+                </select>
+              </div>
+
+              <div class="form-group span-full">
+                <label>Arc Recipient</label>
+                <input type="text" id="bridgeRecipient" placeholder="0x..."/>
+                <p class="bridge-field-note">Use your connected wallet or any Arc EVM address.</p>
+              </div>
             </div>
-            <div class="bridge-summary-item">
-              <span>Route</span>
-              <strong id="bridgeRouteMode">CCTP v2 forwarding</strong>
+
+            <label class="bridge-check-row">
+              <input type="checkbox" id="bridgeUseForwarder" checked/>
+              <span>Let Circle complete the Arc mint automatically whenever forwarding is available.</span>
+            </label>
+
+            <div class="bridge-actions">
+              <button class="btn btn-outline" onclick="estimateArcBridge()" id="bridgeEstimateBtn">Estimate</button>
+              <button class="btn btn-primary" onclick="runArcBridge()" id="bridgeBtn">Bridge to Arc</button>
+              <button class="btn btn-outline" onclick="switchBridgeToArc()" id="bridgeSwitchBtn">Switch to Arc</button>
             </div>
+
+            <div class="bridge-status info" id="bridgeStatus">
+              <div class="bridge-status-title">Bridge ready</div>
+              <div>Connect your wallet, estimate the route, then bridge USDC to Arc.</div>
+            </div>
+
+            <p class="bridge-help">You’ll need source-chain USDC and gas on the selected network for approval and burn confirmation.</p>
           </div>
-
-          <label class="bridge-check-row">
-            <input type="checkbox" id="bridgeUseForwarder" checked/>
-            <span>Let Circle finish the Arc mint when forwarding is available.</span>
-          </label>
-
-          <div class="bridge-actions">
-            <button class="btn btn-outline" onclick="estimateArcBridge()" id="bridgeEstimateBtn">Estimate</button>
-            <button class="btn btn-primary" onclick="runArcBridge()" id="bridgeBtn">Bridge to Arc</button>
-            <button class="btn btn-outline" onclick="switchBridgeToArc()" id="bridgeSwitchBtn">Switch to Arc</button>
-          </div>
-
-          <div class="bridge-status info" id="bridgeStatus">
-            <div class="bridge-status-title">Bridge ready</div>
-            <div>Connect your wallet, estimate the route, then bridge USDC to Arc.</div>
-          </div>
-
-          <p class="bridge-help">You need source-chain USDC plus gas on the selected network. Your wallet will ask for approval and burn confirmation.</p>
         </div>
       </div>
     </div>
@@ -1510,17 +1869,37 @@ function toast(title, msg, type='info') {
   setTimeout(() => el.remove(), 5000);
 }
 
+function setMobileNav(open) {
+  document.body.classList.toggle('nav-open', open);
+  const toggle = document.getElementById('navToggle');
+  if (toggle) toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+}
+
+function toggleMobileNav() {
+  setMobileNav(!document.body.classList.contains('nav-open'));
+}
+
+function closeMobileNav() {
+  setMobileNav(false);
+}
+
 function showPage(name) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById('page-' + name).classList.add('active');
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  event?.target?.classList.add('active');
+  const navPage = name === 'create-campaign' ? 'campaigns' : name;
+  document.querySelector(`.nav-btn[data-page="${navPage}"]`)?.classList.add('active');
+  closeMobileNav();
   if (name === 'dashboard') loadDashboard();
   if (name === 'reviews') loadReviewBoard();
   if (name === 'pick') loadAvailableJobs();
   if (name === 'campaigns') loadCampaigns();
   if (name === 'bridge') refreshBridgeDefaults();
 }
+
+window.addEventListener('resize', () => {
+  if (window.innerWidth > 920) closeMobileNav();
+});
 
 function scrollToAgents() {
   document.getElementById('agents-section').scrollIntoView({ behavior: 'smooth' });

@@ -399,36 +399,89 @@
     .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
     .tag { font-size: 11px; font-family: var(--font-mono); background: var(--surface2); border: 1px solid var(--border); color: var(--muted); padding: 3px 10px; border-radius: 100px; }
 
-    .jobs-list { display: flex; flex-direction: column; gap: 12px; }
+    .jobs-list { display: flex; flex-direction: column; gap: 14px; }
 
     .job-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 20px 24px;
+      background: rgba(17,17,24,0.92);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 20px;
+      padding: 18px 20px;
       display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 16px;
-      align-items: center;
-      transition: all 0.2s;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 18px;
+      align-items: flex-start;
+      transition: border-color 0.2s, transform 0.2s, background 0.2s;
       cursor: pointer;
     }
 
-    .job-card:hover { border-color: var(--border-hover); }
+    .job-card:hover {
+      background: rgba(21,22,31,0.96);
+      border-color: rgba(166,246,255,0.14);
+      transform: translateY(-1px);
+    }
 
-    .job-title { font-family: var(--font-head); font-size: 15px; font-weight: 600; margin-bottom: 4px; }
-    .job-meta { font-size: 12px; color: var(--muted); font-family: var(--font-mono); display: flex; gap: 16px; flex-wrap: wrap; }
-    .job-right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
-    .job-budget { font-family: var(--font-head); font-size: 18px; font-weight: 700; color: var(--accent2); }
+    .job-title {
+      font-family: var(--font-head);
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+    }
+
+    .job-meta {
+      color: rgba(232,232,240,0.46);
+      display: flex;
+      flex-wrap: wrap;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      gap: 10px;
+    }
+
+    .job-right {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 12px;
+      min-width: 180px;
+    }
+
+    .job-budget {
+      color: var(--text);
+      font-family: var(--font-head);
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .job-desc {
+      color: rgba(232,232,240,0.62);
+      font-size: 13px;
+      line-height: 1.55;
+      margin-top: 10px;
+      max-width: 620px;
+    }
+
+    .job-actions-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .job-note {
+      color: rgba(232,232,240,0.42);
+      font-family: var(--font-mono);
+      font-size: 11px;
+    }
 
     .countdown-pill {
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      background: rgba(79,209,197,0.08);
-      border: 1px solid rgba(79,209,197,0.18);
-      border-radius: 8px;
-      color: var(--accent2);
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 999px;
+      color: rgba(232,232,240,0.64);
       font-family: var(--font-mono);
       font-size: 11px;
       padding: 5px 9px;
@@ -437,7 +490,7 @@
 
     .countdown-pill.deadline-expired {
       background: rgba(248,114,114,0.08);
-      border-color: rgba(248,114,114,0.2);
+      border-color: rgba(248,114,114,0.18);
       color: var(--danger);
     }
 
@@ -452,62 +505,238 @@
     }
 
     .form-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 32px;
-      max-width: 640px;
+      background: rgba(17,17,24,0.92);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 24px;
+      box-shadow: 0 16px 40px rgba(0,0,0,0.18);
+      padding: 28px;
+      max-width: 760px;
     }
 
-    .form-group { margin-bottom: 20px; }
+    .form-group { margin-bottom: 18px; }
 
-    label { display: block; font-size: 13px; font-family: var(--font-mono); color: var(--muted); margin-bottom: 8px; }
+    label {
+      display: block;
+      font-size: 11px;
+      font-family: var(--font-mono);
+      color: rgba(232,232,240,0.5);
+      letter-spacing: 0.14em;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+    }
 
     input, textarea, select {
       width: 100%;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 8px;
+      background: rgba(255,255,255,0.025);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 14px;
       color: var(--text);
       font-family: var(--font-body);
       font-size: 14px;
-      padding: 12px 16px;
+      padding: 14px 16px;
       outline: none;
-      transition: border-color 0.2s;
+      transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
     }
 
     .deadline-row { display: flex; gap: 10px; align-items: center; }
     .deadline-row input { flex: 1; }
     .deadline-row select { width: 120px; }
 
-    input:focus, textarea:focus, select:focus { border-color: var(--accent); }
+    input:focus, textarea:focus, select:focus {
+      border-color: rgba(166,246,255,0.24);
+      box-shadow: 0 0 0 4px rgba(89,199,255,0.07);
+    }
     textarea { resize: vertical; min-height: 100px; }
     select option { background: var(--surface2); }
 
-    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 
     .agent-select-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-      gap: 10px;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
     }
 
     .agent-select-card {
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 14px;
+      background: rgba(255,255,255,0.025);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 18px;
+      padding: 16px;
       cursor: pointer;
       transition: all 0.2s;
       position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
     }
 
-    .agent-select-card.selected { border-color: var(--accent); background: rgba(124,109,250,0.08); }
-    .agent-select-card:hover { border-color: var(--border-hover); }
+    .agent-select-card.selected {
+      border-color: rgba(166,246,255,0.24);
+      background: rgba(166,246,255,0.05);
+    }
+    .agent-select-card:hover { border-color: rgba(166,246,255,0.14); }
     .agent-select-card.ai-locked { opacity: 0.6; cursor: not-allowed; }
 
-    .agent-select-name { font-weight: 600; font-size: 14px; margin-bottom: 4px; }
-    .agent-select-desc { font-size: 12px; color: var(--muted); }
+    .agent-select-name {
+      font-family: var(--font-head);
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .agent-select-desc { font-size: 12px; color: rgba(232,232,240,0.56); }
+
+    .agent-select-meta {
+      color: rgba(232,232,240,0.44);
+      display: flex;
+      flex-wrap: wrap;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      gap: 8px;
+    }
+
+    .flow-page {
+      margin: 0 auto;
+      max-width: 860px;
+    }
+
+    .flow-header {
+      margin-bottom: 24px;
+    }
+
+    .flow-kicker {
+      color: rgba(232,232,240,0.46);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+    }
+
+    .flow-title {
+      font-family: var(--font-head);
+      font-size: clamp(30px, 5vw, 40px);
+      font-weight: 700;
+      letter-spacing: -0.04em;
+      line-height: 1;
+      margin-bottom: 10px;
+    }
+
+    .flow-copy {
+      color: rgba(232,232,240,0.62);
+      font-size: 15px;
+      line-height: 1.6;
+      max-width: 560px;
+    }
+
+    .flow-progress {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+
+    .flow-progress-step {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 999px;
+      color: rgba(232,232,240,0.54);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      padding: 8px 12px;
+      text-transform: uppercase;
+    }
+
+    .flow-progress-step.active {
+      background: rgba(166,246,255,0.05);
+      border-color: rgba(166,246,255,0.18);
+      color: var(--text);
+    }
+
+    .flow-note {
+      color: rgba(232,232,240,0.44);
+      font-size: 12px;
+      line-height: 1.55;
+      margin-top: 8px;
+    }
+
+    .post-card { max-width: none; }
+
+    .post-action-row {
+      display: flex;
+      gap: 12px;
+      margin-top: 10px;
+    }
+
+    .post-footnote {
+      color: rgba(232,232,240,0.46);
+      font-size: 12px;
+      line-height: 1.55;
+      margin-top: 14px;
+    }
+
+    .post-card .btn-primary,
+    .job-actions-row .btn-primary {
+      background: var(--text);
+      color: #090b10;
+      box-shadow: none;
+    }
+
+    .pick-steps {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      margin-bottom: 18px;
+    }
+
+    .pick-step {
+      background: rgba(17,17,24,0.92);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 18px;
+      padding: 16px;
+    }
+
+    .pick-step-num {
+      align-items: center;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 999px;
+      color: var(--text);
+      display: inline-flex;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      height: 28px;
+      justify-content: center;
+      margin-bottom: 12px;
+      width: 28px;
+    }
+
+    .pick-step strong {
+      display: block;
+      font-family: var(--font-head);
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .pick-step span {
+      color: rgba(232,232,240,0.56);
+      display: block;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .pick-board {
+      background: rgba(17,17,24,0.92);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 24px;
+      padding: 20px;
+    }
+
+    .pick-board .section-head {
+      margin-bottom: 18px;
+    }
 
     /* ── Coming Soon Banner ── */
     .coming-soon-banner {
@@ -795,121 +1024,105 @@
 
     .bridge-grid {
       margin: 0 auto;
-      max-width: 1120px;
+      max-width: 820px;
     }
 
     .bridge-card {
-      background: linear-gradient(145deg, rgba(15,19,29,0.94), rgba(7,8,14,0.96));
-      border: 1px solid rgba(166,246,255,0.1);
-      border-radius: 30px;
-      box-shadow: 0 28px 80px rgba(0,0,0,0.42);
-      overflow: hidden;
+      background: rgba(17,17,24,0.92);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 24px;
+      box-shadow: 0 18px 48px rgba(0,0,0,0.24);
       padding: 22px;
-      position: relative;
     }
 
     .bridge-card::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background:
-        radial-gradient(circle at top left, rgba(89,199,255,0.18), transparent 32%),
-        radial-gradient(circle at 88% 14%, rgba(122,255,200,0.14), transparent 24%),
-        linear-gradient(180deg, rgba(255,255,255,0.03), transparent 36%);
-      pointer-events: none;
+      display: none;
     }
 
     .bridge-shell {
       display: grid;
-      gap: 22px;
-      grid-template-columns: minmax(0, 1.08fr) minmax(360px, 0.92fr);
-      position: relative;
-      z-index: 1;
+      gap: 16px;
+      grid-template-columns: 1fr;
     }
 
     .bridge-spotlight,
     .bridge-card-body {
-      background: rgba(8,11,17,0.7);
-      border: 1px solid rgba(166,246,255,0.08);
-      border-radius: 24px;
-      backdrop-filter: blur(12px);
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 20px;
+      padding: 24px;
     }
 
     .bridge-spotlight {
       display: flex;
       flex-direction: column;
-      gap: 22px;
-      overflow: hidden;
-      padding: 30px;
-      position: relative;
+      gap: 18px;
     }
 
     .bridge-spotlight::after {
-      content: '';
-      position: absolute;
-      width: 220px;
-      height: 220px;
-      border-radius: 50%;
-      background: radial-gradient(circle, rgba(89,199,255,0.18), transparent 68%);
-      right: -72px;
-      top: -54px;
-      pointer-events: none;
+      display: none;
     }
 
     .bridge-topline {
-      align-items: center;
       display: flex;
       flex-wrap: wrap;
-      gap: 12px;
-      justify-content: space-between;
+      gap: 10px;
+      justify-content: flex-start;
     }
 
     .bridge-title-row {
       align-items: flex-start;
       display: flex;
-      gap: 18px;
+      gap: 14px;
     }
 
     .bridge-mark {
       align-items: center;
-      background:
-        linear-gradient(145deg, rgba(89,199,255,0.2), rgba(122,255,200,0.12)),
-        rgba(15,24,36,0.84);
-      border: 1px solid rgba(166,246,255,0.14);
-      border-radius: 20px;
+      background: rgba(166,246,255,0.05);
+      border: 1px solid rgba(166,246,255,0.12);
+      border-radius: 16px;
       display: flex;
       flex: 0 0 auto;
-      height: 72px;
+      height: 56px;
       justify-content: center;
-      position: relative;
-      width: 72px;
+      width: 56px;
     }
 
     .bridge-mark svg {
-      height: 34px;
-      width: 34px;
+      height: 26px;
+      opacity: 0.92;
+      width: 26px;
     }
 
     .bridge-title {
-      font-size: clamp(34px, 5vw, 56px);
-      letter-spacing: -0.05em;
-      line-height: 0.95;
+      font-size: clamp(32px, 5vw, 42px);
+      letter-spacing: -0.04em;
+      line-height: 1;
       margin: 0;
     }
 
-    .bridge-kicker {
+    .bridge-kicker,
+    .bridge-mode-pill {
       align-items: center;
-      background: rgba(89,199,255,0.08);
-      border: 1px solid rgba(166,246,255,0.14);
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.08);
       border-radius: 999px;
-      color: var(--brand-ice);
+      color: rgba(232,232,240,0.68);
       display: inline-flex;
       font-family: var(--font-mono);
       font-size: 11px;
       gap: 8px;
-      letter-spacing: 0.14em;
-      padding: 8px 12px;
+      letter-spacing: 0.12em;
+      padding: 6px 10px;
       text-transform: uppercase;
+    }
+
+    .bridge-copy {
+      color: rgba(232,232,240,0.62);
+      font-size: 15px;
+      line-height: 1.6;
+      margin-top: 10px;
+      max-width: 520px;
     }
 
     .bridge-kicker::before {
@@ -917,40 +1130,19 @@
       width: 6px;
       height: 6px;
       border-radius: 50%;
-      background: var(--brand-mint);
-      box-shadow: 0 0 14px rgba(122,255,200,0.6);
-    }
-
-    .bridge-copy {
-      color: rgba(232,232,240,0.68);
-      font-size: 16px;
-      line-height: 1.6;
-      margin-top: 12px;
-      max-width: 470px;
-    }
-
-    .bridge-mode-pill {
-      align-self: flex-start;
-      background: rgba(122,255,200,0.08);
-      border: 1px solid rgba(122,255,200,0.16);
-      border-radius: 999px;
-      color: var(--brand-mint);
-      font-family: var(--font-mono);
-      font-size: 11px;
-      letter-spacing: 0.1em;
-      padding: 8px 12px;
-      white-space: nowrap;
+      background: var(--brand-sky);
+      box-shadow: none;
     }
 
     .bridge-route {
-      align-items: stretch;
-      background: rgba(3,6,11,0.32);
-      border: 1px solid rgba(166,246,255,0.08);
-      border-radius: 22px;
+      align-items: center;
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 18px;
       display: grid;
-      gap: 16px;
+      gap: 14px;
       grid-template-columns: 1fr auto 1fr;
-      padding: 18px;
+      padding: 14px 16px;
     }
 
     .bridge-chain-box,
@@ -960,92 +1152,64 @@
     }
 
     .bridge-route-node {
-      background: rgba(255,255,255,0.02);
-      border-radius: 18px;
-      padding: 16px;
+      background: transparent;
+      padding: 0;
     }
 
     .bridge-chain-label {
-      color: rgba(232,232,240,0.42);
+      color: rgba(232,232,240,0.46);
       font-family: var(--font-mono);
       font-size: 10px;
       letter-spacing: 0.16em;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
       text-transform: uppercase;
     }
 
     .bridge-chain-name {
       font-family: var(--font-head);
-      font-size: 22px;
+      font-size: 18px;
       font-weight: 700;
-      letter-spacing: -0.03em;
+      letter-spacing: -0.02em;
     }
 
     .bridge-arrow,
     .bridge-route-arrow {
       align-self: center;
-      background: linear-gradient(145deg, rgba(89,199,255,0.18), rgba(122,255,200,0.1));
-      border: 1px solid rgba(166,246,255,0.1);
-      border-radius: 999px;
-      color: var(--brand-ice);
-      display: grid;
+      background: none;
+      border: none;
+      color: rgba(232,232,240,0.42);
+      display: block;
       font-family: var(--font-mono);
       font-size: 18px;
-      height: 46px;
-      place-items: center;
-      width: 46px;
     }
 
     .bridge-card-body {
       display: flex;
       flex-direction: column;
-      gap: 18px;
-      padding: 28px;
+      gap: 16px;
     }
 
     .bridge-console-head {
-      align-items: flex-start;
-      display: flex;
-      gap: 16px;
-      justify-content: space-between;
+      display: block;
     }
 
     .bridge-console-kicker {
-      color: rgba(232,232,240,0.52);
+      color: rgba(232,232,240,0.48);
       font-family: var(--font-mono);
       font-size: 11px;
       letter-spacing: 0.14em;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
       text-transform: uppercase;
     }
 
     .bridge-console-copy {
-      color: rgba(232,232,240,0.66);
+      color: rgba(232,232,240,0.6);
       font-size: 14px;
       line-height: 1.5;
     }
 
     .bridge-console-badge {
-      align-items: center;
-      background: rgba(255,255,255,0.03);
-      border: 1px solid rgba(166,246,255,0.1);
-      border-radius: 999px;
-      color: var(--text);
-      display: inline-flex;
-      font-family: var(--font-mono);
-      font-size: 11px;
-      gap: 8px;
-      padding: 8px 12px;
-      white-space: nowrap;
-    }
-
-    .bridge-console-badge::before {
-      content: '';
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background: var(--brand-sky);
-      box-shadow: 0 0 14px rgba(89,199,255,0.45);
+      display: none;
     }
 
     .bridge-form-grid {
@@ -1061,7 +1225,7 @@
     .bridge-form-grid .form-group { margin-bottom: 0; }
 
     .bridge-card-body label {
-      color: rgba(232,232,240,0.48);
+      color: rgba(232,232,240,0.5);
       font-size: 11px;
       letter-spacing: 0.14em;
       margin-bottom: 10px;
@@ -1070,16 +1234,16 @@
 
     .bridge-card-body input,
     .bridge-card-body select {
-      background: rgba(255,255,255,0.035);
-      border: 1px solid rgba(166,246,255,0.08);
-      border-radius: 16px;
-      font-size: 15px;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 14px;
+      font-size: 14px;
       padding: 14px 16px;
     }
 
     .bridge-card-body input:focus,
     .bridge-card-body select:focus {
-      border-color: rgba(166,246,255,0.34);
+      border-color: rgba(166,246,255,0.24);
       box-shadow: 0 0 0 4px rgba(89,199,255,0.08);
     }
 
@@ -1098,27 +1262,27 @@
     }
 
     .bridge-summary-item {
-      background: rgba(255,255,255,0.025);
-      border: 1px solid rgba(166,246,255,0.08);
-      border-radius: 18px;
-      padding: 16px;
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 16px;
+      padding: 14px;
     }
     .bridge-summary-item + .bridge-summary-item { border-left: 0; }
 
     .bridge-summary-item span {
-      color: rgba(232,232,240,0.42);
+      color: rgba(232,232,240,0.46);
       display: block;
       font-family: var(--font-mono);
       font-size: 10px;
       letter-spacing: 0.16em;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
       text-transform: uppercase;
     }
 
     .bridge-summary-item strong {
       color: var(--text);
       display: block;
-      font-size: 14px;
+      font-size: 13px;
       line-height: 1.5;
       overflow-wrap: anywhere;
     }
@@ -1131,42 +1295,42 @@
     }
 
     .bridge-check-row {
-      background: linear-gradient(180deg, rgba(122,255,200,0.08), rgba(89,199,255,0.05));
-      border: 1px solid rgba(122,255,200,0.14);
-      border-radius: 18px;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 16px;
       display: flex;
       gap: 10px;
       align-items: flex-start;
-      color: rgba(232,232,240,0.64);
+      color: rgba(232,232,240,0.62);
       font-size: 13px;
       margin-top: 2px;
-      padding: 14px 16px;
+      padding: 13px 14px;
     }
 
     .bridge-check-row input { width: auto; margin-top: 4px; }
 
     .bridge-status {
-      background: rgba(4,8,13,0.56);
-      border: 1px solid rgba(166,246,255,0.1);
-      border-radius: 18px;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px;
       color: rgba(232,232,240,0.66);
       font-size: 13px;
       margin-top: 2px;
-      min-height: 84px;
-      padding: 16px;
+      min-height: 72px;
+      padding: 15px;
     }
 
     .bridge-status.success {
-      background: rgba(79,209,165,0.08);
-      border-color: rgba(79,209,165,0.22);
+      background: rgba(79,209,165,0.07);
+      border-color: rgba(79,209,165,0.18);
     }
     .bridge-status.error {
       background: rgba(248,114,114,0.08);
-      border-color: rgba(248,114,114,0.25);
+      border-color: rgba(248,114,114,0.18);
     }
     .bridge-status.info {
-      background: rgba(89,199,255,0.08);
-      border-color: rgba(89,199,255,0.22);
+      background: rgba(255,255,255,0.03);
+      border-color: rgba(255,255,255,0.08);
     }
 
     .bridge-status-title {
@@ -1177,23 +1341,23 @@
 
     .bridge-status .tx-link,
     .bridge-step .tx-link {
-      color: var(--brand-ice);
+      color: var(--text);
     }
 
     .bridge-step {
       display: grid;
-      grid-template-columns: 84px 1fr;
+      grid-template-columns: 78px 1fr;
       gap: 10px;
-      padding: 11px 0;
-      border-top: 1px solid rgba(166,246,255,0.08);
+      padding: 10px 0;
+      border-top: 1px solid rgba(255,255,255,0.06);
     }
 
     .bridge-step:first-child { border-top: none; }
 
     .bridge-pre {
       background: rgba(0,0,0,0.18);
-      border: 1px solid rgba(166,246,255,0.08);
-      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 14px;
       color: rgba(232,232,240,0.58);
       font-family: var(--font-mono);
       font-size: 11px;
@@ -1215,18 +1379,18 @@
     .bridge-actions .btn {
       flex: 1 1 0;
       justify-content: center;
-      min-width: 132px;
-      padding: 12px 18px;
+      min-width: 140px;
+      padding: 12px 16px;
     }
 
     .bridge-actions .btn-outline {
-      border-color: rgba(166,246,255,0.12);
+      border-color: rgba(255,255,255,0.08);
     }
 
     .bridge-actions .btn-primary {
-      background: linear-gradient(135deg, #58dbff 0%, #69bfff 48%, #7df3cf 100%);
-      box-shadow: 0 18px 38px rgba(89,199,255,0.2);
-      color: #071018;
+      background: var(--text);
+      box-shadow: none;
+      color: #090b10;
       font-weight: 700;
     }
 
@@ -1268,6 +1432,7 @@
       .wallet-bar { flex: 1 1 100%; }
       .job-card { grid-template-columns: 1fr; }
       .job-right { align-items: flex-start; }
+      .pick-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .section-head, .dashboard-header { align-items: flex-start; flex-direction: column; gap: 12px; }
       .agents-grid { grid-template-columns: 1fr; }
       .bridge-shell,
@@ -1287,8 +1452,13 @@
       .stats-bar { grid-template-columns: repeat(2, 1fr); }
       .stat-cell { padding: 18px; }
       .form-row { grid-template-columns: 1fr; }
+      .flow-progress { gap: 8px; }
+      .flow-progress-step { flex: 1 1 calc(50% - 8px); text-align: center; }
+      .pick-steps { grid-template-columns: 1fr; }
+      .pick-board { padding: 16px; }
       h1 { font-size: 36px; }
       .form-card, .bridge-panel { padding: 20px; }
+      .post-action-row { flex-direction: column; }
       .nav-links { grid-template-columns: 1fr; }
       .nav-right { display: grid; gap: 10px; grid-template-columns: 1fr; }
       .wallet-bar,
@@ -1314,6 +1484,7 @@
       .detail-val { max-width: 100%; text-align: left; }
       .chat-meta { flex-direction: column; gap: 2px; }
       .bridge-summary-item + .bridge-summary-item { border-top: 0; }
+      .job-actions-row { width: 100%; }
       .bridge-actions .btn { flex: 1 1 100%; min-width: 0; }
       .toast-container { left: 16px; right: 16px; bottom: 16px; }
       .toast { max-width: none; }
@@ -1427,89 +1598,92 @@
 <!-- ── PAGE: POST A JOB ── -->
 <div class="page" id="page-post">
   <div class="container">
-    <div style="margin-bottom:32px">
-      <h2 style="font-size:28px;margin-bottom:8px">Post a Job</h2>
-      <p style="color:var(--muted)">Describe your task, pick a human worker, and fund escrow with USDC.</p>
-    </div>
-
-    <div class="steps">
-      <div class="step done" id="step1"></div>
-      <div class="step" id="step2"></div>
-      <div class="step" id="step3"></div>
-    </div>
-
-    <div class="form-card">
-      <div class="form-group">
-        <label>Job Title</label>
-        <input type="text" id="jobTitle" placeholder="e.g. Summarize Q3 earnings report"/>
+    <div class="flow-page">
+      <div class="flow-header">
+        <div class="flow-kicker">Funded task setup</div>
+        <h2 class="flow-title">Post a job</h2>
+        <p class="flow-copy">Describe the work, choose who can take it, and fund the task in USDC.</p>
       </div>
 
-      <div class="form-group">
-        <label>Description — what exactly do you need done?</label>
-        <textarea id="jobDesc" placeholder="Describe the task in detail. The more specific, the better the result."></textarea>
+      <div class="flow-progress" aria-label="Posting flow">
+        <div class="flow-progress-step active">1. Task</div>
+        <div class="flow-progress-step">2. Worker</div>
+        <div class="flow-progress-step">3. Fund</div>
       </div>
 
-      <div class="form-row">
+      <div class="form-card post-card">
         <div class="form-group">
-          <label>Category</label>
-          <select id="jobCategory">
-            <option value="Writing">Writing</option>
-            <option value="Research">Research</option>
-            <option value="Translation">Translation</option>
-            <option value="Compliance">Compliance</option>
-            <option value="Operations">Operations</option>
-          </select>
+          <label>Job Title</label>
+          <input type="text" id="jobTitle" placeholder="e.g. Summarize Q3 earnings report"/>
         </div>
+
         <div class="form-group">
-          <label>Worker Type</label>
-          <select id="workerType" onchange="handleWorkerTypeChange()">
-            <option value="Human">Human</option>
-            <option value="AI">AI Agent (Coming Soon)</option>
-          </select>
+          <label>Description</label>
+          <textarea id="jobDesc" placeholder="Describe the task clearly and what a finished result should include."></textarea>
         </div>
-      </div>
 
-      <div class="form-group">
-        <label>Availability</label>
-        <select id="jobAvailability" onchange="handleJobAvailabilityChange()">
-          <option value="assigned">Assign a specific worker</option>
-          <option value="open">Open marketplace — anyone can claim</option>
-        </select>
-        <p style="font-size:12px;color:var(--muted);margin-top:6px">Open jobs can be claimed by any eligible worker after posting.</p>
-      </div>
-
-      <div class="form-group" id="agentSelectSection">
-        <label>Choose a Worker</label>
-        <div class="agent-select-grid" id="agentSelectGrid"></div>
-      </div>
-
-      <div class="form-group">
-        <label>Deadline</label>
-        <div class="deadline-row">
-          <input type="number" id="deadlineValue" placeholder="120" min="1" value="120"/>
-          <select id="deadlineUnit">
-            <option value="minutes">Minutes</option>
-            <option value="hours">Hours</option>
-          </select>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Category</label>
+            <select id="jobCategory">
+              <option value="Writing">Writing</option>
+              <option value="Research">Research</option>
+              <option value="Translation">Translation</option>
+              <option value="Compliance">Compliance</option>
+              <option value="Operations">Operations</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Worker Type</label>
+            <select id="workerType" onchange="handleWorkerTypeChange()">
+              <option value="Human">Human</option>
+              <option value="AI">AI Agent (Coming Soon)</option>
+            </select>
+          </div>
         </div>
-        <p style="font-size:12px;color:var(--muted);margin-top:6px">Enter the deadline in minutes or hours.</p>
-      </div>
 
-      <div class="form-group">
-        <label>Budget (USDC)</label>
-        <input type="number" id="budget" placeholder="5.00" min="0.01" step="0.01"/>
-        <p style="font-size:12px;color:var(--muted);margin-top:6px">Platform fee: 2.5% · Worker receives the rest</p>
-      </div>
+        <div class="form-group">
+          <label>Availability</label>
+          <select id="jobAvailability" onchange="handleJobAvailabilityChange()">
+            <option value="assigned">Assign a specific worker</option>
+            <option value="open">Open marketplace — anyone can claim</option>
+          </select>
+          <p class="flow-note">Open jobs can be claimed by any eligible worker after posting.</p>
+        </div>
 
-      <div style="display:flex;gap:12px;margin-top:8px">
-        <button class="btn btn-primary" style="flex:1" onclick="submitJob()" id="postBtn">
-          Fund Escrow & Post Job
-        </button>
-      </div>
+        <div class="form-group" id="agentSelectSection">
+          <label>Choose a Worker</label>
+          <div class="agent-select-grid" id="agentSelectGrid"></div>
+        </div>
 
-      <p style="font-size:12px;color:var(--muted);margin-top:14px;text-align:center">
-        Your USDC is locked in the smart contract. It releases to the worker only when you approve their work.
-      </p>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Deadline</label>
+            <div class="deadline-row">
+              <input type="number" id="deadlineValue" placeholder="120" min="1" value="120"/>
+              <select id="deadlineUnit">
+                <option value="minutes">Minutes</option>
+                <option value="hours">Hours</option>
+              </select>
+            </div>
+            <p class="flow-note">Set the time window in minutes or hours.</p>
+          </div>
+
+          <div class="form-group">
+            <label>Budget (USDC)</label>
+            <input type="number" id="budget" placeholder="5.00" min="0.01" step="0.01"/>
+            <p class="flow-note">Platform fee: 2.5%. The worker receives the rest.</p>
+          </div>
+        </div>
+
+        <div class="post-action-row">
+          <button class="btn btn-primary" style="flex:1" onclick="submitJob()" id="postBtn">
+            Fund Escrow & Post Job
+          </button>
+        </div>
+
+        <p class="post-footnote">Your USDC stays in escrow and is only released when you approve the finished work.</p>
+      </div>
     </div>
   </div>
 </div>
@@ -1544,8 +1718,8 @@
                 </svg>
               </div>
               <div>
-                <h2 class="bridge-title">Bridge USDC into Arc</h2>
-                <p class="bridge-copy">A clean bridge flow for funding jobs, campaigns, and payouts from one wallet.</p>
+                <h2 class="bridge-title">Bridge USDC to Arc</h2>
+                <p class="bridge-copy">Move testnet USDC into Arc and use the same wallet to fund work.</p>
               </div>
             </div>
 
@@ -1581,9 +1755,8 @@
             <div class="bridge-console-head">
               <div>
                 <div class="bridge-console-kicker">Transfer setup</div>
-                <p class="bridge-console-copy">Keep it simple: choose a source, set the amount, and bridge.</p>
+                <p class="bridge-console-copy">Choose a source, amount, and recipient.</p>
               </div>
-              <div class="bridge-console-badge">Arc native USDC</div>
             </div>
 
             <div class="bridge-form-grid">
@@ -1633,7 +1806,7 @@
               <div>Connect your wallet, estimate the route, then bridge USDC to Arc.</div>
             </div>
 
-            <p class="bridge-help">You’ll need source-chain USDC and gas on the selected network for approval and burn confirmation.</p>
+            <p class="bridge-help">You’ll need source-chain USDC and gas for approval and burn confirmation.</p>
           </div>
         </div>
       </div>
@@ -1644,39 +1817,47 @@
 <!-- PAGE: PICK A JOB -->
 <div class="page" id="page-pick">
   <div class="container">
-    <div style="margin-bottom:24px">
-      <h2 style="font-size:28px;margin-bottom:8px">Pick a Job</h2>
-      <p style="color:var(--muted)">Browse open jobs, claim one, complete the work, and get paid in USDC.</p>
-    </div>
+    <div class="flow-page">
+      <div class="flow-header">
+        <div class="flow-kicker">Worker flow</div>
+        <h2 class="flow-title">Pick a job</h2>
+        <p class="flow-copy">Browse open tasks, claim one with your wallet, deliver the work, and get paid in USDC.</p>
+      </div>
 
-    <!-- How it works -->
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px 24px;margin-bottom:24px">
-      <p style="font-family:var(--font-mono);font-size:12px;color:var(--muted);margin-bottom:14px">HOW IT WORKS</p>
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px">
-        <div style="display:flex;align-items:flex-start;gap:10px">
-          <div style="width:28px;height:28px;background:rgba(124,109,250,0.15);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0">1</div>
-          <div><strong style="font-size:13px;display:block;margin-bottom:2px">Claim a job</strong><span style="font-size:12px;color:var(--muted)">Sign with your wallet to accept</span></div>
+      <div class="pick-steps" aria-label="How it works">
+        <div class="pick-step">
+          <div class="pick-step-num">1</div>
+          <strong>Claim</strong>
+          <span>Take the task directly from the marketplace.</span>
         </div>
-        <div style="display:flex;align-items:flex-start;gap:10px">
-          <div style="width:28px;height:28px;background:rgba(124,109,250,0.15);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0">2</div>
-          <div><strong style="font-size:13px;display:block;margin-bottom:2px">Do the work</strong><span style="font-size:12px;color:var(--muted)">Complete the task off-chain</span></div>
+        <div class="pick-step">
+          <div class="pick-step-num">2</div>
+          <strong>Work</strong>
+          <span>Complete the task off-chain and prepare the result.</span>
         </div>
-        <div style="display:flex;align-items:flex-start;gap:10px">
-          <div style="width:28px;height:28px;background:rgba(124,109,250,0.15);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0">3</div>
-          <div><strong style="font-size:13px;display:block;margin-bottom:2px">Submit deliverable</strong><span style="font-size:12px;color:var(--muted)">Paste link or result onchain</span></div>
+        <div class="pick-step">
+          <div class="pick-step-num">3</div>
+          <strong>Submit</strong>
+          <span>Send your deliverable back through the job flow.</span>
         </div>
-        <div style="display:flex;align-items:flex-start;gap:10px">
-          <div style="width:28px;height:28px;background:rgba(79,209,165,0.15);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0">💰</div>
-          <div><strong style="font-size:13px;display:block;margin-bottom:2px">Get paid</strong><span style="font-size:12px;color:var(--muted)">USDC sent to your wallet</span></div>
+        <div class="pick-step">
+          <div class="pick-step-num">4</div>
+          <strong>Get paid</strong>
+          <span>USDC is released when the client approves the work.</span>
         </div>
       </div>
-    </div>
 
-    <div class="section-head">
-      <h2>Open Jobs</h2>
-      <button class="btn btn-outline btn-sm" onclick="loadAvailableJobs()">↻ Refresh</button>
+      <div class="pick-board">
+        <div class="section-head">
+          <div>
+            <h2>Open Jobs</h2>
+            <p class="flow-note">Only active marketplace jobs are shown here.</p>
+          </div>
+          <button class="btn btn-outline btn-sm" onclick="loadAvailableJobs()">Refresh</button>
+        </div>
+        <div id="availableJobs"></div>
+      </div>
     </div>
-    <div id="availableJobs"></div>
   </div>
 </div>
 
@@ -2155,8 +2336,12 @@ function renderAgentSelect() {
 
   grid.innerHTML = humanAgents.map(a => `
     <div class="agent-select-card" id="asel-${a.id}" onclick="selectAgent('${a.id}')">
-      <div class="agent-select-name">🧑 ${a.name}</div>
-      <div class="agent-select-desc">${a.taskTypes.join(', ')} · ${a.reputationScore}/100</div>
+      <div class="agent-select-name">${a.name}</div>
+      <div class="agent-select-desc">${a.taskTypes.join(', ')}</div>
+      <div class="agent-select-meta">
+        <span>${a.reputationScore}/100 rep</span>
+        <span>from ${a.minBudget} USDC</span>
+      </div>
     </div>
   `).join('');
 }
@@ -2212,20 +2397,20 @@ async function loadAvailableJobs() {
         <div>
           <div class="job-title">${escapeHtml(j.title)}</div>
           <div class="job-meta">
-            <span>📂 ${escapeHtml(j.category)}</span>
-            <span>👤 ${escapeHtml(j.workerTypeLabel)}</span>
+            <span>${escapeHtml(j.category)}</span>
+            <span>${escapeHtml(j.workerTypeLabel)}</span>
             ${countdownPill(j.deadline, 'Deadline')}
             <span>Posted by ${shortAddr(j.client)}</span>
           </div>
-          <div style="font-size:12px;color:var(--muted);margin-top:6px;max-width:500px">${escapeHtml(j.description?.slice(0,100))}${j.description?.length > 100 ? '...' : ''}</div>
+          <div class="job-desc">${escapeHtml(j.description?.slice(0,120))}${j.description?.length > 120 ? '...' : ''}</div>
         </div>
         <div class="job-right">
           <div class="job-budget">${j.budget} USDC</div>
-          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end">
+          <div class="job-actions-row">
             <span class="badge ${STATUS_CLASS[j.status]}">${j.statusLabel}</span>
             ${currentWallet
               ? currentWallet.toLowerCase() === j.client.toLowerCase()
-                ? '<span style="font-size:11px;color:var(--muted);font-family:var(--font-mono)">Your job</span>'
+                ? '<span class="job-note">Your job</span>'
                 : `<button class="btn btn-primary btn-sm" onclick="event.stopPropagation();claimJob(${j.id})">Claim Job</button>`
               : '<button class="btn btn-outline btn-sm" onclick="event.stopPropagation();connectWallet()">Connect to Claim</button>'
             }

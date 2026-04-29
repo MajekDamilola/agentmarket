@@ -60,10 +60,20 @@ const IDENTITY_ABI = [
 
 const STATUS_LABELS = ["Open","Funded","Submitted","Completed","Rejected"];
 const WORKER_TYPES = ["AI","Human"];
+const COMPLETED_JOB_RETENTION_MS = 24 * 60 * 60 * 1000;
 
 // ─── Helpers ──────────────────────────────────────────────────────
 function sameAddress(a, b) {
   return a?.toLowerCase() === b?.toLowerCase();
+}
+
+function isArchivedCompletedJob(job, now = Date.now()) {
+  return Number(job?.status) === 3 && Number(job?.completedAt) > 0 && (now - Number(job.completedAt)) > COMPLETED_JOB_RETENTION_MS;
+}
+
+function isClosedCampaign(campaign, now = Date.now()) {
+  const deadline = Number(campaign?.deadline || 0);
+  return Boolean(campaign?.expired) || (deadline > 0 && now > deadline);
 }
 
 function formatJob(job) {
@@ -260,7 +270,8 @@ app.post("/api/chats/:roomType/:roomId/messages", async (req, res) => {
 // ─── Jobs ─────────────────────────────────────────────────────────
 app.get("/api/jobs", async (req, res) => {
   try {
-    res.json(await getAllFormattedJobs());
+    const jobs = await getAllFormattedJobs();
+    res.json(jobs.filter(job => !isArchivedCompletedJob(job)));
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
@@ -288,7 +299,7 @@ app.get("/api/client/:address/jobs", async (req, res) => {
       "getClientJobs",
       (job, addr) => sameAddress(job.client, addr)
     );
-    res.json(jobs);
+    res.json(jobs.filter(job => !isArchivedCompletedJob(job)));
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
@@ -299,7 +310,7 @@ app.get("/api/agent/:address/jobs", async (req, res) => {
       "getAgentJobs",
       (job, addr) => sameAddress(job.agent, addr)
     );
-    res.json(jobs);
+    res.json(jobs.filter(job => !isArchivedCompletedJob(job)));
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
@@ -375,12 +386,13 @@ app.get("/api/campaigns", async (req, res) => {
     const campaigns = await publicClient.readContract({
       address: JOB_BOARD_ADDRESS, abi: JOB_BOARD_ABI, functionName: "getAllCampaigns",
     });
-    res.json(campaigns.map(c => ({
+    const formattedCampaigns = campaigns.map(c => ({
       id: Number(c.id), creator: c.creator, title: c.title, description: c.description,
       prizePool: formatUnits(c.prizePool, 6), entryFee: formatUnits(c.entryFee, 6),
       maxParticipants: Number(c.maxParticipants), deadline: Number(c.deadline) * 1000,
       expired: c.expired, createdAt: Number(c.createdAt) * 1000,
-    })));
+    }));
+    res.json(formattedCampaigns.filter(campaign => !isClosedCampaign(campaign)));
   } catch (err) { res.status(500).json({ error: "Failed to fetch campaigns" }); }
 });
 

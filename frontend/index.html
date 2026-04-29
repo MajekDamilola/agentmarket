@@ -1027,6 +1027,46 @@
       max-width: 820px;
     }
 
+    .fund-stack {
+      margin: 0 auto;
+      max-width: 860px;
+      display: grid;
+      gap: 28px;
+    }
+
+    .fund-section {
+      display: grid;
+      gap: 16px;
+    }
+
+    .fund-section-head {
+      display: grid;
+      gap: 8px;
+      padding: 0 4px;
+    }
+
+    .fund-section-title {
+      color: rgba(232,232,240,0.74);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+    }
+
+    .fund-section-copy {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.6;
+      margin: 0;
+      max-width: 680px;
+    }
+
+    .fund-divider {
+      height: 1px;
+      background: linear-gradient(90deg, rgba(122,255,200,0), rgba(122,255,200,0.34), rgba(89,199,255,0.34), rgba(122,255,200,0));
+      opacity: 0.92;
+    }
+
     .bridge-card {
       background: rgba(17,17,24,0.92);
       border: 1px solid rgba(255,255,255,0.08);
@@ -1737,8 +1777,13 @@
 <!-- PAGE: FUNDING -->
 <div class="page" id="page-bridge">
   <div class="container">
-    <div class="bridge-grid">
-      <div class="bridge-card">
+    <div class="fund-stack">
+      <section class="fund-section" aria-labelledby="fundUnifiedBalanceHeading">
+        <div class="fund-section-head">
+          <div class="fund-section-title">Unified Balance Kit</div>
+          <p class="fund-section-copy" id="fundUnifiedBalanceHeading">Primary multichain funding flow. Deposit USDC once, keep it chain-agnostic, then spend only the amount you need onto Arc before checkout.</p>
+        </div>
+        <div class="bridge-card">
         <div class="bridge-shell">
           <div class="bridge-spotlight">
             <div class="bridge-topline">
@@ -1792,17 +1837,17 @@
                 <div class="bridge-form-grid">
                   <div class="form-group span-full">
                     <label>Source Chain</label>
-                    <select id="ubSourceChain"></select>
+                    <select id="ubSourceChain" disabled></select>
                   </div>
                   <div class="form-group span-full">
                     <label>Deposit Amount (USDC)</label>
-                    <input type="number" id="ubDepositAmount" placeholder="2.00" min="0.01" step="0.01"/>
+                    <input type="number" id="ubDepositAmount" placeholder="2.00" min="0.01" step="0.01" disabled/>
                     <p class="bridge-field-note">This keeps funds chain-agnostic until you spend them to Arc.</p>
                   </div>
                 </div>
                 <div class="bridge-actions">
-                  <button class="btn btn-outline" onclick="refreshUnifiedBalance()" id="ubRefreshBtn">Refresh Balance</button>
-                  <button class="btn btn-primary" onclick="depositToUnifiedBalance()" id="ubDepositBtn">Deposit</button>
+                  <button class="btn btn-outline" onclick="refreshUnifiedBalance()" id="ubRefreshBtn" disabled>Refresh Balance</button>
+                  <button class="btn btn-primary" onclick="depositToUnifiedBalance()" id="ubDepositBtn" disabled>Deposit</button>
                 </div>
               </div>
 
@@ -1812,17 +1857,17 @@
                 <div class="bridge-form-grid">
                   <div class="form-group">
                     <label>Arc Top-up Amount (USDC)</label>
-                    <input type="number" id="ubSpendAmount" placeholder="5.00" min="0.01" step="0.01"/>
+                    <input type="number" id="ubSpendAmount" placeholder="5.00" min="0.01" step="0.01" disabled/>
                   </div>
                   <div class="form-group">
                     <label>Destination</label>
-                    <input type="text" id="ubRecipient" placeholder="0x..."/>
+                    <input type="text" id="ubRecipient" placeholder="0x..." disabled/>
                     <p class="bridge-field-note">Defaults to your connected Arc wallet.</p>
                   </div>
                 </div>
                 <div class="bridge-actions">
-                  <button class="btn btn-outline" onclick="estimateUnifiedBalanceSpend()" id="ubEstimateBtn">Estimate Top-up</button>
-                  <button class="btn btn-primary" onclick="spendUnifiedBalanceToArc()" id="ubSpendBtn">Fund Arc</button>
+                  <button class="btn btn-outline" onclick="estimateUnifiedBalanceSpend()" id="ubEstimateBtn" disabled>Estimate Top-up</button>
+                  <button class="btn btn-primary" onclick="spendUnifiedBalanceToArc()" id="ubSpendBtn" disabled>Fund Arc</button>
                 </div>
               </div>
             </div>
@@ -1835,9 +1880,17 @@
             <p class="bridge-help">Phase 1 keeps your existing escrow contracts unchanged. Unified Balance only funds your Arc wallet before the normal approval and contract call.</p>
           </div>
         </div>
-      </div>
+        </div>
+      </section>
 
-      <div class="bridge-card">
+      <div class="fund-divider" aria-hidden="true"></div>
+
+      <section class="fund-section" aria-labelledby="fundBridgeHeading">
+        <div class="fund-section-head">
+          <div class="fund-section-title">Direct Bridge Fallback</div>
+          <p class="fund-section-copy" id="fundBridgeHeading">One-off route for moving USDC straight onto Arc. Use this if Unified Balance is still loading, unavailable in your browser, or you prefer the direct bridge path.</p>
+        </div>
+        <div class="bridge-card">
         <div class="bridge-shell">
           <div class="bridge-spotlight">
             <div class="bridge-topline">
@@ -1954,7 +2007,8 @@
             <p class="bridge-help">You’ll need source-chain USDC and gas for approval and burn confirmation.</p>
           </div>
         </div>
-      </div>
+        </div>
+      </section>
     </div>
   </div>
 </div>
@@ -2266,12 +2320,23 @@ function isPastDeadline(deadlineMs) {
   return Number(deadlineMs) > 0 && Date.now() > Number(deadlineMs);
 }
 
+const COMPLETED_JOB_RETENTION_MS = 24 * 60 * 60 * 1000;
+
 function isExpiredJob(job) {
   return Boolean(job?.deadline) && [0, 1].includes(Number(job.status)) && isPastDeadline(job.deadline);
 }
 
+function isArchivedCompletedJob(job) {
+  const completedAt = Number(job?.completedAt || 0);
+  return Number(job?.status) === 3 && completedAt > 0 && (Date.now() - completedAt) > COMPLETED_JOB_RETENTION_MS;
+}
+
+function isClosedCampaign(campaign) {
+  return Boolean(campaign?.expired) || isPastDeadline(campaign?.deadline);
+}
+
 function shouldShowPublicJob(job) {
-  return !isExpiredJob(job) && Number(job.status) !== 4;
+  return !isExpiredJob(job) && Number(job.status) !== 4 && !isArchivedCompletedJob(job);
 }
 
 function countdownLabel(deadlineMs) {
@@ -2740,17 +2805,19 @@ async function loadCampaigns() {
     const res = await fetch(`${API}/api/campaigns`);
     const campaigns = await res.json();
     const container = document.getElementById('campaignsList');
-    if (!campaigns.length) {
-      container.innerHTML = '<div class="empty-state"><p>No campaigns yet. Be the first to create one.</p></div>';
+    const activeCampaigns = Array.isArray(campaigns)
+      ? campaigns.filter(campaign => !isClosedCampaign(campaign))
+      : [];
+    if (!activeCampaigns.length) {
+      container.innerHTML = '<div class="empty-state"><p>No active campaigns right now. Expired campaigns are cleared automatically.</p></div>';
       return;
     }
-    const sortedCampaigns = campaigns
+    const sortedCampaigns = activeCampaigns
       .slice()
-      .sort((a, b) => Number(a.expired || isPastDeadline(a.deadline)) - Number(b.expired || isPastDeadline(b.deadline)));
+      .sort((a, b) => Number(a.deadline || 0) - Number(b.deadline || 0));
     container.innerHTML = sortedCampaigns.map(c => {
-      const unavailable = c.expired || isPastDeadline(c.deadline);
       return `
-      <div class="job-card campaign-card ${unavailable ? 'campaign-closed' : ''}" onclick="openCampaignModal(${c.id})">
+      <div class="job-card campaign-card" onclick="openCampaignModal(${c.id})">
         <div>
           <div class="job-title">${escapeHtml(c.title)}</div>
           <div class="job-meta">
@@ -2763,7 +2830,7 @@ async function loadCampaigns() {
         </div>
         <div class="job-right">
           <div class="job-budget">${c.prizePool} USDC</div>
-          <span class="badge ${unavailable ? 'badge-rejected' : 'badge-funded'}">${unavailable ? 'Closed' : 'Participate'}</span>
+          <span class="badge badge-funded">Participate</span>
         </div>
       </div>
     `}).join('');
@@ -2879,7 +2946,7 @@ async function openCampaignModal(id) {
     const entries = entriesRes.ok ? await entriesRes.json() : [];
     const isCreator = currentWallet?.toLowerCase() === campaign.creator?.toLowerCase();
     const isParticipant = participants.some(p => p.toLowerCase() === currentWallet?.toLowerCase());
-    const isClosed = campaign.expired || isPastDeadline(campaign.deadline);
+    const isClosed = isClosedCampaign(campaign);
     const maxedOut = Number(campaign.maxParticipants) > 0 && participants.length >= Number(campaign.maxParticipants);
     const myEntry = entries.find(e => e.participant?.toLowerCase() === currentWallet?.toLowerCase());
 
@@ -3222,8 +3289,9 @@ function switchTab(tab) {
 function renderDashboardJobs(jobs) {
   const container = document.getElementById('dashboardContent');
   const isWorkerTab = currentTab === 'agent';
+  const visibleJobs = Array.isArray(jobs) ? jobs.filter(job => !isArchivedCompletedJob(job)) : [];
 
-  if (!jobs.length) {
+  if (!visibleJobs.length) {
     container.innerHTML = `
       <div class="empty-state">
         <p>${isWorkerTab ? 'You haven\'t claimed any jobs yet.' : 'You haven\'t posted any jobs yet.'}</p>
@@ -3234,7 +3302,7 @@ function renderDashboardJobs(jobs) {
     return;
   }
 
-  container.innerHTML = `<div class="jobs-list">` + jobs.map(j => {
+  container.innerHTML = `<div class="jobs-list">` + visibleJobs.map(j => {
     const isClient = currentWallet?.toLowerCase() === j.client?.toLowerCase();
     const isWorker = currentWallet?.toLowerCase() === j.agent?.toLowerCase();
     const expired = isExpiredJob(j);
@@ -3776,8 +3844,52 @@ function setUnifiedBalanceStatus(title, body, type = 'info') {
   status.innerHTML = `<div class="bridge-status-title">${escapeHtml(title)}</div><div>${body}</div>`;
 }
 
+function getBrowserViemAdapterFactory(module) {
+  return module?.createViemAdapterFromProvider || module?.createAdapterFromProvider || null;
+}
+
+function createUnifiedBalanceClient(module) {
+  if (typeof module?.UnifiedBalanceKit === 'function') return new module.UnifiedBalanceKit();
+  if (typeof module?.default === 'function') return new module.default();
+  if (typeof module?.AppKit === 'function') {
+    const appKit = new module.AppKit();
+    if (appKit?.unifiedBalance) return appKit.unifiedBalance;
+  }
+  return null;
+}
+
+function syncUnifiedBalanceUiState() {
+  const enabled = isUnifiedBalanceEnabled();
+  const wallet = window.getAgentMarketWallet?.();
+  const ready = enabled && unifiedBalanceState.ready;
+  const hasWallet = Boolean(wallet);
+  const hasSourceChains = getUnifiedBalanceSourceChains().length > 0;
+  const sourceDisabled = !ready || !hasWallet || !hasSourceChains;
+  const spendDisabled = !ready || !hasWallet;
+
+  const buttonStates = {
+    ubRefreshBtn: !ready || !hasWallet,
+    ubDepositBtn: sourceDisabled,
+    ubEstimateBtn: spendDisabled,
+    ubSpendBtn: spendDisabled,
+  };
+  Object.entries(buttonStates).forEach(([id, disabled]) => {
+    const el = getBridgeEl(id);
+    if (el) el.disabled = disabled;
+  });
+
+  ['ubSourceChain', 'ubDepositAmount'].forEach(id => {
+    const el = getBridgeEl(id);
+    if (el) el.disabled = sourceDisabled;
+  });
+  ['ubSpendAmount', 'ubRecipient'].forEach(id => {
+    const el = getBridgeEl(id);
+    if (el) el.disabled = spendDisabled;
+  });
+}
+
 function setUnifiedBalanceButtonsDisabled(disabled) {
-  ['ubRefreshBtn', 'ubEstimateBtn', 'ubDepositBtn', 'ubSpendBtn'].forEach(id => {
+  ['ubRefreshBtn', 'ubEstimateBtn', 'ubDepositBtn', 'ubSpendBtn', 'ubSourceChain', 'ubDepositAmount', 'ubSpendAmount', 'ubRecipient'].forEach(id => {
     const el = getBridgeEl(id);
     if (el) el.disabled = disabled;
   });
@@ -3851,6 +3963,7 @@ function populateUnifiedBalanceSourceChains() {
   if (chains.some(chain => chain.id === selected)) {
     select.value = selected;
   }
+  syncUnifiedBalanceUiState();
 }
 
 async function createUnifiedBalanceAdapter() {
@@ -3890,6 +4003,7 @@ async function refreshUnifiedBalance(options = {}) {
     updateUnifiedBalanceSummary(null);
     setUnifiedBalanceMode('Disabled');
     setUnifiedBalanceStatus('Unified Balance disabled', 'This environment has Unified Balance turned off, so use the direct bridge below.', 'info');
+    syncUnifiedBalanceUiState();
     return null;
   }
 
@@ -3898,6 +4012,7 @@ async function refreshUnifiedBalance(options = {}) {
     if (!options.silent) {
       setUnifiedBalanceStatus('Wallet required', 'Connect your EVM wallet to view your Unified Balance and fund Arc.', 'info');
     }
+    syncUnifiedBalanceUiState();
     return null;
   }
 
@@ -3909,6 +4024,7 @@ async function refreshUnifiedBalance(options = {}) {
         : `The Unified Balance SDK did not load. Use the direct bridge below instead.${unifiedBalanceState.error ? `<div style="margin-top:6px">${escapeHtml(unifiedBalanceState.error)}</div>` : ''}`;
       setUnifiedBalanceStatus(title, body, unifiedBalanceState.loading ? 'info' : 'error');
     }
+    syncUnifiedBalanceUiState();
     return null;
   }
 
@@ -3919,7 +4035,7 @@ async function refreshUnifiedBalance(options = {}) {
     }
     const adapter = await createUnifiedBalanceAdapter();
     const balances = await unifiedBalanceState.kit.getBalances({
-      sources: { adapter },
+      sources: [{ adapter }],
       token: 'USDC',
       includePending: true,
       networkType: 'testnet',
@@ -3936,7 +4052,7 @@ async function refreshUnifiedBalance(options = {}) {
     }
     return null;
   } finally {
-    setUnifiedBalanceButtonsDisabled(false);
+    syncUnifiedBalanceUiState();
   }
 }
 
@@ -3978,7 +4094,7 @@ async function estimateUnifiedBalanceSpend(options = {}) {
     bridgeToast('Estimate Failed', bridgeErrorMessage(err).slice(0, 110), 'error');
     throw err;
   } finally {
-    setUnifiedBalanceButtonsDisabled(false);
+    syncUnifiedBalanceUiState();
     setUnifiedBalanceButtonText('ubEstimateBtn', 'Estimating...', 'Estimate Top-up', false);
   }
 }
@@ -4023,7 +4139,7 @@ async function depositToUnifiedBalance(options = {}) {
     bridgeToast('Deposit Failed', bridgeErrorMessage(err).slice(0, 110), 'error');
     throw err;
   } finally {
-    setUnifiedBalanceButtonsDisabled(false);
+    syncUnifiedBalanceUiState();
     setUnifiedBalanceButtonText('ubDepositBtn', 'Depositing...', 'Deposit', false);
   }
 }
@@ -4068,7 +4184,7 @@ async function spendUnifiedBalanceToArc(options = {}) {
     bridgeToast('Top-up Failed', bridgeErrorMessage(err).slice(0, 110), 'error');
     throw err;
   } finally {
-    setUnifiedBalanceButtonsDisabled(false);
+    syncUnifiedBalanceUiState();
     setUnifiedBalanceButtonText('ubSpendBtn', 'Funding...', 'Fund Arc', false);
   }
 }
@@ -4082,7 +4198,9 @@ async function maybeTopUpArcForSpend(options = {}) {
   if (arcBalance + 0.000001 >= requested) return false;
 
   if (!unifiedBalanceState.ready) {
-    throw new Error('Your Arc wallet is short on USDC and Unified Balance is not ready. Open Fund to top up or use the direct bridge.');
+    throw new Error(unifiedBalanceState.loading
+      ? 'Your Arc wallet is short on USDC and Unified Balance is still loading. Wait a moment or use the direct bridge.'
+      : 'Your Arc wallet is short on USDC and Unified Balance is unavailable. Open Fund to use the direct bridge.');
   }
 
   const shortage = Math.max(0, requested - arcBalance);
@@ -4124,6 +4242,7 @@ window.arcUnifiedBalanceRefresh = () => {
   if (!wallet) {
     updateUnifiedBalanceSummary(null);
     setUnifiedBalanceStatus('Wallet required', 'Connect your EVM wallet to view your Unified Balance and fund Arc.', 'info');
+    syncUnifiedBalanceUiState();
     return;
   }
   if (!unifiedBalanceState.ready) {
@@ -4132,9 +4251,11 @@ window.arcUnifiedBalanceRefresh = () => {
       ? 'The Unified Balance SDK is still starting.'
       : `The Unified Balance SDK did not load. Use the direct bridge below instead.${unifiedBalanceState.error ? `<div style="margin-top:6px">${escapeHtml(unifiedBalanceState.error)}</div>` : ''}`;
     setUnifiedBalanceStatus(title, body, unifiedBalanceState.loading ? 'info' : 'error');
+    syncUnifiedBalanceUiState();
     return;
   }
   if (wallet && unifiedBalanceState.ready) {
+    syncUnifiedBalanceUiState();
     const fundingPageVisible = Boolean(document.getElementById('page-bridge')?.classList.contains('active'));
     refreshUnifiedBalance({ silent: !fundingPageVisible }).catch(() => {});
   }
@@ -4630,7 +4751,7 @@ function tightenUiCopy() {
   const openOption = document.querySelector('#jobAvailability option[value="open"]');
   if (openOption) openOption.textContent = 'Open market';
 
-  const bridgeHelp = document.querySelector('#page-bridge .bridge-help');
+  const bridgeHelp = document.querySelectorAll('#page-bridge .bridge-help')[1];
   if (bridgeHelp) bridgeHelp.textContent = 'You’ll need source-chain USDC and gas.';
 }
 
@@ -4644,6 +4765,7 @@ async function initBridgeSdk() {
 
     const {
       BridgeKit,
+      BridgingKit,
       ArcTestnet,
       ArbitrumSepolia,
       AvalancheFuji,
@@ -4651,13 +4773,14 @@ async function initBridgeSdk() {
       EthereumSepolia,
       PolygonAmoy,
     } = kitModule;
-    const { createViemAdapterFromProvider } = adapterModule;
+    const BridgeKitCtor = BridgeKit || BridgingKit || kitModule?.default;
+    const createViemAdapterFromProvider = getBrowserViemAdapterFactory(adapterModule);
 
-    if (!BridgeKit || !createViemAdapterFromProvider) {
+    if (!BridgeKitCtor || !createViemAdapterFromProvider) {
       throw new Error('Circle Bridge Kit did not expose the expected browser exports.');
     }
 
-    bridgeState.bridgeKit = new BridgeKit();
+    bridgeState.bridgeKit = new BridgeKitCtor();
     bridgeState.createAdapter = createViemAdapterFromProvider;
     bridgeState.supportedChains = [
       EthereumSepolia,
@@ -4696,22 +4819,25 @@ async function initUnifiedBalanceSdk() {
       window.arcUnifiedBalanceLoading = false;
       setUnifiedBalanceMode('Disabled');
       setUnifiedBalanceStatus('Unified Balance disabled', 'This environment is configured to use the direct bridge only.', 'info');
+      syncUnifiedBalanceUiState();
       return;
     }
 
+    setUnifiedBalanceMode('Loading adapter');
+    syncUnifiedBalanceUiState();
     setUnifiedBalanceStatus('Ready', 'Unified Balance is loading so you can deposit and top up Arc from one wallet.', 'info');
     const [kitModule, adapterModule] = await Promise.all([
       withBridgeTimeout(import(UNIFIED_BALANCE_SDK_URLS.kit), 'Unified Balance Kit'),
       withBridgeTimeout(import(UNIFIED_BALANCE_SDK_URLS.adapter), 'Circle Viem adapter'),
     ]);
-    const { UnifiedBalanceKit } = kitModule;
-    const { createViemAdapterFromProvider } = adapterModule;
+    const unifiedBalanceClient = createUnifiedBalanceClient(kitModule);
+    const createViemAdapterFromProvider = getBrowserViemAdapterFactory(adapterModule);
 
-    if (!UnifiedBalanceKit || !createViemAdapterFromProvider) {
+    if (!unifiedBalanceClient || !createViemAdapterFromProvider) {
       throw new Error('Unified Balance Kit did not expose the expected browser exports.');
     }
 
-    unifiedBalanceState.kit = new UnifiedBalanceKit();
+    unifiedBalanceState.kit = unifiedBalanceClient;
     unifiedBalanceState.createAdapter = createViemAdapterFromProvider;
     unifiedBalanceState.ready = true;
     unifiedBalanceState.loading = false;
@@ -4719,6 +4845,7 @@ async function initUnifiedBalanceSdk() {
     window.arcUnifiedBalanceReady = true;
     window.arcUnifiedBalanceLoading = false;
     setUnifiedBalanceMode('Unified Balance active');
+    syncUnifiedBalanceUiState();
     window.arcUnifiedBalanceRefresh();
     if (window.getAgentMarketWallet?.()) {
       setUnifiedBalanceStatus('Ready', 'Refresh your balance, deposit to Unified Balance, or fund Arc directly from it.', 'info');
@@ -4731,6 +4858,7 @@ async function initUnifiedBalanceSdk() {
     window.arcUnifiedBalanceLoading = false;
     setUnifiedBalanceMode('Unavailable');
     setUnifiedBalanceStatus('Unified Balance unavailable', `The Unified Balance SDK did not load, so use the direct bridge below instead.${unifiedBalanceState.error ? `<div style="margin-top:6px">${escapeHtml(unifiedBalanceState.error)}</div>` : ''}`, 'error');
+    syncUnifiedBalanceUiState();
   }
 }
 

@@ -209,6 +209,14 @@ app.get("/api/config", (req, res) => {
     jobBoardAddress: JOB_BOARD_ADDRESS,
     usdcAddress: USDC_ADDRESS,
     explorerUrl: "https://testnet.arcscan.app",
+    unifiedBalanceEnabled: true,
+    unifiedBalanceSupportedChains: [
+      { id: "Ethereum_Sepolia", name: "Ethereum Sepolia", chainId: 11155111, type: "evm", testnet: true },
+      { id: "Base_Sepolia", name: "Base Sepolia", chainId: 84532, type: "evm", testnet: true },
+      { id: "Arbitrum_Sepolia", name: "Arbitrum Sepolia", chainId: 421614, type: "evm", testnet: true },
+      { id: "Avalanche_Fuji", name: "Avalanche Fuji", chainId: 43113, type: "evm", testnet: true },
+      { id: "Polygon_Amoy_Testnet", name: "Polygon Amoy", chainId: 80002, type: "evm", testnet: true },
+    ],
     bridgeSupportedChains: [
       { id: "Ethereum_Sepolia", name: "Ethereum Sepolia", chainId: 11155111, type: "evm", testnet: true },
       { id: "Base_Sepolia", name: "Base Sepolia", chainId: 84532, type: "evm", testnet: true },

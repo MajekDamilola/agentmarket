@@ -169,18 +169,24 @@ That's it. Your app is running.
 
 ---
 
-## PHASE 4.5 - Bridge USDC to Arc
+## PHASE 4.5 - Fund Arc with Unified Balance or Bridge
 
-AgentMarket now includes a `Bridge USDC` page in the app navigation.
+AgentMarket now includes a `Fund` page in the app navigation.
 
 1. Open the site over HTTP, for example `http://localhost:8080`.
 2. Connect MetaMask.
-3. Choose a supported source chain: Ethereum Sepolia, Base Sepolia, Arbitrum Sepolia, Avalanche Fuji, or Polygon Amoy.
-4. Enter the USDC amount and Arc recipient address.
-5. Click `Estimate`, then `Bridge to Arc`.
-6. Confirm each wallet prompt. Circle CCTP handles the native USDC burn on the source chain and mint on Arc Testnet.
+3. If you want the new flow, use `Unified Balance`:
+   - Choose a supported source chain.
+   - Deposit USDC into Unified Balance.
+   - Refresh until the confirmed balance is enough.
+   - Enter the Arc top-up amount and click `Fund Arc`.
+4. If you want the fallback path, use the direct `Bridge` section:
+   - Choose a supported source chain: Ethereum Sepolia, Base Sepolia, Arbitrum Sepolia, Avalanche Fuji, or Polygon Amoy.
+   - Enter the USDC amount and Arc recipient address.
+   - Click `Estimate`, then `Bridge`.
+5. Confirm each wallet prompt. Circle handles the transfer to Arc Testnet.
 
-You need source-chain USDC plus native gas on the selected source chain. After the bridge finishes, use `Switch to Arc` before posting jobs or funding campaigns.
+You need source-chain USDC plus native gas on the selected source chain. After funding finishes, switch to Arc before posting jobs or funding campaigns if your wallet is not already there.
 
 ---
 

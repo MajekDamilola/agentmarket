@@ -2240,8 +2240,14 @@ app.get("/api/campaigns/:id/submission/:address", async (req, res) => {
 
 // ─── Start ────────────────────────────────────────────────────────
 const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => {
-  console.log(`AgentMarket API running on port ${PORT}`);
-  console.log(`Network: Arc Testnet`);
-  console.log(`Contract: ${JOB_BOARD_ADDRESS}`);
-});
+const isDirectRun = Boolean(process.argv[1] && path.resolve(process.argv[1]) === __filename);
+
+if (isDirectRun) {
+  app.listen(PORT, () => {
+    console.log(`AgentMarket API running on port ${PORT}`);
+    console.log(`Network: Arc Testnet`);
+    console.log(`Contract: ${JOB_BOARD_ADDRESS}`);
+  });
+}
+
+export default app;

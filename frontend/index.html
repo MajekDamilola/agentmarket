@@ -1748,6 +1748,45 @@
       justify-content: space-between;
     }
 
+    .pulse-identity-chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .pulse-status-chip {
+      align-items: center;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 999px;
+      color: rgba(232,232,240,0.78);
+      display: inline-flex;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      gap: 6px;
+      letter-spacing: 0.12em;
+      padding: 7px 10px;
+      text-transform: uppercase;
+    }
+
+    .pulse-status-chip.active {
+      background: rgba(122,255,200,0.08);
+      border-color: rgba(122,255,200,0.18);
+      color: var(--success);
+    }
+
+    .pulse-status-chip.mint {
+      background: rgba(124,109,250,0.08);
+      border-color: rgba(124,109,250,0.18);
+      color: #bdb4ff;
+    }
+
+    .pulse-identity-link-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
     .pulse-kicker {
       color: rgba(232,232,240,0.52);
       font-family: var(--font-mono);
@@ -2722,6 +2761,7 @@
     html[data-theme="light"] .pulse-kicker,
     html[data-theme="light"] .pulse-identity-copy,
     html[data-theme="light"] .pulse-identity-rank span,
+    html[data-theme="light"] .pulse-status-chip,
     html[data-theme="light"] .pulse-identity-stat-label,
     html[data-theme="light"] .pulse-identity-stat-sub,
     html[data-theme="light"] .pulse-metric-label,
@@ -2789,6 +2829,23 @@
 
     html[data-theme="light"] .pulse-identity-card::before {
       background: linear-gradient(90deg, rgba(31,134,218,0.26), rgba(122,255,200,0.18), transparent);
+    }
+
+    html[data-theme="light"] .pulse-status-chip {
+      background: rgba(255,255,255,0.76);
+      border-color: rgba(19,32,51,0.08);
+    }
+
+    html[data-theme="light"] .pulse-status-chip.active {
+      background: rgba(63,194,138,0.08);
+      border-color: rgba(63,194,138,0.18);
+      color: #1c7b54;
+    }
+
+    html[data-theme="light"] .pulse-status-chip.mint {
+      background: rgba(124,109,250,0.08);
+      border-color: rgba(124,109,250,0.16);
+      color: #5a4ed0;
     }
 
     html[data-theme="light"] .pulse-donut::after {
@@ -3790,6 +3847,7 @@ const EXPLORER = 'https://testnet.arcscan.app';
 const USDC = '0x3600000000000000000000000000000000000000';
 let JOB_BOARD = window.JOB_BOARD_ADDRESS = '0x42e4cC4836cDd7355a7aD600B51B054b03322D3f';
 window.AGENTMARKET_RUNTIME_CONFIG = window.AGENTMARKET_RUNTIME_CONFIG || {
+  arcIdNft: null,
   arcIdUnlock: null,
   bridgeSupportedChains: [],
   pulseEnabled: true,
@@ -3804,6 +3862,9 @@ async function loadConfig() {
     if (config.jobBoardAddress) JOB_BOARD = window.JOB_BOARD_ADDRESS = config.jobBoardAddress;
     if (config.arcIdUnlock && typeof config.arcIdUnlock === 'object') {
       window.AGENTMARKET_RUNTIME_CONFIG.arcIdUnlock = config.arcIdUnlock;
+    }
+    if (config.arcIdNft && typeof config.arcIdNft === 'object') {
+      window.AGENTMARKET_RUNTIME_CONFIG.arcIdNft = config.arcIdNft;
     }
     if (Array.isArray(config.bridgeSupportedChains)) {
       bridgeSupportedChains = config.bridgeSupportedChains;
@@ -3844,6 +3905,7 @@ let pulseState = null;
 let pulseLoading = false;
 let pulseFeedLane = 'all';
 let pulseArcIdBusy = false;
+let pulseArcIdMintBusy = false;
 let currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
 
 const NAV_PAGE_LABELS = {
@@ -4698,6 +4760,87 @@ async function fetchPulseJson(path, options = {}) {
   return data;
 }
 
+function buildPulseArcIdNftMetadata(payload = {}) {
+  const profile = payload?.profile || {};
+  const payment = payload?.payment || {};
+  const wallet = payload?.wallet || currentWallet || '';
+  const walletLabel = payload?.walletLabel || (wallet ? shortAddr(wallet) : 'Arc wallet');
+  const displayName = profile.displayName || walletLabel;
+  const badge = payload?.badge || 'Arc ID beta';
+  const rankLabel = payload?.rank?.label || 'Tracked beta';
+  const trackedActions = formatCompactNumber(profile.totalTrackedActions || payload?.teaser?.trackedActions || 0);
+  const volume = formatPulseUsdc(profile.trackedVolumeUsdc || payload?.teaser?.trackedVolumeUsdc || 0);
+  const points = formatCompactNumber(profile.points || payload?.teaser?.points || 0);
+  const streak = `${formatCompactNumber(profile.currentStreak || payload?.teaser?.currentStreak || 0)}d`;
+  const mostUsedLane = profile.mostUsedLane || 'Build';
+  const memberSince = profile.memberSinceLabel || 'No activity yet';
+  const unlockTx = payment?.txHash ? shortAddr(payment.txHash) : 'Paid unlock verified';
+  const activityLine = `${trackedActions} actions / ${volume} volume / ${points} pts`;
+  const details = [
+    ['Wallet', walletLabel],
+    ['Rank', rankLabel],
+    ['Badge', badge],
+    ['Streak', streak],
+    ['Lane', mostUsedLane],
+    ['Member since', memberSince],
+  ];
+
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="720" viewBox="0 0 1200 720" fill="none">
+      <defs>
+        <linearGradient id="bg" x1="0" y1="0" x2="1200" y2="720" gradientUnits="userSpaceOnUse">
+          <stop stop-color="#090D14"/>
+          <stop offset="1" stop-color="#101827"/>
+        </linearGradient>
+        <linearGradient id="line" x1="96" y1="110" x2="1104" y2="110" gradientUnits="userSpaceOnUse">
+          <stop stop-color="#59C7FF"/>
+          <stop offset="1" stop-color="#7AFFC8" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+      <rect width="1200" height="720" rx="40" fill="url(#bg)"/>
+      <circle cx="1030" cy="124" r="150" fill="#7C6DFA" fill-opacity="0.18"/>
+      <circle cx="186" cy="632" r="180" fill="#59C7FF" fill-opacity="0.14"/>
+      <rect x="48" y="48" width="1104" height="624" rx="30" fill="white" fill-opacity="0.03" stroke="rgba(255,255,255,0.08)"/>
+      <rect x="96" y="96" width="1008" height="1" fill="url(#line)"/>
+      <text x="96" y="146" fill="#91A3B4" font-family="IBM Plex Mono, monospace" font-size="24" letter-spacing="6">ARC ID SEASON 1</text>
+      <text x="96" y="236" fill="#F5F7FB" font-family="Space Grotesk, Arial, sans-serif" font-size="70" font-weight="700">${escapeHtml(displayName)}</text>
+      <text x="96" y="284" fill="#AAB7C7" font-family="IBM Plex Mono, monospace" font-size="24">${escapeHtml(walletLabel)}</text>
+      <text x="96" y="356" fill="#D8E1EB" font-family="Space Grotesk, Arial, sans-serif" font-size="34" font-weight="500">${escapeHtml(activityLine)}</text>
+      <text x="96" y="412" fill="#AAB7C7" font-family="IBM Plex Mono, monospace" font-size="24">Unlock receipt ${escapeHtml(unlockTx)}</text>
+      <rect x="96" y="470" width="1008" height="132" rx="22" fill="white" fill-opacity="0.04" stroke="rgba(255,255,255,0.06)"/>
+      ${details.map((detail, index) => {
+        const x = 132 + ((index % 3) * 322);
+        const y = index < 3 ? 524 : 586;
+        return `
+          <text x="${x}" y="${y - 18}" fill="#8FA1B3" font-family="IBM Plex Mono, monospace" font-size="17" letter-spacing="3">${escapeHtml(detail[0].toUpperCase())}</text>
+          <text x="${x}" y="${y + 18}" fill="#F5F7FB" font-family="Space Grotesk, Arial, sans-serif" font-size="30" font-weight="600">${escapeHtml(detail[1])}</text>
+        `;
+      }).join('')}
+    </svg>
+  `.trim();
+
+  const image = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+  const metadata = {
+    name: `${displayName} • Arc ID Season 1`,
+    description: 'A soulbound Arc ID collectible minted from AgentMarket Pulse after a paid Arc ID unlock on Arc testnet.',
+    image,
+    external_url: `${window.location.origin}${window.location.pathname}#pulse`,
+    attributes: [
+      { trait_type: 'Wallet', value: walletLabel },
+      { trait_type: 'Rank', value: rankLabel },
+      { trait_type: 'Badge', value: badge },
+      { trait_type: 'Tracked Actions', value: Number(profile.totalTrackedActions || payload?.teaser?.trackedActions || 0) },
+      { trait_type: 'Tracked Volume USDC', value: Number(profile.trackedVolumeUsdc || payload?.teaser?.trackedVolumeUsdc || 0) },
+      { trait_type: 'Pulse Points', value: Number(profile.points || payload?.teaser?.points || 0) },
+      { trait_type: 'Current Streak', value: Number(profile.currentStreak || payload?.teaser?.currentStreak || 0) },
+      { trait_type: 'Most Used Lane', value: mostUsedLane },
+      { trait_type: 'Member Since', value: memberSince },
+    ],
+  };
+
+  return `data:application/json;charset=UTF-8,${encodeURIComponent(JSON.stringify(metadata))}`;
+}
+
 function renderPulseFeedFilters(counts = {}) {
   const mount = document.getElementById('pulseFeedFilters');
   if (!mount) return;
@@ -4815,6 +4958,7 @@ function renderPulseArcId(payload = null) {
   const mount = document.getElementById('pulseArcIdCard');
   if (!mount) return;
   const runtimePayment = getArcIdUnlockConfig();
+  const runtimeNft = getArcIdNftConfig();
 
   if (payload?.error) {
     mount.className = 'pulse-identity-card locked';
@@ -4846,8 +4990,17 @@ function renderPulseArcId(payload = null) {
     ...runtimePayment,
     ...(payload?.payment && typeof payload.payment === 'object' ? payload.payment : {}),
   };
+  const nft = {
+    ...runtimeNft,
+    ...(payload?.nft && typeof payload.nft === 'object' ? payload.nft : {}),
+  };
   const unlockConfigured = Boolean(payment.enabled && payment.recipient);
+  const nftConfigured = Boolean(nft.enabled && nft.contractAddress);
+  const nftReady = Boolean(nft.ready && nft.contractAddress);
+  const nftMinted = Boolean(nft.minted && nft.tokenId);
+  const nftCanMint = Boolean(nft.canMint && nftReady && !nftMinted);
   const priceLabel = formatPulseUsdc(payment.priceUsdc || runtimePayment.priceUsdc || '2.50');
+  const mintPriceLabel = formatPulseUsdc(nft.mintPriceUsdc || runtimeNft.mintPriceUsdc || '5.00');
   const recipientLabel = payment.recipientLabel || (payment.recipient ? shortAddr(payment.recipient) : 'Arc recipient');
   const displayName = profile.displayName || (hasWallet ? shortAddr(currentWallet) : 'Your wallet');
   const badge = payload?.badge || 'Arc ID beta';
@@ -4855,6 +5008,15 @@ function renderPulseArcId(payload = null) {
   const walletLabel = payload?.walletLabel || (hasWallet ? shortAddr(currentWallet) : 'Connect wallet');
   const paymentTxLink = paidUnlocked && payment.txUrl
     ? `<a class="pulse-inline-link mono" href="${escapeHtml(payment.txUrl)}" target="_blank" rel="noreferrer">View payment tx</a>`
+    : '';
+  const mintTxLink = nftMinted && nft.txUrl
+    ? `<a class="pulse-inline-link mono" href="${escapeHtml(nft.txUrl)}" target="_blank" rel="noreferrer">View mint tx</a>`
+    : '';
+  const contractLink = nftConfigured && (nft.contractUrl || nft.contractAddress)
+    ? `<a class="pulse-inline-link mono" href="${escapeHtml(nft.contractUrl || `${EXPLORER}/address/${nft.contractAddress}`)}" target="_blank" rel="noreferrer">View NFT contract</a>`
+    : '';
+  const metadataLink = nftMinted && nft.metadataUri && !String(nft.metadataUri).startsWith('data:')
+    ? `<a class="pulse-inline-link mono" href="${escapeHtml(nft.metadataUri)}" target="_blank" rel="noreferrer">View metadata</a>`
     : '';
 
   const previewStats = hasWallet && payload
@@ -4899,6 +5061,19 @@ function renderPulseArcId(payload = null) {
         { label: 'Member since', value: 'Apr 2026', sub: 'Wallet card teaser' },
       ];
 
+  const statusChips = [
+    paidUnlocked
+      ? `<span class="pulse-status-chip active">Paid unlock verified</span>`
+      : betaUnlocked
+        ? `<span class="pulse-status-chip">Beta unlock live</span>`
+        : `<span class="pulse-status-chip">Preview mode</span>`,
+    nftMinted
+      ? `<span class="pulse-status-chip mint">Season 1 NFT minted</span>`
+      : paidUnlocked
+        ? `<span class="pulse-status-chip">NFT eligible</span>`
+        : `<span class="pulse-status-chip">Mint after paid unlock</span>`,
+  ].join('');
+
   const unlockPanel = !hasWallet
     ? `
       <div class="pulse-identity-unlock">
@@ -4920,15 +5095,35 @@ function renderPulseArcId(payload = null) {
         <div class="pulse-identity-unlock">
           <div class="pulse-identity-unlock-row">
             <div>
-              <div class="pulse-mini-title">Paid onchain unlock verified</div>
+              <div class="pulse-mini-title">${nftMinted ? `Season 1 minted as #${escapeHtml(String(nft.tokenId || ''))}` : 'Paid onchain unlock verified'}</div>
               <div class="pulse-note">
                 Verified ${escapeHtml(payment.paidAmountUsdc || payment.priceUsdc || '2.50')} USDC payment on Arc for ${escapeHtml(recipientLabel)}.
                 ${paymentTxLink ? `${paymentTxLink}<span style="margin:0 6px">/</span>` : ''}
                 Saved ${escapeHtml(formatPulseTimestamp(payload?.unlockedAt || 0))}.
+                ${nftMinted
+                  ? ` Your soulbound Arc ID collectible is now attached to this wallet.${nft.metadataUri && String(nft.metadataUri).startsWith('data:') ? ' Metadata is stored directly in the token URI.' : ''}`
+                  : ` This card can now mint the Season 1 collectible for ${escapeHtml(mintPriceLabel)} USDC.`}
               </div>
             </div>
-            <button class="btn btn-outline" type="button" disabled>Mint next</button>
+            ${nftMinted
+              ? `<button class="btn btn-outline" type="button" disabled>Minted</button>`
+              : `<button class="btn btn-primary" type="button" onclick="mintPulseArcIdNft()" id="pulseArcIdMintBtn" ${pulseArcIdMintBusy || !nftCanMint ? 'disabled' : ''}>${nftCanMint ? (pulseArcIdMintBusy ? 'Minting...' : `Mint NFT for ${mintPriceLabel}`) : (!nftConfigured ? 'Mint unavailable' : (!nftReady ? 'Mint not ready' : 'Mint unavailable'))}</button>`}
           </div>
+          <div class="pulse-identity-link-row">
+            ${paymentTxLink}
+            ${mintTxLink}
+            ${contractLink}
+            ${metadataLink}
+          </div>
+          ${!nftMinted && nftConfigured && !nftReady
+            ? `<div class="pulse-note">The Arc ID NFT contract is configured, but the backend signer still needs to be set before minting can go live.</div>`
+            : ''}
+          ${!nftMinted && !nftConfigured
+            ? `<div class="pulse-note">The Arc ID NFT contract has not been configured on the backend yet, so this wallet is ready but cannot mint yet.</div>`
+            : ''}
+          ${!nftMinted && nft.error
+            ? `<div class="pulse-note">${escapeHtml(nft.error)}</div>`
+            : ''}
         </div>
       `
       : betaUnlocked
@@ -4984,6 +5179,7 @@ function renderPulseArcId(payload = null) {
         <span>${escapeHtml(badge)}</span>
       </div>
     </div>
+    <div class="pulse-identity-chip-row">${statusChips}</div>
     <div class="pulse-identity-data">
       ${previewStats.map(item => `
         <div class="pulse-identity-stat">
@@ -5210,6 +5406,109 @@ async function unlockPulseArcId() {
     toast('Unlock Failed', e.message || 'Could not complete the Arc ID payment.', 'error');
   } finally {
     pulseArcIdBusy = false;
+    if (button) {
+      button.disabled = false;
+      button.textContent = previousLabel;
+    }
+  }
+}
+
+async function mintPulseArcIdNft() {
+  if (!currentWallet) {
+    toast('Connect Wallet', 'Connect your wallet before minting the Arc ID NFT.', 'info');
+    return;
+  }
+  if (pulseArcIdMintBusy) return;
+
+  pulseArcIdMintBusy = true;
+  const button = document.getElementById('pulseArcIdMintBtn');
+  const previousLabel = button?.textContent || 'Mint Arc ID NFT';
+  if (button) {
+    button.disabled = true;
+    button.textContent = 'Preparing mint...';
+  }
+
+  try {
+    await ensureWalletConnected();
+    await ensureWalletChain('Arc_Testnet');
+    const ethersLib = requireEthers();
+    const provider = new ethersLib.BrowserProvider(window.ethereum);
+    const signer = await provider.getSigner();
+    const signerAddress = await signer.getAddress();
+
+    if (!currentWallet || signerAddress.toLowerCase() !== currentWallet.toLowerCase()) {
+      currentWallet = signerAddress;
+      updateWalletDisplay();
+      updateWalletButtons();
+      await loadPulse(true);
+    }
+
+    const arcIdPayload = pulseState?.arcId;
+    if (!arcIdPayload?.paidUnlocked) {
+      throw new Error('Complete the paid Arc ID unlock before minting the Season 1 NFT.');
+    }
+
+    const nftState = {
+      ...getArcIdNftConfig(),
+      ...(arcIdPayload?.nft && typeof arcIdPayload.nft === 'object' ? arcIdPayload.nft : {}),
+    };
+    if (!nftState.enabled || !nftState.contractAddress) {
+      throw new Error('The Arc ID NFT contract is not configured yet.');
+    }
+    if (!nftState.ready) {
+      throw new Error('The Arc ID NFT signer is not configured on the backend yet.');
+    }
+    if (nftState.minted) {
+      toast('Already Minted', `Arc ID NFT #${nftState.tokenId || ''} is already attached to this wallet.`, 'info');
+      await loadPulse(true);
+      return;
+    }
+
+    const metadataUri = buildPulseArcIdNftMetadata(arcIdPayload);
+    if (button) button.textContent = 'Requesting signature...';
+    const prepared = await fetchPulseJson('/api/pulse/arc-id/mint/prepare', {
+      method: 'POST',
+      body: JSON.stringify({
+        wallet: signerAddress,
+        metadataUri,
+      }),
+    });
+
+    const mintPriceValue = String(prepared?.mintPriceUsdc || nftState.mintPriceUsdc || '5.00');
+    const amount = parseUsdcAmount(mintPriceValue);
+    const usdc = new ethersLib.Contract(USDC, USDC_ERC20_ABI, signer);
+    const allowance = await usdc.allowance(signerAddress, prepared.contractAddress);
+
+    if (allowance < amount) {
+      toast('Approve USDC', `Approve ${formatPulseUsdc(mintPriceValue)} USDC so the Arc ID NFT contract can mint your card.`, 'info');
+      if (button) button.textContent = 'Approve USDC...';
+      const approvalTx = await usdc.approve(prepared.contractAddress, amount);
+      if (button) button.textContent = 'Waiting for approval...';
+      await approvalTx.wait();
+    }
+
+    const nftContract = new ethersLib.Contract(prepared.contractAddress, ARC_ID_NFT_MINT_ABI, signer);
+    toast('Confirm Mint', `Mint your Arc ID Season 1 NFT for ${formatPulseUsdc(mintPriceValue)} USDC on Arc.`, 'info');
+    if (button) button.textContent = 'Confirm mint in wallet...';
+    const mintTx = await nftContract.mintArcId(prepared.metadataUri, prepared.expiresAt, prepared.signature);
+    if (button) button.textContent = 'Waiting for Arc confirmation...';
+    await mintTx.wait();
+
+    if (button) button.textContent = 'Finalizing card...';
+    await fetchPulseJson('/api/pulse/arc-id/mint/confirm', {
+      method: 'POST',
+      body: JSON.stringify({
+        wallet: signerAddress,
+        txHash: mintTx.hash,
+      }),
+    });
+
+    toast('Arc ID NFT Minted', `Your Season 1 Arc ID collectible is now attached to ${shortAddr(signerAddress)}.`, 'success');
+    await loadPulse(true);
+  } catch (e) {
+    toast('Mint Failed', e.message || 'Could not mint the Arc ID NFT.', 'error');
+  } finally {
+    pulseArcIdMintBusy = false;
     if (button) {
       button.disabled = false;
       button.textContent = previousLabel;
@@ -6237,6 +6536,10 @@ const USDC_ERC20_ABI = [
   'function transfer(address to, uint256 amount) returns (bool)',
 ];
 
+const ARC_ID_NFT_MINT_ABI = [
+  'function mintArcId(string metadataUri,uint256 expiresAt,bytes signature) returns (uint256)',
+];
+
 const TOKEN_MESSENGER_V2_ABI = [
   'function depositForBurn(uint256 amount,uint32 destinationDomain,bytes32 mintRecipient,address burnToken,bytes32 destinationCaller,uint256 maxFee,uint32 minFinalityThreshold)',
   'function depositForBurnWithHook(uint256 amount,uint32 destinationDomain,bytes32 mintRecipient,address burnToken,bytes32 destinationCaller,uint256 maxFee,uint32 minFinalityThreshold,bytes hookData)',
@@ -6360,6 +6663,13 @@ function getArcIdUnlockConfig() {
   return (config && typeof config === 'object')
     ? config
     : { enabled: false, priceUsdc: '2.50', recipient: '', recipientLabel: 'Configure unlock wallet' };
+}
+
+function getArcIdNftConfig() {
+  const config = getRuntimeConfig().arcIdNft;
+  return (config && typeof config === 'object')
+    ? config
+    : { enabled: false, ready: false, contractAddress: '', contractLabel: 'Deploy Arc ID NFT', mintPriceUsdc: '5.00', signerAddress: '', signerLabel: 'Configure signer' };
 }
 
 function isUnifiedBalanceEnabled() {

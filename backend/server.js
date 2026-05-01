@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
-import { createPublicClient, http, formatUnits, parseAbiItem, parseEventLogs } from "viem";
+import { createPublicClient, http, formatUnits, parseAbiItem, parseEventLogs, keccak256, toBytes } from "viem";
+import { privateKeyToAccount } from "viem/accounts";
 import { arcTestnet } from "viem/chains";
 import dotenv from "dotenv";
 import { promises as fs } from "fs";
@@ -53,6 +54,11 @@ const PULSE_DB_PATH = path.resolve(__dirname, "..", "cache", "pulse-store.sqlite
 const PULSE_LANES = new Set(["build", "thread", "art"]);
 const ARC_ID_UNLOCK_PRICE_USDC = "2.50";
 const ARC_ID_UNLOCK_PRICE_BASE_UNITS = 2_500_000n;
+const ARC_ID_NFT_MINT_PRICE_USDC = "5.00";
+const ARC_ID_NFT_MINT_PRICE_BASE_UNITS = 5_000_000n;
+const ARC_ID_NFT_SIGNATURE_TTL_SEC = 15 * 60;
+const ARC_ID_NFT_DOMAIN_NAME = "AgentMarket Arc ID";
+const ARC_ID_NFT_DOMAIN_VERSION = "1";
 
 // ─── ABIs ─────────────────────────────────────────────────────────
 const JOB_BOARD_ABI = [
@@ -77,6 +83,12 @@ const IDENTITY_ABI = [
 ];
 
 const ERC20_TRANSFER_EVENT = parseAbiItem("event Transfer(address indexed from, address indexed to, uint256 value)");
+const ARC_ID_NFT_MINT_EVENT = parseAbiItem("event ArcIdMinted(address indexed minter, uint256 indexed tokenId, uint256 pricePaid)");
+const ARC_ID_NFT_VIEW_ABI = [
+  { name: "walletTokenId", type: "function", stateMutability: "view", inputs: [{ name: "wallet", type: "address" }], outputs: [{ name: "", type: "uint256" }] },
+  { name: "ownerOf", type: "function", stateMutability: "view", inputs: [{ name: "tokenId", type: "uint256" }], outputs: [{ name: "", type: "address" }] },
+  { name: "tokenURI", type: "function", stateMutability: "view", inputs: [{ name: "tokenId", type: "uint256" }], outputs: [{ name: "", type: "string" }] },
+];
 
 const STATUS_LABELS = ["Open","Funded","Submitted","Completed","Rejected"];
 const WORKER_TYPES = ["AI","Human"];
@@ -104,6 +116,16 @@ function shortWallet(address) {
   return address ? `${address.slice(0, 6)}...${address.slice(-4)}` : "Anon";
 }
 
+function normalizePrivateKeyHex(value = "") {
+  const raw = String(value || "").trim();
+  if (!raw) return "";
+  const normalized = raw.startsWith("0x") ? raw : `0x${raw}`;
+  if (!/^0x[a-fA-F0-9]{64}$/.test(normalized)) {
+    throw new Error("ARC_ID_NFT_SIGNER_PRIVATE_KEY must be a 32-byte hex private key");
+  }
+  return normalized;
+}
+
 function toUsdcNumber(value) {
   const amount = Number.parseFloat(String(value ?? 0));
   return Number.isFinite(amount) ? amount : 0;
@@ -119,6 +141,16 @@ const ARC_ID_UNLOCK_RECIPIENT = resolveOptionalAddress(
   process.env.PLATFORM_WALLET,
   process.env.SUMMARY_AGENT_WALLET,
 );
+const ARC_ID_NFT_ADDRESS = resolveOptionalAddress(
+  process.env.ARC_ID_NFT_ADDRESS,
+  process.env.PULSE_ARC_ID_NFT_ADDRESS,
+);
+const ARC_ID_NFT_SIGNER_PRIVATE_KEY = normalizePrivateKeyHex(
+  process.env.ARC_ID_NFT_SIGNER_PRIVATE_KEY || process.env.ARC_ID_MINT_SIGNER_PRIVATE_KEY,
+);
+const arcIdNftSignerAccount = ARC_ID_NFT_SIGNER_PRIVATE_KEY
+  ? privateKeyToAccount(ARC_ID_NFT_SIGNER_PRIVATE_KEY)
+  : null;
 
 function utcDayKey(timestamp) {
   const date = new Date(timestamp);
@@ -596,6 +628,15 @@ async function ensurePulseDatabase() {
           recipient TEXT NOT NULL DEFAULT ''
         );
 
+        CREATE TABLE IF NOT EXISTS pulse_arc_id_nft_mints (
+          wallet TEXT PRIMARY KEY,
+          token_id TEXT NOT NULL DEFAULT '',
+          tx_hash TEXT NOT NULL DEFAULT '',
+          metadata_uri TEXT NOT NULL DEFAULT '',
+          minted_at INTEGER NOT NULL,
+          updated_at INTEGER NOT NULL
+        );
+
         CREATE INDEX IF NOT EXISTS idx_pulse_posts_created_at ON pulse_posts(created_at DESC);
         CREATE INDEX IF NOT EXISTS idx_pulse_posts_lane_created_at ON pulse_posts(lane, created_at DESC);
         CREATE INDEX IF NOT EXISTS idx_pulse_profiles_points ON pulse_profiles(points DESC, updated_at DESC);
@@ -603,6 +644,8 @@ async function ensurePulseDatabase() {
         CREATE INDEX IF NOT EXISTS idx_pulse_upvotes_wallet ON pulse_post_upvotes(wallet);
         CREATE INDEX IF NOT EXISTS idx_pulse_arc_id_unlocks_updated_at ON pulse_arc_id_unlocks(updated_at DESC);
         CREATE UNIQUE INDEX IF NOT EXISTS idx_pulse_arc_id_unlocks_tx_hash ON pulse_arc_id_unlocks(tx_hash) WHERE tx_hash <> '';
+        CREATE INDEX IF NOT EXISTS idx_pulse_arc_id_nft_mints_updated_at ON pulse_arc_id_nft_mints(updated_at DESC);
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_pulse_arc_id_nft_mints_tx_hash ON pulse_arc_id_nft_mints(tx_hash) WHERE tx_hash <> '';
       `);
       const unlockColumns = new Set(db.prepare("PRAGMA table_info(pulse_arc_id_unlocks)").all().map(column => String(column.name || "")));
       if (!unlockColumns.has("tx_hash")) {
@@ -613,6 +656,22 @@ async function ensurePulseDatabase() {
       }
       if (!unlockColumns.has("recipient")) {
         db.exec("ALTER TABLE pulse_arc_id_unlocks ADD COLUMN recipient TEXT NOT NULL DEFAULT '';");
+      }
+      const nftMintColumns = new Set(db.prepare("PRAGMA table_info(pulse_arc_id_nft_mints)").all().map(column => String(column.name || "")));
+      if (!nftMintColumns.has("token_id")) {
+        db.exec("ALTER TABLE pulse_arc_id_nft_mints ADD COLUMN token_id TEXT NOT NULL DEFAULT '';");
+      }
+      if (!nftMintColumns.has("tx_hash")) {
+        db.exec("ALTER TABLE pulse_arc_id_nft_mints ADD COLUMN tx_hash TEXT NOT NULL DEFAULT '';");
+      }
+      if (!nftMintColumns.has("metadata_uri")) {
+        db.exec("ALTER TABLE pulse_arc_id_nft_mints ADD COLUMN metadata_uri TEXT NOT NULL DEFAULT '';");
+      }
+      if (!nftMintColumns.has("minted_at")) {
+        db.exec(`ALTER TABLE pulse_arc_id_nft_mints ADD COLUMN minted_at INTEGER NOT NULL DEFAULT ${Date.now()};`);
+      }
+      if (!nftMintColumns.has("updated_at")) {
+        db.exec(`ALTER TABLE pulse_arc_id_nft_mints ADD COLUMN updated_at INTEGER NOT NULL DEFAULT ${Date.now()};`);
       }
       await migrateLegacyPulseStore(db);
       pulseDb = db;
@@ -997,6 +1056,18 @@ function getArcIdUnlockConfig() {
   };
 }
 
+function getArcIdNftConfig() {
+  return {
+    enabled: Boolean(ARC_ID_NFT_ADDRESS),
+    ready: Boolean(ARC_ID_NFT_ADDRESS && arcIdNftSignerAccount),
+    contractAddress: ARC_ID_NFT_ADDRESS,
+    contractLabel: ARC_ID_NFT_ADDRESS ? shortWallet(ARC_ID_NFT_ADDRESS) : "Deploy Arc ID NFT",
+    mintPriceUsdc: ARC_ID_NFT_MINT_PRICE_USDC,
+    signerAddress: arcIdNftSignerAccount?.address || "",
+    signerLabel: arcIdNftSignerAccount?.address ? shortWallet(arcIdNftSignerAccount.address) : "Configure signer",
+  };
+}
+
 async function verifyArcIdUnlockPayment(wallet, txHash) {
   if (!ARC_ID_UNLOCK_RECIPIENT) {
     throw new Error("Arc ID unlock recipient is not configured on the server");
@@ -1039,13 +1110,279 @@ async function verifyArcIdUnlockPayment(wallet, txHash) {
   };
 }
 
-function buildPulseArcIdProfile(db, wallet, jobs = [], campaigns = []) {
+function getPulseArcIdNftMintRecord(db, wallet) {
+  return db.prepare("SELECT * FROM pulse_arc_id_nft_mints WHERE wallet = ?").get(String(wallet || "").toLowerCase()) || null;
+}
+
+function normalizePulseMetadataUri(value) {
+  const uri = String(value || "").trim();
+  if (!uri) throw new Error("Arc ID NFT metadata is required");
+  if (uri.length > 16000) throw new Error("Arc ID NFT metadata is too large");
+  if (
+    !uri.startsWith("data:application/json")
+    && !uri.startsWith("ipfs://")
+    && !uri.startsWith("https://")
+    && !uri.startsWith("http://")
+  ) {
+    throw new Error("Arc ID NFT metadata must be a data URI, ipfs URI, or https URL");
+  }
+  return uri;
+}
+
+function getArcIdNftMintTypedData(wallet, metadataUri, expiresAt) {
+  return {
+    domain: {
+      name: ARC_ID_NFT_DOMAIN_NAME,
+      version: ARC_ID_NFT_DOMAIN_VERSION,
+      chainId: arcTestnet.id,
+      verifyingContract: ARC_ID_NFT_ADDRESS,
+    },
+    types: {
+      MintAuthorization: [
+        { name: "minter", type: "address" },
+        { name: "metadataHash", type: "bytes32" },
+        { name: "expiresAt", type: "uint256" },
+      ],
+    },
+    primaryType: "MintAuthorization",
+    message: {
+      minter: wallet,
+      metadataHash: keccak256(toBytes(metadataUri)),
+      expiresAt: BigInt(expiresAt),
+    },
+  };
+}
+
+async function getArcIdNftOnchainState(wallet) {
+  if (!ARC_ID_NFT_ADDRESS) {
+    return {
+      configured: false,
+      minted: false,
+      tokenId: "",
+      metadataUri: "",
+      contractAddress: "",
+      error: "",
+    };
+  }
+
+  try {
+    const walletTokenId = await publicClient.readContract({
+      address: ARC_ID_NFT_ADDRESS,
+      abi: ARC_ID_NFT_VIEW_ABI,
+      functionName: "walletTokenId",
+      args: [wallet],
+    });
+    if (!walletTokenId || BigInt(walletTokenId) <= 0n) {
+      return {
+        configured: true,
+        minted: false,
+        tokenId: "",
+        metadataUri: "",
+        contractAddress: ARC_ID_NFT_ADDRESS,
+        error: "",
+      };
+    }
+
+    const tokenId = BigInt(walletTokenId);
+    const [owner, metadataUri] = await Promise.all([
+      publicClient.readContract({
+        address: ARC_ID_NFT_ADDRESS,
+        abi: ARC_ID_NFT_VIEW_ABI,
+        functionName: "ownerOf",
+        args: [tokenId],
+      }),
+      publicClient.readContract({
+        address: ARC_ID_NFT_ADDRESS,
+        abi: ARC_ID_NFT_VIEW_ABI,
+        functionName: "tokenURI",
+        args: [tokenId],
+      }),
+    ]);
+
+    return {
+      configured: true,
+      minted: sameAddress(owner, wallet),
+      tokenId: tokenId.toString(),
+      metadataUri: String(metadataUri || ""),
+      contractAddress: ARC_ID_NFT_ADDRESS,
+      error: "",
+    };
+  } catch (err) {
+    return {
+      configured: true,
+      minted: false,
+      tokenId: "",
+      metadataUri: "",
+      contractAddress: ARC_ID_NFT_ADDRESS,
+      error: err.message || "Could not read Arc ID NFT state",
+    };
+  }
+}
+
+async function prepareArcIdNftMintAuthorization(db, wallet, metadataUri) {
+  if (!ARC_ID_NFT_ADDRESS) {
+    throw new Error("Arc ID NFT contract is not configured on the server");
+  }
+  if (!arcIdNftSignerAccount) {
+    throw new Error("Arc ID NFT signer is not configured on the server");
+  }
+
+  const canonicalWallet = String(wallet || "").toLowerCase();
+  const unlockRecord = getPulseArcIdUnlockRecord(db, canonicalWallet);
+  if (!unlockRecord?.tx_hash) {
+    throw new Error("A paid Arc ID unlock is required before minting the NFT");
+  }
+
+  const existingRecord = getPulseArcIdNftMintRecord(db, canonicalWallet);
+  if (existingRecord?.token_id) {
+    throw new Error("Arc ID NFT already recorded for this wallet");
+  }
+
+  const onchainState = await getArcIdNftOnchainState(canonicalWallet);
+  if (onchainState.minted) {
+    throw new Error("Arc ID NFT already minted for this wallet");
+  }
+  if (onchainState.error) {
+    throw new Error(onchainState.error);
+  }
+
+  const normalizedMetadataUri = normalizePulseMetadataUri(metadataUri);
+  const expiresAt = Math.floor(Date.now() / 1000) + ARC_ID_NFT_SIGNATURE_TTL_SEC;
+  const typedData = getArcIdNftMintTypedData(canonicalWallet, normalizedMetadataUri, expiresAt);
+  const signature = await arcIdNftSignerAccount.signTypedData(typedData);
+
+  return {
+    wallet: canonicalWallet,
+    metadataUri: normalizedMetadataUri,
+    expiresAt,
+    signature,
+    contractAddress: ARC_ID_NFT_ADDRESS,
+    mintPriceUsdc: ARC_ID_NFT_MINT_PRICE_USDC,
+  };
+}
+
+async function verifyArcIdNftMint(wallet, txHash) {
+  if (!ARC_ID_NFT_ADDRESS) {
+    throw new Error("Arc ID NFT contract is not configured on the server");
+  }
+
+  let receipt;
+  try {
+    receipt = await publicClient.getTransactionReceipt({ hash: txHash });
+  } catch (err) {
+    throw new Error("Could not find this Arc ID NFT mint transaction yet");
+  }
+
+  if (!receipt || receipt.status !== "success") {
+    throw new Error("This Arc ID NFT mint transaction has not succeeded");
+  }
+
+  const mintEvents = parseEventLogs({
+    abi: [ARC_ID_NFT_MINT_EVENT],
+    eventName: "ArcIdMinted",
+    logs: receipt.logs,
+    strict: false,
+  }).filter(log => sameAddress(log.address, ARC_ID_NFT_ADDRESS));
+
+  const mintLog = mintEvents.find(log => (
+    sameAddress(log.args?.minter, wallet)
+    && BigInt(log.args?.pricePaid || 0n) >= ARC_ID_NFT_MINT_PRICE_BASE_UNITS
+  ));
+
+  if (!mintLog) {
+    throw new Error(`Mint transaction must emit an Arc ID NFT mint event for your wallet and at least ${ARC_ID_NFT_MINT_PRICE_USDC} USDC`);
+  }
+
+  const tokenId = BigInt(mintLog.args?.tokenId || 0n);
+  if (tokenId <= 0n) {
+    throw new Error("Arc ID NFT mint transaction did not return a valid token id");
+  }
+
+  const [walletTokenId, owner, metadataUri] = await Promise.all([
+    publicClient.readContract({
+      address: ARC_ID_NFT_ADDRESS,
+      abi: ARC_ID_NFT_VIEW_ABI,
+      functionName: "walletTokenId",
+      args: [wallet],
+    }),
+    publicClient.readContract({
+      address: ARC_ID_NFT_ADDRESS,
+      abi: ARC_ID_NFT_VIEW_ABI,
+      functionName: "ownerOf",
+      args: [tokenId],
+    }),
+    publicClient.readContract({
+      address: ARC_ID_NFT_ADDRESS,
+      abi: ARC_ID_NFT_VIEW_ABI,
+      functionName: "tokenURI",
+      args: [tokenId],
+    }),
+  ]);
+
+  if (BigInt(walletTokenId || 0n) !== tokenId || !sameAddress(owner, wallet)) {
+    throw new Error("Arc ID NFT mint verification did not match the current wallet owner");
+  }
+
+  let mintedAt = Date.now();
+  try {
+    const block = await publicClient.getBlock({ blockNumber: receipt.blockNumber });
+    mintedAt = Number(block.timestamp || 0n) > 0 ? Number(block.timestamp) * 1000 : mintedAt;
+  } catch {}
+
+  return {
+    wallet,
+    tokenId: tokenId.toString(),
+    txHash,
+    metadataUri: String(metadataUri || ""),
+    mintedAt,
+    paidAmountUsdc: formatUsdc(formatUnits(BigInt(mintLog.args?.pricePaid || 0n), 6)),
+  };
+}
+
+function savePulseArcIdNftMint(db, wallet, verifiedMint = {}) {
+  const persistMint = db.transaction((targetWallet, mint) => {
+    const canonicalWallet = String(targetWallet || "").toLowerCase();
+    const existingTxOwner = db.prepare("SELECT wallet FROM pulse_arc_id_nft_mints WHERE tx_hash = ? AND wallet <> ?").get(mint.txHash, canonicalWallet);
+    if (existingTxOwner) {
+      throw new Error("This Arc ID NFT mint receipt is already linked to another wallet");
+    }
+
+    const existing = getPulseArcIdNftMintRecord(db, canonicalWallet);
+    const now = Date.now();
+    db.prepare(`
+      INSERT INTO pulse_arc_id_nft_mints (wallet, token_id, tx_hash, metadata_uri, minted_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?)
+      ON CONFLICT(wallet) DO UPDATE SET
+        token_id = excluded.token_id,
+        tx_hash = excluded.tx_hash,
+        metadata_uri = excluded.metadata_uri,
+        minted_at = excluded.minted_at,
+        updated_at = excluded.updated_at
+    `).run(
+      canonicalWallet,
+      String(mint.tokenId || ""),
+      mint.txHash,
+      String(mint.metadataUri || ""),
+      Number(existing?.minted_at || mint.mintedAt || now),
+      now,
+    );
+
+    return getPulseArcIdNftMintRecord(db, canonicalWallet);
+  });
+
+  return persistMint(wallet, verifiedMint);
+}
+
+async function buildPulseArcIdProfile(db, wallet, jobs = [], campaigns = []) {
   const canonicalWallet = String(wallet || "").toLowerCase();
   const analyticsMap = buildPulseWalletAnalytics(db, jobs, campaigns);
   const entry = analyticsMap.get(canonicalWallet) || createPulseWalletActivity(canonicalWallet);
   const summary = formatPulseWalletActivity(entry);
   const unlockRecord = getPulseArcIdUnlockRecord(db, canonicalWallet);
   const unlockConfig = getArcIdUnlockConfig();
+  const nftConfig = getArcIdNftConfig();
+  const nftMintRecord = getPulseArcIdNftMintRecord(db, canonicalWallet);
+  const onchainNftState = await getArcIdNftOnchainState(canonicalWallet);
   const unlockMode = unlockRecord?.tx_hash ? "paid-usdc" : (unlockRecord ? "beta-free" : "locked");
 
   const rankedWallets = [...analyticsMap.values()]
@@ -1068,6 +1405,13 @@ function buildPulseArcIdProfile(db, wallet, jobs = [], campaigns = []) {
   const totalRanked = Math.max(1, rankedWallets.length);
   const topPercent = totalRanked <= 1 ? 1 : Math.max(1, Math.round((rankPosition / totalRanked) * 100));
   const badge = describePulseArcIdBadge(summary, topPercent);
+  const nftMinted = Boolean(onchainNftState?.minted || nftMintRecord?.token_id);
+  const nftTokenId = onchainNftState?.tokenId || String(nftMintRecord?.token_id || "");
+  const nftMetadataUri = onchainNftState?.metadataUri || String(nftMintRecord?.metadata_uri || "");
+  const nftTxHash = String(nftMintRecord?.tx_hash || "");
+  const nftMintedAt = Number(nftMintRecord?.minted_at || 0);
+  const nftEligible = unlockMode === "paid-usdc";
+  const nftCanMint = Boolean(nftEligible && nftConfig.ready && !nftMinted);
 
   return {
     scope: "tracked-beta",
@@ -1086,6 +1430,19 @@ function buildPulseArcIdProfile(db, wallet, jobs = [], campaigns = []) {
       recipient: unlockRecord?.recipient || unlockConfig.recipient,
       recipientLabel: (unlockRecord?.recipient || unlockConfig.recipient) ? shortWallet(unlockRecord?.recipient || unlockConfig.recipient) : unlockConfig.recipientLabel,
       needsPayment: unlockMode !== "paid-usdc",
+    },
+    nft: {
+      ...nftConfig,
+      eligible: nftEligible,
+      canMint: nftCanMint,
+      minted: nftMinted,
+      tokenId: nftTokenId,
+      metadataUri: nftMetadataUri,
+      txHash: nftTxHash,
+      txUrl: nftTxHash ? `https://testnet.arcscan.app/tx/${nftTxHash}` : "",
+      mintedAt: nftMintedAt,
+      contractUrl: nftConfig.contractAddress ? `https://testnet.arcscan.app/address/${nftConfig.contractAddress}` : "",
+      error: onchainNftState?.error || "",
     },
     identityRegistryUrl: `https://testnet.arcscan.app/address/${IDENTITY_REGISTRY}`,
     reputationRegistryUrl: `https://testnet.arcscan.app/address/${REPUTATION_REGISTRY}`,
@@ -1108,6 +1465,9 @@ function buildPulseArcIdProfile(db, wallet, jobs = [], campaigns = []) {
       unlockConfig.enabled
         ? `A ${ARC_ID_UNLOCK_PRICE_USDC} USDC transfer on Arc now unlocks and verifies this card.`
         : "Configure an Arc ID unlock recipient on the server to turn the paid unlock live.",
+      nftConfig.enabled
+        ? `Season 1 Arc ID NFT minting is live at ${ARC_ID_NFT_MINT_PRICE_USDC} USDC after a paid unlock.`
+        : "Deploy and configure the Arc ID NFT contract to turn the collectible mint live.",
       "Full-network Arc identity stats should switch on once an indexer is attached.",
     ],
   };
@@ -1442,6 +1802,7 @@ app.get("/api/config", (req, res) => {
     explorerUrl: "https://testnet.arcscan.app",
     pulseEnabled: true,
     arcIdUnlock: getArcIdUnlockConfig(),
+    arcIdNft: getArcIdNftConfig(),
     unifiedBalanceEnabled: true,
     unifiedBalanceSupportedChains: [
       { id: "Ethereum_Sepolia", name: "Ethereum Sepolia", chainId: 11155111, type: "evm", testnet: true },
@@ -1554,7 +1915,7 @@ app.get("/api/pulse/arc-id/:address", async (req, res) => {
       getAllFormattedCampaigns(),
     ]);
     ensurePulseProfile(pulseDb, wallet);
-    res.json(buildPulseArcIdProfile(pulseDb, wallet, jobs, campaigns));
+    res.json(await buildPulseArcIdProfile(pulseDb, wallet, jobs, campaigns));
   } catch (err) {
     res.status(400).json({ error: err.message || "Could not load the Arc ID profile" });
   }
@@ -1572,9 +1933,42 @@ app.post("/api/pulse/arc-id/unlock", async (req, res) => {
       getAllFormattedJobs(),
       getAllFormattedCampaigns(),
     ]);
-    res.json(buildPulseArcIdProfile(pulseDb, wallet, jobs, campaigns));
+    res.json(await buildPulseArcIdProfile(pulseDb, wallet, jobs, campaigns));
   } catch (err) {
     res.status(400).json({ error: err.message || "Could not verify Arc ID payment" });
+  }
+});
+
+app.post("/api/pulse/arc-id/mint/prepare", async (req, res) => {
+  try {
+    const pulseDb = await ensurePulseDatabase();
+    const wallet = normalizeAddress(req.body?.wallet);
+    ensurePulseProfile(pulseDb, wallet);
+    const authorization = await prepareArcIdNftMintAuthorization(
+      pulseDb,
+      wallet,
+      req.body?.metadataUri,
+    );
+    res.json(authorization);
+  } catch (err) {
+    res.status(400).json({ error: err.message || "Could not prepare the Arc ID NFT mint" });
+  }
+});
+
+app.post("/api/pulse/arc-id/mint/confirm", async (req, res) => {
+  try {
+    const pulseDb = await ensurePulseDatabase();
+    const wallet = normalizeAddress(req.body?.wallet);
+    const txHash = normalizeTxHash(req.body?.txHash);
+    const verifiedMint = await verifyArcIdNftMint(wallet, txHash);
+    savePulseArcIdNftMint(pulseDb, wallet, verifiedMint);
+    const [jobs, campaigns] = await Promise.all([
+      getAllFormattedJobs(),
+      getAllFormattedCampaigns(),
+    ]);
+    res.json(await buildPulseArcIdProfile(pulseDb, wallet, jobs, campaigns));
+  } catch (err) {
+    res.status(400).json({ error: err.message || "Could not verify the Arc ID NFT mint" });
   }
 });
 

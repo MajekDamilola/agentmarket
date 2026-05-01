@@ -3908,6 +3908,17 @@ let pulseArcIdBusy = false;
 let pulseArcIdMintBusy = false;
 let currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
 
+const USDC_ERC20_ABI = [
+  'function allowance(address owner, address spender) view returns (uint256)',
+  'function approve(address spender, uint256 amount) returns (bool)',
+  'function balanceOf(address owner) view returns (uint256)',
+  'function transfer(address to, uint256 amount) returns (bool)',
+];
+
+const ARC_ID_NFT_MINT_ABI = [
+  'function mintArcId(string metadataUri,uint256 expiresAt,bytes signature) returns (uint256)',
+];
+
 const NAV_PAGE_LABELS = {
   home: 'Browse',
   pulse: 'Pulse',
@@ -3930,6 +3941,33 @@ const PULSE_FEED_LANES = [
   { id: 'thread', label: 'Thread' },
   { id: 'art', label: 'Art' },
 ];
+
+function getRuntimeConfig() {
+  return window.AGENTMARKET_RUNTIME_CONFIG || {};
+}
+
+function getArcIdUnlockConfig() {
+  const config = getRuntimeConfig().arcIdUnlock;
+  return (config && typeof config === 'object')
+    ? config
+    : { enabled: false, priceUsdc: '2.50', recipient: '', recipientLabel: 'Configure unlock wallet' };
+}
+
+function getArcIdNftConfig() {
+  const config = getRuntimeConfig().arcIdNft;
+  return (config && typeof config === 'object')
+    ? config
+    : { enabled: false, ready: false, contractAddress: '', contractLabel: 'Deploy Arc ID NFT', mintPriceUsdc: '5.00', signerAddress: '', signerLabel: 'Configure signer' };
+}
+
+function requireEthers() {
+  if (!window.ethers) throw new Error('Ethers did not load. Refresh the page and try again.');
+  return window.ethers;
+}
+
+function parseUsdcAmount(amount) {
+  return requireEthers().parseUnits(amount, 6);
+}
 
 const BRIDGE_CHAIN_LABELS = {
   Ethereum_Sepolia: 'Ethereum Sepolia',

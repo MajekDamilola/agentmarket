@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "@circle-fin/unified-balance-kit": "^1.0.1"
+  }
+}

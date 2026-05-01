@@ -4,6 +4,20 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>AgentMarket — AI Agent Job Board on Arc</title>
+  <script>
+    (() => {
+      const root = document.documentElement;
+      try {
+        const savedTheme = localStorage.getItem('agentmarket-theme');
+        const theme = savedTheme === 'light' || savedTheme === 'dark'
+          ? savedTheme
+          : (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+        root.setAttribute('data-theme', theme);
+      } catch {
+        root.setAttribute('data-theme', 'dark');
+      }
+    })();
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
   <style>
@@ -28,6 +42,19 @@
       --font-body: 'DM Sans', sans-serif;
       --font-mono: 'DM Mono', monospace;
       --radius: 12px;
+      color-scheme: dark;
+    }
+
+    html[data-theme="light"] {
+      --bg: #f3f7fc;
+      --surface: #ffffff;
+      --surface2: #eef3f9;
+      --border: rgba(18,32,52,0.08);
+      --border-hover: rgba(18,32,52,0.16);
+      --text: #132033;
+      --muted: #6e7b90;
+      --brand-ink: #eef6ff;
+      color-scheme: light;
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -222,6 +249,12 @@
     }
 
     .nav-right { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+
+    .theme-toggle {
+      justify-content: center;
+      min-width: 116px;
+      white-space: nowrap;
+    }
 
     .nav-toggle {
       align-items: center;
@@ -2390,6 +2423,213 @@
       margin-top: 14px;
     }
 
+    html[data-theme="light"] body {
+      background:
+        radial-gradient(circle at top, rgba(89,199,255,0.12), transparent 30%),
+        radial-gradient(circle at 84% 18%, rgba(122,255,200,0.08), transparent 18%),
+        linear-gradient(180deg, #f8fbff 0%, #edf4fb 100%);
+    }
+
+    html[data-theme="light"] body::before {
+      background-image:
+        linear-gradient(rgba(19,32,51,0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(19,32,51,0.035) 1px, transparent 1px);
+    }
+
+    html[data-theme="light"] body::after {
+      background:
+        radial-gradient(circle at 10% 12%, rgba(89,199,255,0.12), transparent 22%),
+        radial-gradient(circle at 88% 20%, rgba(122,255,200,0.1), transparent 14%);
+    }
+
+    html[data-theme="light"] nav {
+      background: rgba(248,250,253,0.88);
+      border-bottom-color: rgba(19,32,51,0.08);
+      box-shadow: 0 12px 32px rgba(38,60,90,0.08);
+    }
+
+    html[data-theme="light"] .logo-mark {
+      border-color: rgba(89,199,255,0.18);
+      background:
+        linear-gradient(145deg, rgba(89,199,255,0.14), rgba(122,255,200,0.12)),
+        rgba(255,255,255,0.96);
+      box-shadow:
+        0 12px 28px rgba(117,149,186,0.18),
+        inset 0 1px 0 rgba(255,255,255,0.9);
+    }
+
+    html[data-theme="light"] .nav-toggle,
+    html[data-theme="light"] .nav-menu,
+    html[data-theme="light"] .wallet-bar,
+    html[data-theme="light"] .stat-cell,
+    html[data-theme="light"] .agent-card,
+    html[data-theme="light"] .job-card,
+    html[data-theme="light"] .form-card,
+    html[data-theme="light"] .pick-step,
+    html[data-theme="light"] .pick-board,
+    html[data-theme="light"] .bridge-card,
+    html[data-theme="light"] .bridge-spotlight,
+    html[data-theme="light"] .bridge-card-body,
+    html[data-theme="light"] .modal,
+    html[data-theme="light"] .chat-box,
+    html[data-theme="light"] .chat-message,
+    html[data-theme="light"] .dashboard-header,
+    html[data-theme="light"] .deliverable-box,
+    html[data-theme="light"] .toast,
+    html[data-theme="light"] .ai-coming-soon-modal .feature-list,
+    html[data-theme="light"] .pulse-panel,
+    html[data-theme="light"] .pulse-stage > :first-child,
+    html[data-theme="light"] .pulse-metric,
+    html[data-theme="light"] .pulse-summary-card,
+    html[data-theme="light"] .pulse-feed-compose,
+    html[data-theme="light"] .pulse-feed-card,
+    html[data-theme="light"] .pulse-checkin-stat,
+    html[data-theme="light"] .pulse-checkin-action,
+    html[data-theme="light"] .pulse-note-item,
+    html[data-theme="light"] .pulse-breakdown-row,
+    html[data-theme="light"] .pulse-block-row,
+    html[data-theme="light"] .pulse-ranking-row,
+    html[data-theme="light"] .pulse-ranking-stat,
+    html[data-theme="light"] .pulse-empty-box,
+    html[data-theme="light"] .agent-select-card,
+    html[data-theme="light"] .flow-progress-step,
+    html[data-theme="light"] .tag,
+    html[data-theme="light"] .countdown-pill,
+    html[data-theme="light"] .pick-step-num,
+    html[data-theme="light"] .hero-badge,
+    html[data-theme="light"] .tab.active,
+    html[data-theme="light"] input,
+    html[data-theme="light"] textarea,
+    html[data-theme="light"] select {
+      background: rgba(255,255,255,0.88);
+      border-color: rgba(19,32,51,0.08);
+      box-shadow: 0 14px 34px rgba(39,64,94,0.08);
+    }
+
+    html[data-theme="light"] .btn-outline {
+      background: rgba(255,255,255,0.76);
+      border-color: rgba(19,32,51,0.12);
+      color: var(--text);
+    }
+
+    html[data-theme="light"] .btn-outline:hover,
+    html[data-theme="light"] .nav-btn:hover,
+    html[data-theme="light"] .nav-btn.active {
+      background: rgba(89,199,255,0.12);
+      border-color: rgba(89,199,255,0.22);
+      color: var(--text);
+    }
+
+    html[data-theme="light"] .btn-primary,
+    html[data-theme="light"] .post-card .btn-primary,
+    html[data-theme="light"] .job-actions-row .btn-primary {
+      background: linear-gradient(135deg, #132033 0%, #234264 100%);
+      color: #f7fbff;
+    }
+
+    html[data-theme="light"] .btn-primary:hover {
+      background: linear-gradient(135deg, #1a2f4a 0%, #2d5079 100%);
+    }
+
+    html[data-theme="light"] input,
+    html[data-theme="light"] textarea,
+    html[data-theme="light"] select {
+      box-shadow: none;
+    }
+
+    html[data-theme="light"] input:focus,
+    html[data-theme="light"] textarea:focus,
+    html[data-theme="light"] select:focus {
+      border-color: rgba(31,134,218,0.28);
+      box-shadow: 0 0 0 4px rgba(89,199,255,0.14);
+    }
+
+    html[data-theme="light"] .gradient-text {
+      background: linear-gradient(135deg, #16304d 0%, #1f86da 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    html[data-theme="light"] .hero-sub,
+    html[data-theme="light"] .agent-desc,
+    html[data-theme="light"] .job-desc,
+    html[data-theme="light"] .job-meta,
+    html[data-theme="light"] .job-note,
+    html[data-theme="light"] label,
+    html[data-theme="light"] .flow-kicker,
+    html[data-theme="light"] .flow-copy,
+    html[data-theme="light"] .flow-note,
+    html[data-theme="light"] .stat-label,
+    html[data-theme="light"] .tag,
+    html[data-theme="light"] .countdown-pill,
+    html[data-theme="light"] .pulse-note,
+    html[data-theme="light"] .pulse-copy,
+    html[data-theme="light"] .pulse-kicker,
+    html[data-theme="light"] .pulse-metric-label,
+    html[data-theme="light"] .pulse-metric-sub,
+    html[data-theme="light"] .pulse-summary-label,
+    html[data-theme="light"] .pulse-summary-sub,
+    html[data-theme="light"] .pulse-feed-meta,
+    html[data-theme="light"] .pulse-breakdown-meta,
+    html[data-theme="light"] .pulse-block-meta,
+    html[data-theme="light"] .pulse-ranking-meta,
+    html[data-theme="light"] .pulse-checkin-label,
+    html[data-theme="light"] .detail-key,
+    html[data-theme="light"] .wallet-bar,
+    html[data-theme="light"] .nav-menu-copy,
+    html[data-theme="light"] .logo-sub,
+    html[data-theme="light"] .agent-select-desc,
+    html[data-theme="light"] .agent-select-meta,
+    html[data-theme="light"] .pick-step span,
+    html[data-theme="light"] .fund-section-copy,
+    html[data-theme="light"] .chat-note,
+    html[data-theme="light"] .hero-badge {
+      color: rgba(19,32,51,0.64);
+    }
+
+    html[data-theme="light"] input::placeholder,
+    html[data-theme="light"] textarea::placeholder {
+      color: rgba(19,32,51,0.38);
+    }
+
+    html[data-theme="light"] .nav-toggle-icon span {
+      background: #234264;
+    }
+
+    html[data-theme="light"] .pulse-hero-header {
+      background:
+        radial-gradient(circle at 100% 0%, rgba(124,109,250,0.16), transparent 34%),
+        radial-gradient(circle at 0% 0%, rgba(89,199,255,0.16), transparent 28%),
+        linear-gradient(180deg, rgba(255,255,255,0.98), rgba(242,248,255,0.94));
+      border-color: rgba(19,32,51,0.08);
+      box-shadow: 0 20px 46px rgba(39,64,94,0.08);
+    }
+
+    html[data-theme="light"] #page-pulse {
+      background:
+        radial-gradient(circle at top right, rgba(124,109,250,0.1), transparent 30%),
+        radial-gradient(circle at top left, rgba(89,199,255,0.1), transparent 28%),
+        linear-gradient(180deg, rgba(255,255,255,0), rgba(224,234,245,0.55));
+    }
+
+    html[data-theme="light"] .pulse-chart-wrap {
+      background:
+        linear-gradient(180deg, rgba(248,251,255,0.96), rgba(255,255,255,0.84)),
+        rgba(255,255,255,0.84);
+      border-color: rgba(19,32,51,0.08);
+    }
+
+    html[data-theme="light"] .pulse-donut::after {
+      background: rgba(247,250,255,0.96);
+      border-color: rgba(19,32,51,0.08);
+    }
+
+    html[data-theme="light"] .job-card:hover,
+    html[data-theme="light"] .agent-card:hover {
+      border-color: rgba(89,199,255,0.18);
+      transform: translateY(-1px);
+    }
+
     @media (max-width: 920px) {
       nav {
         flex-wrap: wrap;
@@ -2560,6 +2800,7 @@
       <div class="wallet-dot"></div>
       <span>Arc Testnet</span>
     </div>
+    <button class="btn btn-outline btn-sm theme-toggle" type="button" onclick="toggleTheme()" id="themeToggle" aria-label="Switch color theme">Light mode</button>
     <button class="btn btn-outline btn-sm" onclick="connectWallet()" id="connectBtn">Connect Wallet</button>
     <button class="btn btn-outline btn-sm" onclick="disconnectWallet()" id="disconnectBtn" style="display:none">Disconnect</button>
   </div>
@@ -3413,6 +3654,7 @@ let bridgeSupportedChains = [];
 let pulseState = null;
 let pulseLoading = false;
 let pulseFeedLane = 'all';
+let currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
 
 const NAV_PAGE_LABELS = {
   home: 'Browse',
@@ -3425,6 +3667,9 @@ const NAV_PAGE_LABELS = {
   dashboard: 'Dashboard',
   'create-campaign': 'Campaigns',
 };
+
+const THEME_STORAGE_KEY = 'agentmarket-theme';
+const systemThemeQuery = window.matchMedia ? window.matchMedia('(prefers-color-scheme: light)') : null;
 
 const PULSE_COLORS = ['#7c6dfa', '#59c7ff', '#7affc8', '#f6c90e', '#f87272', '#a6f6ff'];
 const PULSE_FEED_LANES = [
@@ -3467,6 +3712,40 @@ function closeMobileNav() {
   setMobileNav(false);
 }
 
+function hasStoredThemePreference() {
+  try {
+    const stored = localStorage.getItem(THEME_STORAGE_KEY);
+    return stored === 'light' || stored === 'dark';
+  } catch {
+    return false;
+  }
+}
+
+function syncThemeToggle() {
+  const button = document.getElementById('themeToggle');
+  if (!button) return;
+  const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
+  const nextLabel = nextTheme === 'light' ? 'Light mode' : 'Dark mode';
+  button.textContent = nextLabel;
+  button.setAttribute('aria-label', `Switch to ${nextTheme} mode`);
+  button.setAttribute('title', `Switch to ${nextTheme} mode`);
+}
+
+function applyTheme(theme, { persist = true } = {}) {
+  currentTheme = theme === 'light' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', currentTheme);
+  if (persist) {
+    try {
+      localStorage.setItem(THEME_STORAGE_KEY, currentTheme);
+    } catch {}
+  }
+  syncThemeToggle();
+}
+
+function toggleTheme() {
+  applyTheme(currentTheme === 'dark' ? 'light' : 'dark');
+}
+
 function updateNavCurrentLabel(name) {
   const label = document.getElementById('navCurrentLabel');
   if (label) label.textContent = NAV_PAGE_LABELS[name] || 'Menu';
@@ -3504,6 +3783,12 @@ document.addEventListener('click', event => {
 document.addEventListener('keydown', event => {
   if (event.key === 'Escape' && document.body.classList.contains('nav-open')) {
     closeMobileNav();
+  }
+});
+
+systemThemeQuery?.addEventListener?.('change', event => {
+  if (!hasStoredThemePreference()) {
+    applyTheme(event.matches ? 'light' : 'dark', { persist: false });
   }
 });
 
@@ -5330,6 +5615,8 @@ async function rejectJob(jobId) {
 
 // ── Init ─────────────────────────────────────────────────────────
 async function init() {
+  applyTheme(currentTheme, { persist: false });
+  updateNavCurrentLabel('home');
   await Promise.all([loadConfig(), loadAgents(), loadStats(), loadRecentJobs(), loadCampaigns(), loadPulse()]);
   handleJobAvailabilityChange();
   refreshBridgeDefaults();

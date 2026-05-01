@@ -35,6 +35,10 @@ const JOB_BOARD_ADDRESS = resolveJobBoardAddress(process.env.JOB_BOARD_ADDRESS);
 const USDC_ADDRESS = "0x3600000000000000000000000000000000000000";
 const IDENTITY_REGISTRY = "0x8004A818BFB912233c491871b3d84c89A494BD9e";
 const REPUTATION_REGISTRY = "0x8004B663056A597Dffe9eCcC1965A193B7388713";
+const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
+const DAY_MS = 24 * 60 * 60 * 1000;
+const PULSE_RECENT_BLOCK_LIMIT = 6;
+const PULSE_SERIES_DAYS = 14;
 
 // ─── ABIs ─────────────────────────────────────────────────────────
 const JOB_BOARD_ABI = [
@@ -65,6 +69,23 @@ const COMPLETED_JOB_RETENTION_MS = 24 * 60 * 60 * 1000;
 // ─── Helpers ──────────────────────────────────────────────────────
 function sameAddress(a, b) {
   return a?.toLowerCase() === b?.toLowerCase();
+}
+
+function toUsdcNumber(value) {
+  const amount = Number.parseFloat(String(value ?? 0));
+  return Number.isFinite(amount) ? amount : 0;
+}
+
+function formatUsdc(value) {
+  return toUsdcNumber(value).toFixed(2);
+}
+
+function utcDayKey(timestamp) {
+  const date = new Date(timestamp);
+  const year = date.getUTCFullYear();
+  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(date.getUTCDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 function isArchivedCompletedJob(job, now = Date.now()) {
@@ -115,6 +136,32 @@ async function getAllFormattedJobs() {
   return jobs.map(formatJob);
 }
 
+function formatCampaign(campaign) {
+  return {
+    id: Number(campaign.id),
+    creator: campaign.creator,
+    title: campaign.title,
+    description: campaign.description,
+    prizePool: formatUnits(campaign.prizePool, 6),
+    prizePoolRaw: campaign.prizePool.toString(),
+    entryFee: formatUnits(campaign.entryFee, 6),
+    entryFeeRaw: campaign.entryFee.toString(),
+    maxParticipants: Number(campaign.maxParticipants),
+    deadline: Number(campaign.deadline) * 1000,
+    expired: campaign.expired,
+    createdAt: Number(campaign.createdAt) * 1000,
+  };
+}
+
+async function getAllFormattedCampaigns() {
+  const campaigns = await publicClient.readContract({
+    address: JOB_BOARD_ADDRESS,
+    abi: JOB_BOARD_ABI,
+    functionName: "getAllCampaigns",
+  });
+  return campaigns.map(formatCampaign);
+}
+
 async function getJobsByIds(jobIds) {
   const jobs = await Promise.all(
     jobIds.map(id =>
@@ -145,6 +192,203 @@ async function getJobsForAddress(address, idFunctionName, matchesAddress) {
   }
   const allJobs = await getAllFormattedJobs();
   return allJobs.filter(job => matchesAddress(job, normalized));
+}
+
+async function getRecentBlocks(limit = PULSE_RECENT_BLOCK_LIMIT) {
+  const latestBlockNumber = await publicClient.getBlockNumber();
+  const blockNumbers = [];
+
+  for (let offset = 0n; offset < BigInt(limit); offset++) {
+    if (latestBlockNumber < offset) break;
+    blockNumbers.push(latestBlockNumber - offset);
+  }
+
+  const blocks = await Promise.all(
+    blockNumbers.map(blockNumber => publicClient.getBlock({ blockNumber }))
+  );
+
+  return blocks.map(block => {
+    const timestamp = Number(block.timestamp) * 1000;
+    return {
+      number: Number(block.number),
+      hash: block.hash,
+      timestamp,
+      txCount: Array.isArray(block.transactions) ? block.transactions.length : 0,
+      ageSec: Math.max(0, Math.floor((Date.now() - timestamp) / 1000)),
+    };
+  });
+}
+
+function averageBlockTimeSec(blocks) {
+  if (!Array.isArray(blocks) || blocks.length < 2) return 0;
+  const deltas = [];
+  for (let index = 0; index < blocks.length - 1; index++) {
+    const delta = (Number(blocks[index].timestamp) - Number(blocks[index + 1].timestamp)) / 1000;
+    if (delta > 0) deltas.push(delta);
+  }
+  if (!deltas.length) return 0;
+  const avg = deltas.reduce((sum, value) => sum + value, 0) / deltas.length;
+  return Number(avg.toFixed(2));
+}
+
+function buildPulseSeries(jobs, days = PULSE_SERIES_DAYS) {
+  const now = Date.now();
+  const points = [];
+  const bucketMap = new Map();
+
+  for (let index = days - 1; index >= 0; index--) {
+    const dayTimestamp = now - (index * DAY_MS);
+    const key = utcDayKey(dayTimestamp);
+    const point = { date: key, volumeUsdc: 0, jobs: 0 };
+    points.push(point);
+    bucketMap.set(key, point);
+  }
+
+  for (const job of jobs) {
+    const key = utcDayKey(job.createdAt);
+    const bucket = bucketMap.get(key);
+    if (!bucket) continue;
+    bucket.volumeUsdc += toUsdcNumber(job.budget);
+    bucket.jobs += 1;
+  }
+
+  return points.map(point => ({
+    date: point.date,
+    jobs: point.jobs,
+    volumeUsdc: formatUsdc(point.volumeUsdc),
+  }));
+}
+
+function buildCategoryBreakdown(jobs) {
+  const summary = new Map();
+
+  for (const job of jobs) {
+    const category = String(job.category || "Uncategorized").trim() || "Uncategorized";
+    if (!summary.has(category)) {
+      summary.set(category, { category, volumeUsdc: 0, jobs: 0 });
+    }
+    const row = summary.get(category);
+    row.volumeUsdc += toUsdcNumber(job.budget);
+    row.jobs += 1;
+  }
+
+  return [...summary.values()]
+    .sort((a, b) => b.volumeUsdc - a.volumeUsdc)
+    .map(row => ({
+      category: row.category,
+      jobs: row.jobs,
+      volumeUsdc: formatUsdc(row.volumeUsdc),
+    }));
+}
+
+function buildTrackedAppRankings(jobs, campaigns) {
+  const now = Date.now();
+  const weekMs = 7 * DAY_MS;
+  const previousWeekStart = now - (2 * weekMs);
+  const currentWeekStart = now - weekMs;
+
+  const allVolume = jobs.reduce((sum, job) => sum + toUsdcNumber(job.budget), 0)
+    + campaigns.reduce((sum, campaign) => sum + toUsdcNumber(campaign.prizePool), 0);
+
+  const thisWeekVolume = jobs
+    .filter(job => job.createdAt >= currentWeekStart)
+    .reduce((sum, job) => sum + toUsdcNumber(job.budget), 0)
+    + campaigns
+      .filter(campaign => campaign.createdAt >= currentWeekStart)
+      .reduce((sum, campaign) => sum + toUsdcNumber(campaign.prizePool), 0);
+
+  const previousWeekVolume = jobs
+    .filter(job => job.createdAt >= previousWeekStart && job.createdAt < currentWeekStart)
+    .reduce((sum, job) => sum + toUsdcNumber(job.budget), 0)
+    + campaigns
+      .filter(campaign => campaign.createdAt >= previousWeekStart && campaign.createdAt < currentWeekStart)
+      .reduce((sum, campaign) => sum + toUsdcNumber(campaign.prizePool), 0);
+
+  const activeWallets = new Set();
+  for (const job of jobs) {
+    if (job.client && !sameAddress(job.client, ZERO_ADDRESS)) activeWallets.add(job.client.toLowerCase());
+    if (job.agent && !sameAddress(job.agent, ZERO_ADDRESS)) activeWallets.add(job.agent.toLowerCase());
+  }
+  for (const campaign of campaigns) {
+    if (campaign.creator && !sameAddress(campaign.creator, ZERO_ADDRESS)) activeWallets.add(campaign.creator.toLowerCase());
+  }
+
+  let growthDirection = "flat";
+  if (thisWeekVolume > previousWeekVolume) growthDirection = "up";
+  if (thisWeekVolume < previousWeekVolume) growthDirection = "down";
+
+  return [{
+    rank: 1,
+    id: "agentmarket",
+    name: "AgentMarket",
+    category: "AI / Work",
+    description: "Tracked beta view based on the live AgentMarket Arc contracts.",
+    volumeUsdc: formatUsdc(allVolume),
+    weeklyVolumeUsdc: formatUsdc(thisWeekVolume),
+    previousWeekVolumeUsdc: formatUsdc(previousWeekVolume),
+    growthDirection,
+    growthPercent: previousWeekVolume > 0
+      ? Number((((thisWeekVolume - previousWeekVolume) / previousWeekVolume) * 100).toFixed(1))
+      : null,
+    activeWallets: activeWallets.size,
+    jobs: jobs.length,
+    campaigns: campaigns.length,
+    liveContracts: [JOB_BOARD_ADDRESS],
+    status: "Tracked beta",
+  }];
+}
+
+async function getPulseSnapshot() {
+  const [jobs, campaigns, recentBlocks] = await Promise.all([
+    getAllFormattedJobs(),
+    getAllFormattedCampaigns(),
+    getRecentBlocks(),
+  ]);
+
+  const activeJobs = jobs.filter(job => !isArchivedCompletedJob(job));
+  const activeCampaigns = campaigns.filter(campaign => !isClosedCampaign(campaign));
+  const completedJobs = jobs.filter(job => Number(job.status) === 3);
+  const openJobs = jobs.filter(job => Number(job.status) === 0 && !job.isExpired);
+
+  const trackedWallets = new Set();
+  for (const job of jobs) {
+    if (job.client && !sameAddress(job.client, ZERO_ADDRESS)) trackedWallets.add(job.client.toLowerCase());
+    if (job.agent && !sameAddress(job.agent, ZERO_ADDRESS)) trackedWallets.add(job.agent.toLowerCase());
+  }
+  for (const campaign of campaigns) {
+    if (campaign.creator && !sameAddress(campaign.creator, ZERO_ADDRESS)) trackedWallets.add(campaign.creator.toLowerCase());
+  }
+
+  const trackedEscrowVolume = jobs.reduce((sum, job) => sum + toUsdcNumber(job.budget), 0)
+    + campaigns.reduce((sum, campaign) => sum + toUsdcNumber(campaign.prizePool), 0);
+  const settledVolume = completedJobs.reduce((sum, job) => sum + toUsdcNumber(job.budget), 0);
+  const recentBlockTxCount = recentBlocks.reduce((sum, block) => sum + Number(block.txCount || 0), 0);
+
+  return {
+    generatedAt: Date.now(),
+    mode: "hybrid-beta",
+    overview: {
+      latestBlockNumber: recentBlocks[0]?.number || 0,
+      avgBlockTimeSec: averageBlockTimeSec(recentBlocks),
+      recentBlockTxCount,
+      trackedEscrowVolumeUsdc: formatUsdc(trackedEscrowVolume),
+      settledVolumeUsdc: formatUsdc(settledVolume),
+      totalJobs: jobs.length,
+      completedJobs: completedJobs.length,
+      openJobs: openJobs.length,
+      activeCampaigns: activeCampaigns.length,
+      trackedWallets: trackedWallets.size,
+    },
+    recentBlocks,
+    volume14d: buildPulseSeries(jobs),
+    categoryBreakdown: buildCategoryBreakdown(activeJobs),
+    appRankings: buildTrackedAppRankings(jobs, campaigns),
+    notes: [
+      "Live Arc blocks come directly from the Arc RPC endpoint.",
+      "Volume, categories, and rankings are currently tracked from the AgentMarket contracts only.",
+      "Full-network ArcPulse rankings should use an indexer such as Goldsky or Envio.",
+    ],
+  };
 }
 
 // ─── In-memory chat (shared across all users in the same server instance) ───
@@ -219,6 +463,7 @@ app.get("/api/config", (req, res) => {
     jobBoardAddress: JOB_BOARD_ADDRESS,
     usdcAddress: USDC_ADDRESS,
     explorerUrl: "https://testnet.arcscan.app",
+    pulseEnabled: true,
     unifiedBalanceEnabled: true,
     unifiedBalanceSupportedChains: [
       { id: "Ethereum_Sepolia", name: "Ethereum Sepolia", chainId: 11155111, type: "evm", testnet: true },
@@ -237,6 +482,15 @@ app.get("/api/config", (req, res) => {
       { id: "Solana_Devnet", name: "Solana Devnet", type: "solana", testnet: true },
     ],
   });
+});
+
+app.get("/api/pulse/overview", async (req, res) => {
+  try {
+    const snapshot = await getPulseSnapshot();
+    res.json(snapshot);
+  } catch (err) {
+    res.status(500).json({ error: err.message || "Failed to load ArcPulse overview" });
+  }
 });
 
 // ─── Chat ─────────────────────────────────────────────────────────

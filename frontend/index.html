@@ -1476,6 +1476,406 @@
       text-align: center;
     }
 
+    .pulse-stack {
+      display: grid;
+      gap: 18px;
+    }
+
+    .pulse-panel {
+      background: rgba(17,17,24,0.92);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 24px;
+      box-shadow: 0 18px 48px rgba(0,0,0,0.22);
+      padding: 24px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .pulse-panel::before {
+      content: '';
+      position: absolute;
+      inset: 0 0 auto 0;
+      height: 1px;
+      background: linear-gradient(90deg, rgba(166,246,255,0.22), rgba(89,199,255,0.08), transparent);
+      opacity: 0.9;
+    }
+
+    .pulse-topline {
+      align-items: flex-start;
+      display: flex;
+      gap: 14px;
+      justify-content: space-between;
+      margin-bottom: 18px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .pulse-kicker {
+      color: rgba(232,232,240,0.52);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.16em;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+    }
+
+    .pulse-copy {
+      color: rgba(232,232,240,0.62);
+      font-size: 14px;
+      line-height: 1.6;
+      max-width: 720px;
+    }
+
+    .pulse-note {
+      color: rgba(232,232,240,0.46);
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    .pulse-note-list {
+      display: grid;
+      gap: 10px;
+      margin-top: 2px;
+    }
+
+    .pulse-note-item {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 16px;
+      color: rgba(232,232,240,0.58);
+      font-size: 12px;
+      line-height: 1.55;
+      padding: 12px 14px;
+    }
+
+    .pulse-metrics {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      position: relative;
+      z-index: 1;
+    }
+
+    .pulse-metric {
+      background: rgba(255,255,255,0.025);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 18px;
+      min-height: 112px;
+      padding: 18px;
+    }
+
+    .pulse-metric-value {
+      color: var(--text);
+      font-family: var(--font-head);
+      font-size: clamp(24px, 3vw, 34px);
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+
+    .pulse-metric-label {
+      color: rgba(232,232,240,0.44);
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+    }
+
+    .pulse-metric-sub {
+      color: rgba(232,232,240,0.54);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .pulse-grid {
+      display: grid;
+      gap: 18px;
+      grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+    }
+
+    .pulse-card-head {
+      align-items: flex-start;
+      display: flex;
+      gap: 12px;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .pulse-card-title {
+      font-family: var(--font-head);
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 4px;
+    }
+
+    .pulse-chart-shell {
+      display: grid;
+      gap: 12px;
+    }
+
+    .pulse-chart-wrap {
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0.01)),
+        rgba(10,12,18,0.6);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 20px;
+      min-height: 220px;
+      padding: 16px;
+    }
+
+    .pulse-chart-svg {
+      display: block;
+      height: 180px;
+      width: 100%;
+    }
+
+    .pulse-chart-axis {
+      color: rgba(232,232,240,0.4);
+      display: flex;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      justify-content: space-between;
+      letter-spacing: 0.04em;
+      margin-top: 8px;
+    }
+
+    .pulse-chart-empty {
+      align-items: center;
+      color: rgba(232,232,240,0.48);
+      display: flex;
+      font-size: 13px;
+      justify-content: center;
+      min-height: 180px;
+      text-align: center;
+    }
+
+    .pulse-donut-layout {
+      align-items: center;
+      display: grid;
+      gap: 20px;
+      grid-template-columns: 220px minmax(0, 1fr);
+    }
+
+    .pulse-donut {
+      aspect-ratio: 1;
+      border-radius: 50%;
+      margin: 0 auto;
+      max-width: 220px;
+      position: relative;
+      width: 100%;
+    }
+
+    .pulse-donut::after {
+      background: rgba(10,11,17,0.96);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 50%;
+      content: '';
+      inset: 24px;
+      position: absolute;
+    }
+
+    .pulse-donut-center {
+      align-items: center;
+      display: flex;
+      flex-direction: column;
+      inset: 0;
+      justify-content: center;
+      padding: 40px;
+      position: absolute;
+      text-align: center;
+      z-index: 1;
+    }
+
+    .pulse-donut-center strong {
+      font-family: var(--font-head);
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+
+    .pulse-donut-center span {
+      color: rgba(232,232,240,0.46);
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .pulse-breakdown-list,
+    .pulse-block-list,
+    .pulse-ranking-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .pulse-breakdown-row,
+    .pulse-block-row,
+    .pulse-ranking-row {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 16px;
+      padding: 12px 14px;
+    }
+
+    .pulse-breakdown-row {
+      align-items: center;
+      display: grid;
+      gap: 10px;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+    }
+
+    .pulse-color-dot {
+      border-radius: 50%;
+      height: 10px;
+      width: 10px;
+    }
+
+    .pulse-breakdown-name {
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+
+    .pulse-breakdown-meta,
+    .pulse-block-meta,
+    .pulse-ranking-meta {
+      color: rgba(232,232,240,0.46);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      line-height: 1.5;
+    }
+
+    .pulse-breakdown-value {
+      font-family: var(--font-head);
+      font-size: 19px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      text-align: right;
+    }
+
+    .pulse-block-row {
+      align-items: center;
+      display: grid;
+      gap: 14px;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+    }
+
+    .pulse-block-number {
+      color: var(--brand-ice);
+      font-family: var(--font-head);
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+    }
+
+    .pulse-block-age {
+      color: rgba(232,232,240,0.56);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      white-space: nowrap;
+    }
+
+    .pulse-ranking-row {
+      display: grid;
+      gap: 12px;
+    }
+
+    .pulse-ranking-top {
+      align-items: center;
+      display: flex;
+      gap: 10px;
+      justify-content: space-between;
+    }
+
+    .pulse-ranking-title {
+      align-items: center;
+      display: flex;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .pulse-rank-badge {
+      align-items: center;
+      background: rgba(166,246,255,0.06);
+      border: 1px solid rgba(166,246,255,0.18);
+      border-radius: 999px;
+      color: var(--brand-ice);
+      display: inline-flex;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      height: 28px;
+      justify-content: center;
+      min-width: 28px;
+      padding: 0 9px;
+    }
+
+    .pulse-ranking-name {
+      font-family: var(--font-head);
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .pulse-growth {
+      border-radius: 999px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      padding: 6px 10px;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .pulse-growth.up {
+      background: rgba(79,209,165,0.1);
+      border: 1px solid rgba(79,209,165,0.2);
+      color: var(--success);
+    }
+
+    .pulse-growth.down {
+      background: rgba(248,114,114,0.1);
+      border: 1px solid rgba(248,114,114,0.18);
+      color: var(--danger);
+    }
+
+    .pulse-growth.flat {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: rgba(232,232,240,0.64);
+    }
+
+    .pulse-ranking-grid {
+      display: grid;
+      gap: 10px;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .pulse-ranking-stat {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 14px;
+      padding: 12px;
+    }
+
+    .pulse-ranking-stat-value {
+      font-family: var(--font-head);
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .pulse-ranking-stat-label {
+      color: rgba(232,232,240,0.44);
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      margin-top: 5px;
+      text-transform: uppercase;
+    }
+
     @media (max-width: 920px) {
       nav {
         flex-wrap: wrap;
@@ -1517,6 +1917,10 @@
       .pick-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .section-head, .dashboard-header { align-items: flex-start; flex-direction: column; gap: 12px; }
       .agents-grid { grid-template-columns: 1fr; }
+      .pulse-grid,
+      .pulse-donut-layout { grid-template-columns: 1fr; }
+      .pulse-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .pulse-ranking-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .bridge-shell,
       .bridge-form-grid,
       .bridge-summary-grid,
@@ -1532,6 +1936,8 @@
       .hero { padding-top: 44px; }
       .hero-actions .btn { width: 100%; justify-content: center; }
       .stats-bar { grid-template-columns: repeat(2, 1fr); }
+      .pulse-metrics,
+      .pulse-ranking-grid { grid-template-columns: 1fr; }
       .stat-cell { padding: 18px; }
       .form-row { grid-template-columns: 1fr; }
       .flow-progress { gap: 8px; }
@@ -1564,6 +1970,11 @@
       .modal { padding: 22px; max-height: 92vh; }
       .detail-row { align-items: flex-start; flex-direction: column; gap: 4px; }
       .detail-val { max-width: 100%; text-align: left; }
+      .pulse-topline,
+      .pulse-card-head,
+      .pulse-ranking-top { flex-direction: column; }
+      .pulse-block-row,
+      .pulse-breakdown-row { grid-template-columns: 1fr; }
       .chat-meta { flex-direction: column; gap: 2px; }
       .bridge-summary-item + .bridge-summary-item { border-top: 0; }
       .job-actions-row { width: 100%; }
@@ -1607,6 +2018,7 @@
   <div class="nav-menu" id="navMenu">
     <div class="nav-links">
       <button class="nav-btn active" data-page="home" onclick="showPage('home')">Browse</button>
+      <button class="nav-btn" data-page="pulse" onclick="showPage('pulse')">Pulse</button>
       <button class="nav-btn" data-page="post" onclick="showPage('post')">Post</button>
       <button class="nav-btn" data-page="bridge" onclick="showPage('bridge')">Fund</button>
       <button class="nav-btn" data-page="pick" onclick="showPage('pick')">Work</button>
@@ -1678,6 +2090,115 @@
 </div>
 
 <!-- ── PAGE: POST A JOB ── -->
+<div class="page" id="page-pulse">
+  <div class="container">
+    <div class="flow-page" style="max-width:none">
+      <div class="flow-header">
+        <div class="flow-kicker">ArcPulse beta</div>
+        <h2 class="flow-title">Live Arc signal, inside AgentMarket.</h2>
+        <p class="flow-copy" style="max-width:720px">This first pass blends live Arc RPC block data with tracked contract activity from AgentMarket, so we can ship the Pulse experience now and swap in full-network indexing next.</p>
+      </div>
+
+      <div class="pulse-stack">
+        <div class="pulse-panel">
+          <div class="pulse-topline">
+            <div>
+              <div class="pulse-kicker">Hybrid source mode</div>
+              <div class="pulse-copy">Latest blocks come straight from Arc RPC. Volume, categories, and rankings below are tracked from this live marketplace contract set until Goldsky or Envio indexing is attached.</div>
+            </div>
+            <span class="badge badge-verified">Live Beta</span>
+          </div>
+          <div class="pulse-metrics">
+            <div class="pulse-metric">
+              <div class="pulse-metric-value" id="pulseLatestBlock">—</div>
+              <div class="pulse-metric-label">Latest block</div>
+              <div class="pulse-metric-sub">Most recent Arc block seen by the backend.</div>
+            </div>
+            <div class="pulse-metric">
+              <div class="pulse-metric-value" id="pulseAvgBlockTime">—</div>
+              <div class="pulse-metric-label">Avg block time</div>
+              <div class="pulse-metric-sub">Average across the recent block sample.</div>
+            </div>
+            <div class="pulse-metric">
+              <div class="pulse-metric-value" id="pulseRecentTx">—</div>
+              <div class="pulse-metric-label">Recent sampled txs</div>
+              <div class="pulse-metric-sub">Transactions counted across the latest blocks.</div>
+            </div>
+            <div class="pulse-metric">
+              <div class="pulse-metric-value" id="pulseTrackedVolume">—</div>
+              <div class="pulse-metric-label">Tracked USDC volume</div>
+              <div class="pulse-metric-sub">Jobs plus campaign prize pools on this app.</div>
+            </div>
+            <div class="pulse-metric">
+              <div class="pulse-metric-value" id="pulseTrackedWallets">—</div>
+              <div class="pulse-metric-label">Tracked wallets</div>
+              <div class="pulse-metric-sub">Unique client, worker, and creator addresses.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="pulse-grid">
+          <div class="pulse-panel">
+            <div class="pulse-card-head">
+              <div>
+                <div class="pulse-card-title">14-day tracked volume</div>
+                <div class="pulse-note">Daily job funding volume from the tracked AgentMarket contracts.</div>
+              </div>
+              <span class="badge badge-funded" id="pulseSettledBadge">Settled —</span>
+            </div>
+            <div id="pulseVolumeChart" class="pulse-chart-empty">Loading tracked volume...</div>
+          </div>
+
+          <div class="pulse-panel">
+            <div class="pulse-card-head">
+              <div>
+                <div class="pulse-card-title">Category breakdown</div>
+                <div class="pulse-note">Current volume split from tracked marketplace categories.</div>
+              </div>
+            </div>
+            <div id="pulseCategoryBreakdown" class="pulse-chart-empty">Loading category mix...</div>
+          </div>
+        </div>
+
+        <div class="pulse-grid">
+          <div class="pulse-panel">
+            <div class="pulse-card-head">
+              <div>
+                <div class="pulse-card-title">Latest blocks</div>
+                <div class="pulse-note">Auto-refreshes while this page is open.</div>
+              </div>
+              <button class="btn btn-outline btn-sm" onclick="loadPulse(true)">Refresh</button>
+            </div>
+            <div id="pulseBlocks" class="pulse-chart-empty">Loading recent blocks...</div>
+          </div>
+
+          <div class="pulse-panel">
+            <div class="pulse-card-head">
+              <div>
+                <div class="pulse-card-title">App rankings beta</div>
+                <div class="pulse-note">Tracked-app leaderboard now, full-network rankings after indexer hookup.</div>
+              </div>
+            </div>
+            <div id="pulseRankings" class="pulse-chart-empty">Loading tracked app rankings...</div>
+          </div>
+        </div>
+
+        <div class="pulse-panel">
+          <div class="pulse-card-head">
+            <div>
+              <div class="pulse-card-title">What this unlocks next</div>
+              <div class="pulse-note">ArcPulse can grow from this base into rankings, Arc ID, feed, streaks, and points without rewiring the whole app again.</div>
+            </div>
+          </div>
+          <div id="pulseNotes" class="pulse-note-list">
+            <div class="pulse-note-item">Loading rollout notes...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="page" id="page-post">
   <div class="container">
     <div class="flow-page">
@@ -2207,6 +2728,7 @@ const USDC = '0x3600000000000000000000000000000000000000';
 let JOB_BOARD = window.JOB_BOARD_ADDRESS = '0x42e4cC4836cDd7355a7aD600B51B054b03322D3f';
 window.AGENTMARKET_RUNTIME_CONFIG = window.AGENTMARKET_RUNTIME_CONFIG || {
   bridgeSupportedChains: [],
+  pulseEnabled: true,
   unifiedBalanceEnabled: true,
   unifiedBalanceSupportedChains: [],
 };
@@ -2219,6 +2741,11 @@ async function loadConfig() {
     if (Array.isArray(config.bridgeSupportedChains)) {
       bridgeSupportedChains = config.bridgeSupportedChains;
       window.AGENTMARKET_RUNTIME_CONFIG.bridgeSupportedChains = config.bridgeSupportedChains;
+    }
+    if (typeof config.pulseEnabled === 'boolean') {
+      window.AGENTMARKET_RUNTIME_CONFIG.pulseEnabled = config.pulseEnabled;
+      const pulseNav = document.querySelector('.nav-btn[data-page="pulse"]');
+      if (pulseNav) pulseNav.style.display = config.pulseEnabled ? '' : 'none';
     }
     if (typeof config.unifiedBalanceEnabled === 'boolean') {
       window.AGENTMARKET_RUNTIME_CONFIG.unifiedBalanceEnabled = config.unifiedBalanceEnabled;
@@ -2243,6 +2770,10 @@ let selectedWorkerType = 'Human';
 let currentTab = 'posted';
 let pendingDeliverableJobId = null;
 let bridgeSupportedChains = [];
+let pulseState = null;
+let pulseLoading = false;
+
+const PULSE_COLORS = ['#7c6dfa', '#59c7ff', '#7affc8', '#f6c90e', '#f87272', '#a6f6ff'];
 
 const BRIDGE_CHAIN_LABELS = {
   Ethereum_Sepolia: 'Ethereum Sepolia',
@@ -2284,6 +2815,7 @@ function showPage(name) {
   const navPage = name === 'create-campaign' ? 'campaigns' : name;
   document.querySelector(`.nav-btn[data-page="${navPage}"]`)?.classList.add('active');
   closeMobileNav();
+  if (name === 'pulse') loadPulse();
   if (name === 'dashboard') loadDashboard();
   if (name === 'reviews') loadReviewBoard();
   if (name === 'pick') loadAvailableJobs();
@@ -2768,6 +3300,266 @@ async function loadStats() {
 }
 
 // ── Load Recent Jobs ─────────────────────────────────────────────
+function formatCompactNumber(value) {
+  const amount = Number(value || 0);
+  return new Intl.NumberFormat('en-US', {
+    maximumFractionDigits: amount >= 100 ? 0 : 1,
+    notation: amount >= 1000 ? 'compact' : 'standard',
+  }).format(amount);
+}
+
+function formatPulseUsdc(value) {
+  const amount = Number.parseFloat(String(value ?? 0));
+  if (!Number.isFinite(amount)) return '$0.00';
+  if (amount >= 1000) return `$${formatCompactNumber(amount)}`;
+  return `$${amount.toFixed(2)}`;
+}
+
+function formatPulseDateLabel(value) {
+  const date = new Date(`${value}T00:00:00Z`);
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
+}
+
+function pulseAgeLabel(timestamp) {
+  const diffSeconds = Math.max(0, Math.floor((Date.now() - Number(timestamp || 0)) / 1000));
+  if (diffSeconds < 60) return `${diffSeconds}s ago`;
+  const minutes = Math.floor(diffSeconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  return `${days}d ago`;
+}
+
+function setPulseMetric(id, value) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = value;
+}
+
+function renderPulseVolumeChart(points = []) {
+  const mount = document.getElementById('pulseVolumeChart');
+  if (!mount) return;
+  if (!Array.isArray(points) || !points.length) {
+    mount.className = 'pulse-chart-empty';
+    mount.textContent = 'No tracked volume yet.';
+    return;
+  }
+
+  const values = points.map(point => Number.parseFloat(point.volumeUsdc || 0));
+  const max = Math.max(...values, 1);
+  const width = 620;
+  const height = 180;
+  const paddingX = 8;
+  const paddingY = 14;
+  const step = points.length > 1 ? (width - (paddingX * 2)) / (points.length - 1) : 0;
+  const coords = points.map((point, index) => {
+    const value = Number.parseFloat(point.volumeUsdc || 0);
+    const x = paddingX + (index * step);
+    const y = height - paddingY - ((value / max) * (height - (paddingY * 2)));
+    return { x, y };
+  });
+  const line = coords.map(point => `${point.x},${point.y}`).join(' ');
+  const area = `0,${height} ${coords.map(point => `${point.x},${point.y}`).join(' ')} ${width},${height}`;
+  const firstLabel = formatPulseDateLabel(points[0].date);
+  const lastLabel = formatPulseDateLabel(points[points.length - 1].date);
+
+  mount.className = 'pulse-chart-shell';
+  mount.innerHTML = `
+    <div class="pulse-chart-wrap">
+      <svg class="pulse-chart-svg" viewBox="0 0 ${width} ${height}" role="img" aria-label="Tracked volume over the last 14 days">
+        <defs>
+          <linearGradient id="pulseAreaFill" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0%" stop-color="rgba(89,199,255,0.42)"/>
+            <stop offset="100%" stop-color="rgba(89,199,255,0.02)"/>
+          </linearGradient>
+          <linearGradient id="pulseLineStroke" x1="0" x2="1" y1="0" y2="0">
+            <stop offset="0%" stop-color="#59c7ff"/>
+            <stop offset="100%" stop-color="#7affc8"/>
+          </linearGradient>
+        </defs>
+        <line x1="0" x2="${width}" y1="${height - 1}" y2="${height - 1}" stroke="rgba(255,255,255,0.06)" />
+        <line x1="0" x2="${width}" y1="${height / 2}" y2="${height / 2}" stroke="rgba(255,255,255,0.04)" stroke-dasharray="4 6" />
+        <polygon points="${area}" fill="url(#pulseAreaFill)"></polygon>
+        <polyline points="${line}" fill="none" stroke="url(#pulseLineStroke)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"></polyline>
+        ${coords.map(point => `<circle cx="${point.x}" cy="${point.y}" r="4.5" fill="#0a0a0f" stroke="#a6f6ff" stroke-width="2"></circle>`).join('')}
+      </svg>
+      <div class="pulse-chart-axis">
+        <span>${escapeHtml(firstLabel)}</span>
+        <span>Peak ${formatPulseUsdc(max)}</span>
+        <span>${escapeHtml(lastLabel)}</span>
+      </div>
+    </div>
+  `;
+}
+
+function renderPulseCategoryBreakdown(items = []) {
+  const mount = document.getElementById('pulseCategoryBreakdown');
+  if (!mount) return;
+  if (!Array.isArray(items) || !items.length) {
+    mount.className = 'pulse-chart-empty';
+    mount.textContent = 'No tracked categories yet.';
+    return;
+  }
+
+  const total = items.reduce((sum, item) => sum + Number.parseFloat(item.volumeUsdc || 0), 0);
+  let cursor = 0;
+  const slices = items.map((item, index) => {
+    const amount = Number.parseFloat(item.volumeUsdc || 0);
+    const start = (cursor / total) * 360;
+    cursor += amount;
+    const end = (cursor / total) * 360;
+    return `${PULSE_COLORS[index % PULSE_COLORS.length]} ${start}deg ${end}deg`;
+  }).join(', ');
+
+  mount.className = '';
+  mount.innerHTML = `
+    <div class="pulse-donut-layout">
+      <div class="pulse-donut" style="background: conic-gradient(${slices})">
+        <div class="pulse-donut-center">
+          <strong>${escapeHtml(formatPulseUsdc(total))}</strong>
+          <span>Total tracked</span>
+        </div>
+      </div>
+      <div class="pulse-breakdown-list">
+        ${items.map((item, index) => `
+          <div class="pulse-breakdown-row">
+            <div class="pulse-color-dot" style="background:${PULSE_COLORS[index % PULSE_COLORS.length]}"></div>
+            <div>
+              <div class="pulse-breakdown-name">${escapeHtml(item.category)}</div>
+              <div class="pulse-breakdown-meta">${escapeHtml(String(item.jobs))} jobs</div>
+            </div>
+            <div class="pulse-breakdown-value">${escapeHtml(formatPulseUsdc(item.volumeUsdc))}</div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function renderPulseBlocks(blocks = []) {
+  const mount = document.getElementById('pulseBlocks');
+  if (!mount) return;
+  if (!Array.isArray(blocks) || !blocks.length) {
+    mount.className = 'pulse-chart-empty';
+    mount.textContent = 'No recent blocks available.';
+    return;
+  }
+
+  mount.className = 'pulse-block-list';
+  mount.innerHTML = blocks.map(block => `
+    <div class="pulse-block-row">
+      <div class="pulse-block-number">#${escapeHtml(formatCompactNumber(block.number))}</div>
+      <div>
+        <div>${escapeHtml(String(block.txCount))} txs in this block</div>
+        <div class="pulse-block-meta mono">${escapeHtml(String(block.hash || '').slice(0, 12))}...</div>
+      </div>
+      <div class="pulse-block-age">${escapeHtml(pulseAgeLabel(block.timestamp))}</div>
+    </div>
+  `).join('');
+}
+
+function renderPulseRankings(rankings = []) {
+  const mount = document.getElementById('pulseRankings');
+  if (!mount) return;
+  if (!Array.isArray(rankings) || !rankings.length) {
+    mount.className = 'pulse-chart-empty';
+    mount.textContent = 'No tracked app rankings yet.';
+    return;
+  }
+
+  mount.className = 'pulse-ranking-list';
+  mount.innerHTML = rankings.map(item => {
+    const growthClass = ['up', 'down'].includes(item.growthDirection) ? item.growthDirection : 'flat';
+    const growthLabel = item.growthPercent == null
+      ? (item.growthDirection === 'up' ? 'New growth' : 'Baseline')
+      : `${item.growthPercent > 0 ? '+' : ''}${item.growthPercent}%`;
+
+    return `
+      <div class="pulse-ranking-row">
+        <div class="pulse-ranking-top">
+          <div class="pulse-ranking-title">
+            <span class="pulse-rank-badge">#${escapeHtml(String(item.rank))}</span>
+            <div>
+              <div class="pulse-ranking-name">${escapeHtml(item.name)}</div>
+              <div class="pulse-ranking-meta">${escapeHtml(item.category)} · ${escapeHtml(item.status)}</div>
+            </div>
+          </div>
+          <span class="pulse-growth ${growthClass}">${escapeHtml(growthLabel)}</span>
+        </div>
+        <div class="pulse-note">${escapeHtml(item.description || '')}</div>
+        <div class="pulse-ranking-grid">
+          <div class="pulse-ranking-stat">
+            <div class="pulse-ranking-stat-value">${escapeHtml(formatPulseUsdc(item.volumeUsdc))}</div>
+            <div class="pulse-ranking-stat-label">All volume</div>
+          </div>
+          <div class="pulse-ranking-stat">
+            <div class="pulse-ranking-stat-value">${escapeHtml(formatPulseUsdc(item.weeklyVolumeUsdc))}</div>
+            <div class="pulse-ranking-stat-label">This week</div>
+          </div>
+          <div class="pulse-ranking-stat">
+            <div class="pulse-ranking-stat-value">${escapeHtml(String(item.activeWallets || 0))}</div>
+            <div class="pulse-ranking-stat-label">Wallets</div>
+          </div>
+          <div class="pulse-ranking-stat">
+            <div class="pulse-ranking-stat-value">${escapeHtml(String((item.jobs || 0) + (item.campaigns || 0)))}</div>
+            <div class="pulse-ranking-stat-label">Contract events</div>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderPulseNotes(notes = []) {
+  const mount = document.getElementById('pulseNotes');
+  if (!mount) return;
+  if (!Array.isArray(notes) || !notes.length) {
+    mount.innerHTML = '<div class="pulse-note-item">ArcPulse notes are not available right now.</div>';
+    return;
+  }
+  mount.innerHTML = notes.map(note => `<div class="pulse-note-item">${escapeHtml(note)}</div>`).join('');
+}
+
+async function loadPulse(force = false) {
+  if (!window.AGENTMARKET_RUNTIME_CONFIG?.pulseEnabled) return;
+  if (pulseLoading && !force) return;
+
+  pulseLoading = true;
+  try {
+    const res = await fetch(`${API}/api/pulse/overview`);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data?.error || 'Could not load ArcPulse.');
+    pulseState = data;
+
+    setPulseMetric('pulseLatestBlock', `#${formatCompactNumber(data?.overview?.latestBlockNumber || 0)}`);
+    setPulseMetric('pulseAvgBlockTime', `${Number(data?.overview?.avgBlockTimeSec || 0).toFixed(2)}s`);
+    setPulseMetric('pulseRecentTx', formatCompactNumber(data?.overview?.recentBlockTxCount || 0));
+    setPulseMetric('pulseTrackedVolume', formatPulseUsdc(data?.overview?.trackedEscrowVolumeUsdc || 0));
+    setPulseMetric('pulseTrackedWallets', formatCompactNumber(data?.overview?.trackedWallets || 0));
+
+    const settledBadge = document.getElementById('pulseSettledBadge');
+    if (settledBadge) settledBadge.textContent = `Settled ${formatPulseUsdc(data?.overview?.settledVolumeUsdc || 0)}`;
+
+    renderPulseVolumeChart(data?.volume14d || []);
+    renderPulseCategoryBreakdown(data?.categoryBreakdown || []);
+    renderPulseBlocks(data?.recentBlocks || []);
+    renderPulseRankings(data?.appRankings || []);
+    renderPulseNotes(data?.notes || []);
+  } catch (e) {
+    const message = e.message || 'Could not load ArcPulse.';
+    ['pulseVolumeChart', 'pulseCategoryBreakdown', 'pulseBlocks', 'pulseRankings'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.className = 'pulse-chart-empty';
+        el.textContent = message;
+      }
+    });
+    renderPulseNotes([message]);
+  } finally {
+    pulseLoading = false;
+  }
+}
+
 async function loadRecentJobs() {
   try {
     const res = await fetch(`${API}/api/jobs`);
@@ -3533,7 +4325,7 @@ async function rejectJob(jobId) {
 
 // ── Init ─────────────────────────────────────────────────────────
 async function init() {
-  await Promise.all([loadConfig(), loadAgents(), loadStats(), loadRecentJobs(), loadCampaigns()]);
+  await Promise.all([loadConfig(), loadAgents(), loadStats(), loadRecentJobs(), loadCampaigns(), loadPulse()]);
   handleJobAvailabilityChange();
   refreshBridgeDefaults();
   refreshCountdowns();
@@ -3562,6 +4354,11 @@ async function init() {
 }
 
 setInterval(refreshCountdowns, 1000);
+setInterval(() => {
+  if (document.getElementById('page-pulse')?.classList.contains('active')) {
+    loadPulse();
+  }
+}, 15000);
 init();
 </script>
 <script type="module">

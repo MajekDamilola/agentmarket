@@ -6,6 +6,7 @@ import { arcTestnet } from "viem/chains";
 import dotenv from "dotenv";
 import { promises as fs } from "fs";
 import { DatabaseSync } from "node:sqlite";
+import { tmpdir } from "os";
 import path from "path";
 import { fileURLToPath } from "url";
 
@@ -13,6 +14,26 @@ dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+function resolvePulseStorageBaseDir() {
+  const configured = String(process.env.PULSE_STORAGE_DIR || "").trim();
+  if (configured) {
+    return path.resolve(configured);
+  }
+
+  const isServerlessRuntime = Boolean(
+    process.env.VERCEL
+    || process.env.AWS_EXECUTION_ENV
+    || process.env.LAMBDA_TASK_ROOT
+    || process.env.NETLIFY
+  );
+
+  if (isServerlessRuntime) {
+    return path.join(tmpdir(), "agentmarket-pulse");
+  }
+
+  return path.resolve(__dirname, "..", "cache");
+}
 
 const app = express();
 app.use(cors());
@@ -49,8 +70,6 @@ const PULSE_RECENT_BLOCK_LIMIT = 6;
 const PULSE_SERIES_DAYS = 14;
 const PULSE_FEED_LIMIT = 250;
 const PULSE_LEADERBOARD_LIMIT = 10;
-const PULSE_JSON_STORE_PATH = path.resolve(__dirname, "..", "cache", "pulse-store.json");
-const PULSE_DB_PATH = path.resolve(__dirname, "..", "cache", "pulse-store.sqlite");
 const PULSE_LANES = new Set(["build", "thread", "art"]);
 const ARC_ID_UNLOCK_PRICE_USDC = "2.50";
 const ARC_ID_UNLOCK_PRICE_BASE_UNITS = 2_500_000n;
@@ -59,6 +78,10 @@ const ARC_ID_NFT_MINT_PRICE_BASE_UNITS = 5_000_000n;
 const ARC_ID_NFT_SIGNATURE_TTL_SEC = 15 * 60;
 const ARC_ID_NFT_DOMAIN_NAME = "AgentMarket Arc ID";
 const ARC_ID_NFT_DOMAIN_VERSION = "1";
+const PULSE_STORAGE_BASE_DIR = resolvePulseStorageBaseDir();
+const PULSE_JSON_STORE_PATH = path.join(PULSE_STORAGE_BASE_DIR, "pulse-store.json");
+const PULSE_DB_PATH = path.join(PULSE_STORAGE_BASE_DIR, "pulse-store.sqlite");
+const LEGACY_PULSE_JSON_STORE_PATH = path.resolve(__dirname, "..", "cache", "pulse-store.json");
 
 // ─── ABIs ─────────────────────────────────────────────────────────
 const JOB_BOARD_ABI = [
@@ -479,16 +502,20 @@ async function migrateLegacyPulseStore(db) {
   }
 
   let legacyStore = null;
-  try {
-    const raw = await fs.readFile(PULSE_JSON_STORE_PATH, "utf8");
-    const parsed = JSON.parse(raw);
-    legacyStore = {
-      feedPosts: Array.isArray(parsed?.feedPosts) ? parsed.feedPosts : [],
-      profiles: parsed?.profiles && typeof parsed.profiles === "object" ? parsed.profiles : {},
-    };
-  } catch (err) {
-    if (err?.code !== "ENOENT") {
-      console.warn("Could not read legacy ArcPulse JSON store:", err.message);
+  const legacyPaths = [...new Set([LEGACY_PULSE_JSON_STORE_PATH, PULSE_JSON_STORE_PATH])];
+  for (const candidatePath of legacyPaths) {
+    try {
+      const raw = await fs.readFile(candidatePath, "utf8");
+      const parsed = JSON.parse(raw);
+      legacyStore = {
+        feedPosts: Array.isArray(parsed?.feedPosts) ? parsed.feedPosts : [],
+        profiles: parsed?.profiles && typeof parsed.profiles === "object" ? parsed.profiles : {},
+      };
+      break;
+    } catch (err) {
+      if (err?.code !== "ENOENT") {
+        console.warn(`Could not read legacy ArcPulse JSON store at ${candidatePath}:`, err.message);
+      }
     }
   }
 
@@ -576,8 +603,14 @@ async function ensurePulseDatabase() {
   if (pulseDb) return pulseDb;
   if (!pulseDbReadyPromise) {
     pulseDbReadyPromise = (async () => {
-      await fs.mkdir(path.dirname(PULSE_DB_PATH), { recursive: true });
-      const db = new DatabaseSync(PULSE_DB_PATH);
+      let db;
+      try {
+        await fs.mkdir(path.dirname(PULSE_DB_PATH), { recursive: true });
+        db = new DatabaseSync(PULSE_DB_PATH);
+      } catch (err) {
+        console.warn(`Could not open Pulse database at ${PULSE_DB_PATH}; falling back to in-memory storage:`, err.message);
+        db = new DatabaseSync(":memory:");
+      }
       db.exec(`
         PRAGMA journal_mode = WAL;
         PRAGMA foreign_keys = ON;

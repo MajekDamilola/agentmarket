@@ -3790,6 +3790,7 @@ const EXPLORER = 'https://testnet.arcscan.app';
 const USDC = '0x3600000000000000000000000000000000000000';
 let JOB_BOARD = window.JOB_BOARD_ADDRESS = '0x42e4cC4836cDd7355a7aD600B51B054b03322D3f';
 window.AGENTMARKET_RUNTIME_CONFIG = window.AGENTMARKET_RUNTIME_CONFIG || {
+  arcIdUnlock: null,
   bridgeSupportedChains: [],
   pulseEnabled: true,
   unifiedBalanceEnabled: true,
@@ -3801,6 +3802,9 @@ async function loadConfig() {
     const res = await fetch(`${API}/api/config`);
     const config = await res.json();
     if (config.jobBoardAddress) JOB_BOARD = window.JOB_BOARD_ADDRESS = config.jobBoardAddress;
+    if (config.arcIdUnlock && typeof config.arcIdUnlock === 'object') {
+      window.AGENTMARKET_RUNTIME_CONFIG.arcIdUnlock = config.arcIdUnlock;
+    }
     if (Array.isArray(config.bridgeSupportedChains)) {
       bridgeSupportedChains = config.bridgeSupportedChains;
       window.AGENTMARKET_RUNTIME_CONFIG.bridgeSupportedChains = config.bridgeSupportedChains;
@@ -3819,6 +3823,9 @@ async function loadConfig() {
     window.dispatchEvent(new CustomEvent('agentmarket:config-loaded', {
       detail: window.AGENTMARKET_RUNTIME_CONFIG,
     }));
+    if (document.getElementById('page-pulse')?.classList.contains('active')) {
+      renderPulseArcId(pulseState?.arcId || null);
+    }
   } catch(e) { console.error('Could not load config', e); }
 }
 
@@ -4807,6 +4814,7 @@ function renderPulseCheckIn(statusPayload = null) {
 function renderPulseArcId(payload = null) {
   const mount = document.getElementById('pulseArcIdCard');
   if (!mount) return;
+  const runtimePayment = getArcIdUnlockConfig();
 
   if (payload?.error) {
     mount.className = 'pulse-identity-card locked';
@@ -4830,11 +4838,24 @@ function renderPulseArcId(payload = null) {
   const hasWallet = Boolean(currentWallet);
   const profile = payload?.profile || {};
   const teaser = payload?.teaser || {};
-  const unlocked = Boolean(payload?.unlocked);
+  const unlockMode = payload?.unlockMode || (payload?.unlocked ? 'beta-free' : 'locked');
+  const hasAccess = Boolean(payload?.accessUnlocked ?? payload?.unlocked);
+  const paidUnlocked = unlockMode === 'paid-usdc';
+  const betaUnlocked = unlockMode === 'beta-free';
+  const payment = {
+    ...runtimePayment,
+    ...(payload?.payment && typeof payload.payment === 'object' ? payload.payment : {}),
+  };
+  const unlockConfigured = Boolean(payment.enabled && payment.recipient);
+  const priceLabel = formatPulseUsdc(payment.priceUsdc || runtimePayment.priceUsdc || '2.50');
+  const recipientLabel = payment.recipientLabel || (payment.recipient ? shortAddr(payment.recipient) : 'Arc recipient');
   const displayName = profile.displayName || (hasWallet ? shortAddr(currentWallet) : 'Your wallet');
   const badge = payload?.badge || 'Arc ID beta';
   const rankLabel = payload?.rank?.label || 'Tracked beta';
   const walletLabel = payload?.walletLabel || (hasWallet ? shortAddr(currentWallet) : 'Connect wallet');
+  const paymentTxLink = paidUnlocked && payment.txUrl
+    ? `<a class="pulse-inline-link mono" href="${escapeHtml(payment.txUrl)}" target="_blank" rel="noreferrer">View payment tx</a>`
+    : '';
 
   const previewStats = hasWallet && payload
     ? [
@@ -4884,37 +4905,65 @@ function renderPulseArcId(payload = null) {
         <div class="pulse-identity-unlock-row">
           <div>
             <div class="pulse-mini-title">Connect to preview</div>
-            <div class="pulse-note">Arc ID turns your tracked marketplace activity, Pulse streaks, and community posts into one wallet-facing card.</div>
+            <div class="pulse-note">
+              ${unlockConfigured
+                ? `Arc ID turns your tracked marketplace activity, Pulse streaks, and community posts into one wallet-facing card. Pay ${escapeHtml(priceLabel)} on Arc when you are ready to unlock it.`
+                : 'Arc ID turns your tracked marketplace activity, Pulse streaks, and community posts into one wallet-facing card.'}
+            </div>
           </div>
           <button class="btn btn-primary" type="button" onclick="connectWallet()">Connect wallet</button>
         </div>
       </div>
     `
-    : unlocked
+    : paidUnlocked
       ? `
         <div class="pulse-identity-unlock">
           <div class="pulse-identity-unlock-row">
             <div>
-              <div class="pulse-mini-title">Arc ID unlocked</div>
-              <div class="pulse-note">Saved ${escapeHtml(formatPulseTimestamp(payload?.unlockedAt || 0))}. Paid Arc unlocks and collectible minting can slot into this same card next.</div>
+              <div class="pulse-mini-title">Paid onchain unlock verified</div>
+              <div class="pulse-note">
+                Verified ${escapeHtml(payment.paidAmountUsdc || payment.priceUsdc || '2.50')} USDC payment on Arc for ${escapeHtml(recipientLabel)}.
+                ${paymentTxLink ? `${paymentTxLink}<span style="margin:0 6px">/</span>` : ''}
+                Saved ${escapeHtml(formatPulseTimestamp(payload?.unlockedAt || 0))}.
+              </div>
             </div>
             <button class="btn btn-outline" type="button" disabled>Mint next</button>
           </div>
         </div>
       `
+      : betaUnlocked
+        ? `
+          <div class="pulse-identity-unlock">
+            <div class="pulse-identity-unlock-row">
+              <div>
+                <div class="pulse-mini-title">Beta access is already live</div>
+                <div class="pulse-note">
+                  You unlocked Arc ID during beta. ${unlockConfigured
+                    ? `Pay ${escapeHtml(priceLabel)} on Arc to attach the permanent onchain receipt to this wallet.`
+                    : 'The paid Arc unlock recipient still needs to be configured on the server.'}
+                </div>
+              </div>
+              <button class="btn btn-primary" type="button" onclick="unlockPulseArcId()" id="pulseArcIdUnlockBtn" ${pulseArcIdBusy || !unlockConfigured ? 'disabled' : ''}>${unlockConfigured ? (pulseArcIdBusy ? 'Processing payment...' : `Pay ${priceLabel} on Arc`) : 'Unlock unavailable'}</button>
+            </div>
+          </div>
+        `
       : `
         <div class="pulse-identity-unlock">
           <div class="pulse-identity-unlock-row">
             <div>
               <div class="pulse-mini-title">Preview ready for ${escapeHtml(walletLabel)}</div>
-              <div class="pulse-note">Unlock once in beta to pin this identity card to your Pulse profile. The paid Arc transaction can replace this saved beta action later.</div>
+              <div class="pulse-note">
+                ${unlockConfigured
+                  ? `Send ${escapeHtml(priceLabel)} USDC on Arc to ${escapeHtml(recipientLabel)} and this card will unlock as a verified paid identity surface.`
+                  : 'The onchain unlock path is being configured on the server right now.'}
+              </div>
             </div>
-            <button class="btn btn-primary" type="button" onclick="unlockPulseArcId()" id="pulseArcIdUnlockBtn" ${pulseArcIdBusy ? 'disabled' : ''}>${pulseArcIdBusy ? 'Unlocking...' : 'Unlock Arc ID beta'}</button>
+            <button class="btn btn-primary" type="button" onclick="unlockPulseArcId()" id="pulseArcIdUnlockBtn" ${pulseArcIdBusy || !unlockConfigured ? 'disabled' : ''}>${unlockConfigured ? (pulseArcIdBusy ? 'Processing payment...' : `Unlock for ${priceLabel}`) : 'Unlock unavailable'}</button>
           </div>
         </div>
       `;
 
-  mount.className = `pulse-identity-card ${unlocked ? 'unlocked' : 'locked'}`;
+  mount.className = `pulse-identity-card ${hasAccess ? 'unlocked' : 'locked'}`;
   mount.innerHTML = `
     <div class="pulse-identity-top">
       <div>
@@ -4922,9 +4971,11 @@ function renderPulseArcId(payload = null) {
         <div class="pulse-identity-title">${escapeHtml(displayName)}</div>
         <div class="pulse-identity-copy">
           ${hasWallet
-            ? (unlocked
-              ? 'Your saved Arc ID beta blends tracked marketplace, streak, and community signals into one wallet-facing card while full-network indexing is still coming online.'
-              : 'Your tracked ArcPulse profile is ready. This preview uses live marketplace and community data now so the paid Arc unlock can snap in later without changing the model.')
+            ? (paidUnlocked
+              ? 'Your Arc ID now carries a verified Arc USDC unlock receipt on top of the tracked marketplace, streak, and community signals already shaping the card.'
+              : betaUnlocked
+                ? 'Your beta Arc ID access is still valid. Complete the paid Arc unlock whenever you want the permanent onchain receipt attached to this same identity card.'
+                : 'Your tracked ArcPulse profile is ready. Pay on Arc to turn this preview into a verified identity card without changing the rest of the model.')
             : 'A persistent identity surface for the people actually moving through AgentMarket and ArcPulse.'}
         </div>
       </div>
@@ -5106,30 +5157,57 @@ async function unlockPulseArcId() {
     toast('Connect Wallet', 'Connect your wallet before unlocking Arc ID.', 'info');
     return;
   }
+  const paymentConfig = getArcIdUnlockConfig();
+  if (!paymentConfig.enabled || !paymentConfig.recipient) {
+    toast('Unlock Unavailable', 'The Arc ID payment recipient is not configured yet.', 'error');
+    return;
+  }
   if (pulseArcIdBusy) return;
 
   pulseArcIdBusy = true;
   const button = document.getElementById('pulseArcIdUnlockBtn');
-  const previousLabel = button?.textContent || 'Unlock Arc ID beta';
+  const previousLabel = button?.textContent || `Unlock for ${formatPulseUsdc(paymentConfig.priceUsdc || '2.50')}`;
   if (button) {
     button.disabled = true;
-    button.textContent = 'Unlocking...';
+    button.textContent = 'Preparing payment...';
   }
 
   const authorInput = document.getElementById('pulsePostAuthor');
 
   try {
+    await ensureWalletConnected();
+    await ensureWalletChain('Arc_Testnet');
+    const ethersLib = requireEthers();
+    const provider = new ethersLib.BrowserProvider(window.ethereum);
+    const signer = await provider.getSigner();
+    const signerAddress = await signer.getAddress();
+    if (!currentWallet || signerAddress.toLowerCase() !== currentWallet.toLowerCase()) {
+      currentWallet = signerAddress;
+      updateWalletDisplay();
+      updateWalletButtons();
+    }
+    const priceValue = String(paymentConfig.priceUsdc || '2.50');
+    const amount = parseUsdcAmount(priceValue);
+    const usdc = new ethersLib.Contract(USDC, USDC_ERC20_ABI, signer);
+
+    toast('Confirm Payment', `Send ${formatPulseUsdc(priceValue)} USDC on Arc to unlock your Arc ID.`, 'info');
+    if (button) button.textContent = 'Confirm in wallet...';
+    const tx = await usdc.transfer(paymentConfig.recipient, amount);
+    if (button) button.textContent = 'Waiting for Arc confirmation...';
+    await tx.wait();
+
     await fetchPulseJson('/api/pulse/arc-id/unlock', {
       method: 'POST',
       body: JSON.stringify({
-        wallet: currentWallet,
+        wallet: signerAddress,
         displayName: authorInput?.value || '',
+        txHash: tx.hash,
       }),
     });
-    toast('Arc ID Unlocked', 'Your Pulse identity card is now saved for this wallet.', 'success');
+    toast('Arc ID Unlocked', `Your ${formatPulseUsdc(priceValue)} USDC Arc payment was verified.`, 'success');
     await loadPulse(true);
   } catch (e) {
-    toast('Unlock Failed', e.message || 'Could not unlock Arc ID.', 'error');
+    toast('Unlock Failed', e.message || 'Could not complete the Arc ID payment.', 'error');
   } finally {
     pulseArcIdBusy = false;
     if (button) {
@@ -6156,6 +6234,7 @@ const USDC_ERC20_ABI = [
   'function allowance(address owner, address spender) view returns (uint256)',
   'function approve(address spender, uint256 amount) returns (bool)',
   'function balanceOf(address owner) view returns (uint256)',
+  'function transfer(address to, uint256 amount) returns (bool)',
 ];
 
 const TOKEN_MESSENGER_V2_ABI = [
@@ -6274,6 +6353,13 @@ function shortWallet(address) {
 
 function getRuntimeConfig() {
   return window.AGENTMARKET_RUNTIME_CONFIG || {};
+}
+
+function getArcIdUnlockConfig() {
+  const config = getRuntimeConfig().arcIdUnlock;
+  return (config && typeof config === 'object')
+    ? config
+    : { enabled: false, priceUsdc: '2.50', recipient: '', recipientLabel: 'Configure unlock wallet' };
 }
 
 function isUnifiedBalanceEnabled() {

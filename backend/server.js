@@ -1,6 +1,6 @@
 import express from "express";
 import cors from "cors";
-import { createPublicClient, http, formatUnits } from "viem";
+import { createPublicClient, http, formatUnits, parseAbiItem, parseEventLogs } from "viem";
 import { arcTestnet } from "viem/chains";
 import dotenv from "dotenv";
 import { promises as fs } from "fs";
@@ -51,6 +51,8 @@ const PULSE_LEADERBOARD_LIMIT = 10;
 const PULSE_JSON_STORE_PATH = path.resolve(__dirname, "..", "cache", "pulse-store.json");
 const PULSE_DB_PATH = path.resolve(__dirname, "..", "cache", "pulse-store.sqlite");
 const PULSE_LANES = new Set(["build", "thread", "art"]);
+const ARC_ID_UNLOCK_PRICE_USDC = "2.50";
+const ARC_ID_UNLOCK_PRICE_BASE_UNITS = 2_500_000n;
 
 // ─── ABIs ─────────────────────────────────────────────────────────
 const JOB_BOARD_ABI = [
@@ -74,6 +76,8 @@ const IDENTITY_ABI = [
   { name:"ownerOf", type:"function", stateMutability:"view", inputs:[{name:"tokenId",type:"uint256"}], outputs:[{name:"",type:"address"}] },
 ];
 
+const ERC20_TRANSFER_EVENT = parseAbiItem("event Transfer(address indexed from, address indexed to, uint256 value)");
+
 const STATUS_LABELS = ["Open","Funded","Submitted","Completed","Rejected"];
 const WORKER_TYPES = ["AI","Human"];
 const COMPLETED_JOB_RETENTION_MS = 24 * 60 * 60 * 1000;
@@ -81,6 +85,19 @@ const COMPLETED_JOB_RETENTION_MS = 24 * 60 * 60 * 1000;
 // ─── Helpers ──────────────────────────────────────────────────────
 function sameAddress(a, b) {
   return a?.toLowerCase() === b?.toLowerCase();
+}
+
+function isHexAddress(value) {
+  return /^0x[a-fA-F0-9]{40}$/.test(String(value || "").trim());
+}
+
+function resolveOptionalAddress(...values) {
+  for (const value of values) {
+    if (isHexAddress(value) && !sameAddress(value, ZERO_ADDRESS)) {
+      return String(value).trim();
+    }
+  }
+  return "";
 }
 
 function shortWallet(address) {
@@ -95,6 +112,13 @@ function toUsdcNumber(value) {
 function formatUsdc(value) {
   return toUsdcNumber(value).toFixed(2);
 }
+
+const ARC_ID_UNLOCK_RECIPIENT = resolveOptionalAddress(
+  process.env.ARC_ID_UNLOCK_RECIPIENT,
+  process.env.PULSE_ARC_ID_UNLOCK_RECIPIENT,
+  process.env.PLATFORM_WALLET,
+  process.env.SUMMARY_AGENT_WALLET,
+);
 
 function utcDayKey(timestamp) {
   const date = new Date(timestamp);
@@ -566,7 +590,10 @@ async function ensurePulseDatabase() {
         CREATE TABLE IF NOT EXISTS pulse_arc_id_unlocks (
           wallet TEXT PRIMARY KEY,
           unlocked_at INTEGER NOT NULL,
-          updated_at INTEGER NOT NULL
+          updated_at INTEGER NOT NULL,
+          tx_hash TEXT NOT NULL DEFAULT '',
+          payment_amount_usdc TEXT NOT NULL DEFAULT '0.00',
+          recipient TEXT NOT NULL DEFAULT ''
         );
 
         CREATE INDEX IF NOT EXISTS idx_pulse_posts_created_at ON pulse_posts(created_at DESC);
@@ -575,7 +602,18 @@ async function ensurePulseDatabase() {
         CREATE INDEX IF NOT EXISTS idx_pulse_profiles_streak ON pulse_profiles(current_streak DESC, longest_streak DESC, points DESC);
         CREATE INDEX IF NOT EXISTS idx_pulse_upvotes_wallet ON pulse_post_upvotes(wallet);
         CREATE INDEX IF NOT EXISTS idx_pulse_arc_id_unlocks_updated_at ON pulse_arc_id_unlocks(updated_at DESC);
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_pulse_arc_id_unlocks_tx_hash ON pulse_arc_id_unlocks(tx_hash) WHERE tx_hash <> '';
       `);
+      const unlockColumns = new Set(db.prepare("PRAGMA table_info(pulse_arc_id_unlocks)").all().map(column => String(column.name || "")));
+      if (!unlockColumns.has("tx_hash")) {
+        db.exec("ALTER TABLE pulse_arc_id_unlocks ADD COLUMN tx_hash TEXT NOT NULL DEFAULT '';");
+      }
+      if (!unlockColumns.has("payment_amount_usdc")) {
+        db.exec("ALTER TABLE pulse_arc_id_unlocks ADD COLUMN payment_amount_usdc TEXT NOT NULL DEFAULT '0.00';");
+      }
+      if (!unlockColumns.has("recipient")) {
+        db.exec("ALTER TABLE pulse_arc_id_unlocks ADD COLUMN recipient TEXT NOT NULL DEFAULT '';");
+      }
       await migrateLegacyPulseStore(db);
       pulseDb = db;
       return db;
@@ -941,7 +979,64 @@ function buildPulseWalletAnalytics(db, jobs = [], campaigns = []) {
 }
 
 function getPulseArcIdUnlockRecord(db, wallet) {
-  return db.prepare("SELECT wallet, unlocked_at, updated_at FROM pulse_arc_id_unlocks WHERE wallet = ?").get(String(wallet || "").toLowerCase()) || null;
+  return db.prepare("SELECT * FROM pulse_arc_id_unlocks WHERE wallet = ?").get(String(wallet || "").toLowerCase()) || null;
+}
+
+function normalizeTxHash(value) {
+  const hash = String(value || "").trim();
+  if (!/^0x[a-fA-F0-9]{64}$/.test(hash)) throw new Error("Invalid transaction hash");
+  return hash;
+}
+
+function getArcIdUnlockConfig() {
+  return {
+    enabled: Boolean(ARC_ID_UNLOCK_RECIPIENT),
+    priceUsdc: ARC_ID_UNLOCK_PRICE_USDC,
+    recipient: ARC_ID_UNLOCK_RECIPIENT,
+    recipientLabel: ARC_ID_UNLOCK_RECIPIENT ? shortWallet(ARC_ID_UNLOCK_RECIPIENT) : "Configure unlock wallet",
+  };
+}
+
+async function verifyArcIdUnlockPayment(wallet, txHash) {
+  if (!ARC_ID_UNLOCK_RECIPIENT) {
+    throw new Error("Arc ID unlock recipient is not configured on the server");
+  }
+
+  let receipt;
+  try {
+    receipt = await publicClient.getTransactionReceipt({ hash: txHash });
+  } catch (err) {
+    throw new Error("Could not find this Arc payment transaction yet");
+  }
+
+  if (!receipt || receipt.status !== "success") {
+    throw new Error("This Arc payment transaction has not succeeded");
+  }
+
+  const transfers = parseEventLogs({
+    abi: [ERC20_TRANSFER_EVENT],
+    eventName: "Transfer",
+    logs: receipt.logs,
+    strict: false,
+  }).filter(log => sameAddress(log.address, USDC_ADDRESS));
+
+  const matchingTransfer = transfers.find(log => (
+    sameAddress(log.args?.from, wallet)
+    && sameAddress(log.args?.to, ARC_ID_UNLOCK_RECIPIENT)
+    && BigInt(log.args?.value || 0n) >= ARC_ID_UNLOCK_PRICE_BASE_UNITS
+  ));
+
+  if (!matchingTransfer) {
+    throw new Error(`Payment must be a ${ARC_ID_UNLOCK_PRICE_USDC} USDC transfer from your wallet to the Arc ID unlock recipient on Arc`);
+  }
+
+  return {
+    txHash,
+    paidAmountBaseUnits: BigInt(matchingTransfer.args?.value || 0n),
+    paidAmountUsdc: formatUsdc(formatUnits(BigInt(matchingTransfer.args?.value || 0n), 6)),
+    recipient: ARC_ID_UNLOCK_RECIPIENT,
+    blockNumber: Number(receipt.blockNumber || 0n),
+  };
 }
 
 function buildPulseArcIdProfile(db, wallet, jobs = [], campaigns = []) {
@@ -950,6 +1045,8 @@ function buildPulseArcIdProfile(db, wallet, jobs = [], campaigns = []) {
   const entry = analyticsMap.get(canonicalWallet) || createPulseWalletActivity(canonicalWallet);
   const summary = formatPulseWalletActivity(entry);
   const unlockRecord = getPulseArcIdUnlockRecord(db, canonicalWallet);
+  const unlockConfig = getArcIdUnlockConfig();
+  const unlockMode = unlockRecord?.tx_hash ? "paid-usdc" : (unlockRecord ? "beta-free" : "locked");
 
   const rankedWallets = [...analyticsMap.values()]
     .map(formatPulseWalletActivity)
@@ -978,7 +1075,18 @@ function buildPulseArcIdProfile(db, wallet, jobs = [], campaigns = []) {
     walletLabel: shortWallet(canonicalWallet),
     unlocked: Boolean(unlockRecord),
     unlockedAt: Number(unlockRecord?.unlocked_at || 0),
-    unlockMode: "beta-free",
+    unlockMode,
+    paidUnlocked: unlockMode === "paid-usdc",
+    accessUnlocked: Boolean(unlockRecord),
+    payment: {
+      ...unlockConfig,
+      txHash: unlockRecord?.tx_hash || "",
+      txUrl: unlockRecord?.tx_hash ? `https://testnet.arcscan.app/tx/${unlockRecord.tx_hash}` : "",
+      paidAmountUsdc: unlockRecord?.payment_amount_usdc || "",
+      recipient: unlockRecord?.recipient || unlockConfig.recipient,
+      recipientLabel: (unlockRecord?.recipient || unlockConfig.recipient) ? shortWallet(unlockRecord?.recipient || unlockConfig.recipient) : unlockConfig.recipientLabel,
+      needsPayment: unlockMode !== "paid-usdc",
+    },
     identityRegistryUrl: `https://testnet.arcscan.app/address/${IDENTITY_REGISTRY}`,
     reputationRegistryUrl: `https://testnet.arcscan.app/address/${REPUTATION_REGISTRY}`,
     badge,
@@ -997,29 +1105,48 @@ function buildPulseArcIdProfile(db, wallet, jobs = [], campaigns = []) {
     profile: summary,
     notes: [
       "Arc ID beta is based on tracked AgentMarket and ArcPulse activity right now.",
-      "A paid Arc transaction unlock can replace this saved beta unlock without changing the card model.",
+      unlockConfig.enabled
+        ? `A ${ARC_ID_UNLOCK_PRICE_USDC} USDC transfer on Arc now unlocks and verifies this card.`
+        : "Configure an Arc ID unlock recipient on the server to turn the paid unlock live.",
       "Full-network Arc identity stats should switch on once an indexer is attached.",
     ],
   };
 }
 
-function unlockPulseArcId(db, wallet, displayName = "") {
-  const unlockRecord = db.transaction((targetWallet, label) => {
+function savePaidPulseArcIdUnlock(db, wallet, displayName = "", payment = {}) {
+  const persistUnlock = db.transaction((targetWallet, label, verifiedPayment) => {
     const profile = ensurePulseProfile(db, targetWallet, label);
     const canonicalWallet = profile.wallet;
-    const now = Date.now();
+    const existing = getPulseArcIdUnlockRecord(db, canonicalWallet);
+    const existingTxOwner = db.prepare("SELECT wallet FROM pulse_arc_id_unlocks WHERE tx_hash = ? AND wallet <> ?").get(verifiedPayment.txHash, canonicalWallet);
+    if (existingTxOwner) {
+      throw new Error("This Arc payment receipt is already linked to another wallet");
+    }
 
+    const now = Date.now();
+    const unlockedAt = Number(existing?.unlocked_at || now);
     db.prepare(`
-      INSERT INTO pulse_arc_id_unlocks (wallet, unlocked_at, updated_at)
-      VALUES (?, ?, ?)
+      INSERT INTO pulse_arc_id_unlocks (wallet, unlocked_at, updated_at, tx_hash, payment_amount_usdc, recipient)
+      VALUES (?, ?, ?, ?, ?, ?)
       ON CONFLICT(wallet) DO UPDATE SET
-        updated_at = excluded.updated_at
-    `).run(canonicalWallet, now, now);
+        unlocked_at = excluded.unlocked_at,
+        updated_at = excluded.updated_at,
+        tx_hash = excluded.tx_hash,
+        payment_amount_usdc = excluded.payment_amount_usdc,
+        recipient = excluded.recipient
+    `).run(
+      canonicalWallet,
+      unlockedAt,
+      now,
+      verifiedPayment.txHash,
+      verifiedPayment.paidAmountUsdc,
+      verifiedPayment.recipient,
+    );
 
     return getPulseArcIdUnlockRecord(db, canonicalWallet);
   });
 
-  return unlockRecord(wallet, displayName);
+  return persistUnlock(wallet, displayName, payment);
 }
 
 function getPulsePostById(db, postId, viewerWallet = "") {
@@ -1314,6 +1441,7 @@ app.get("/api/config", (req, res) => {
     usdcAddress: USDC_ADDRESS,
     explorerUrl: "https://testnet.arcscan.app",
     pulseEnabled: true,
+    arcIdUnlock: getArcIdUnlockConfig(),
     unifiedBalanceEnabled: true,
     unifiedBalanceSupportedChains: [
       { id: "Ethereum_Sepolia", name: "Ethereum Sepolia", chainId: 11155111, type: "evm", testnet: true },
@@ -1437,14 +1565,16 @@ app.post("/api/pulse/arc-id/unlock", async (req, res) => {
     const pulseDb = await ensurePulseDatabase();
     const wallet = normalizeAddress(req.body?.wallet);
     const displayName = normalizePulseText(req.body?.displayName, "Display name", 40, { allowEmpty: true });
-    unlockPulseArcId(pulseDb, wallet, displayName);
+    const txHash = normalizeTxHash(req.body?.txHash);
+    const payment = await verifyArcIdUnlockPayment(wallet, txHash);
+    savePaidPulseArcIdUnlock(pulseDb, wallet, displayName, payment);
     const [jobs, campaigns] = await Promise.all([
       getAllFormattedJobs(),
       getAllFormattedCampaigns(),
     ]);
     res.json(buildPulseArcIdProfile(pulseDb, wallet, jobs, campaigns));
   } catch (err) {
-    res.status(400).json({ error: err.message || "Could not unlock Arc ID" });
+    res.status(400).json({ error: err.message || "Could not verify Arc ID payment" });
   }
 });
 

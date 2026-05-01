@@ -563,11 +563,18 @@ async function ensurePulseDatabase() {
           FOREIGN KEY (post_id) REFERENCES pulse_posts(id) ON DELETE CASCADE
         );
 
+        CREATE TABLE IF NOT EXISTS pulse_arc_id_unlocks (
+          wallet TEXT PRIMARY KEY,
+          unlocked_at INTEGER NOT NULL,
+          updated_at INTEGER NOT NULL
+        );
+
         CREATE INDEX IF NOT EXISTS idx_pulse_posts_created_at ON pulse_posts(created_at DESC);
         CREATE INDEX IF NOT EXISTS idx_pulse_posts_lane_created_at ON pulse_posts(lane, created_at DESC);
         CREATE INDEX IF NOT EXISTS idx_pulse_profiles_points ON pulse_profiles(points DESC, updated_at DESC);
         CREATE INDEX IF NOT EXISTS idx_pulse_profiles_streak ON pulse_profiles(current_streak DESC, longest_streak DESC, points DESC);
         CREATE INDEX IF NOT EXISTS idx_pulse_upvotes_wallet ON pulse_post_upvotes(wallet);
+        CREATE INDEX IF NOT EXISTS idx_pulse_arc_id_unlocks_updated_at ON pulse_arc_id_unlocks(updated_at DESC);
       `);
       await migrateLegacyPulseStore(db);
       pulseDb = db;
@@ -738,6 +745,281 @@ function getPulseStorageCounts(db) {
     communityPosts: Number(db.prepare("SELECT COUNT(*) AS count FROM pulse_posts").get()?.count || 0),
     pulseProfiles: Number(db.prepare("SELECT COUNT(*) AS count FROM pulse_profiles").get()?.count || 0),
   };
+}
+
+function formatPulseCalendarLabel(timestamp) {
+  if (!timestamp) return "No activity yet";
+  try {
+    return new Date(Number(timestamp)).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      timeZone: "UTC",
+    });
+  } catch {
+    return "No activity yet";
+  }
+}
+
+function createPulseWalletActivity(wallet) {
+  return {
+    wallet: String(wallet || "").toLowerCase(),
+    displayName: "",
+    points: 0,
+    currentStreak: 0,
+    longestStreak: 0,
+    totalCheckIns: 0,
+    jobsAsClient: 0,
+    jobsAsWorker: 0,
+    campaignsCreated: 0,
+    postsShared: 0,
+    postUpvotesEarned: 0,
+    trackedVolumeUsdc: 0,
+    memberSince: 0,
+    laneCounts: {
+      build: 0,
+      thread: 0,
+      art: 0,
+    },
+  };
+}
+
+function ensurePulseWalletActivity(map, wallet) {
+  const canonicalWallet = String(wallet || "").toLowerCase();
+  if (!canonicalWallet || sameAddress(canonicalWallet, ZERO_ADDRESS)) return null;
+  if (!map.has(canonicalWallet)) {
+    map.set(canonicalWallet, createPulseWalletActivity(canonicalWallet));
+  }
+  return map.get(canonicalWallet);
+}
+
+function notePulseWalletTimestamp(entry, timestamp) {
+  const value = Number(timestamp || 0);
+  if (!entry || value <= 0) return;
+  if (!entry.memberSince || value < entry.memberSince) {
+    entry.memberSince = value;
+  }
+}
+
+function resolvePulseLaneLabel(laneCounts = {}, fallback = "") {
+  let winner = "";
+  let winnerCount = 0;
+  for (const lane of ["build", "thread", "art"]) {
+    const count = Number(laneCounts?.[lane] || 0);
+    if (count > winnerCount) {
+      winner = lane;
+      winnerCount = count;
+    }
+  }
+
+  const lane = winner || fallback;
+  if (lane === "thread") return "Thread";
+  if (lane === "art") return "Art";
+  if (lane === "build") return "Build";
+  return "None yet";
+}
+
+function formatPulseWalletActivity(entry) {
+  const trackedVolumeUsdcRaw = Number((Number(entry.trackedVolumeUsdc || 0)).toFixed(2));
+  const totalTrackedActions = Number(entry.jobsAsClient || 0)
+    + Number(entry.jobsAsWorker || 0)
+    + Number(entry.campaignsCreated || 0)
+    + Number(entry.postsShared || 0)
+    + Number(entry.totalCheckIns || 0);
+
+  const activityScore = Math.round(
+    (totalTrackedActions * 14)
+    + trackedVolumeUsdcRaw
+    + Number(entry.points || 0)
+    + (Number(entry.longestStreak || 0) * 4)
+    + (Number(entry.postUpvotesEarned || 0) * 3)
+  );
+
+  return {
+    wallet: entry.wallet,
+    displayName: entry.displayName || shortWallet(entry.wallet),
+    points: Number(entry.points || 0),
+    currentStreak: Number(entry.currentStreak || 0),
+    longestStreak: Number(entry.longestStreak || 0),
+    totalCheckIns: Number(entry.totalCheckIns || 0),
+    jobsAsClient: Number(entry.jobsAsClient || 0),
+    jobsAsWorker: Number(entry.jobsAsWorker || 0),
+    campaignsCreated: Number(entry.campaignsCreated || 0),
+    postsShared: Number(entry.postsShared || 0),
+    postUpvotesEarned: Number(entry.postUpvotesEarned || 0),
+    trackedVolumeUsdc: formatUsdc(trackedVolumeUsdcRaw),
+    trackedVolumeUsdcRaw,
+    memberSince: Number(entry.memberSince || 0),
+    memberSinceLabel: formatPulseCalendarLabel(entry.memberSince),
+    totalTrackedActions,
+    mostUsedLane: resolvePulseLaneLabel(entry.laneCounts, totalTrackedActions > 0 ? "build" : ""),
+    mostUsedApp: totalTrackedActions > 0 ? "AgentMarket" : "Awaiting first signal",
+    activityScore,
+  };
+}
+
+function describePulseArcIdBadge(summary, topPercent) {
+  if (!summary.totalTrackedActions && !summary.points) return "Network Arrival";
+  if (topPercent <= 10 || summary.activityScore >= 220) return "Arc Vanguard";
+  if (topPercent <= 30 || summary.activityScore >= 120) return "Pulse Builder";
+  if (summary.postsShared > 0 || summary.totalCheckIns > 0) return "Signal Starter";
+  return "Fresh Builder";
+}
+
+function buildPulseWalletAnalytics(db, jobs = [], campaigns = []) {
+  const analytics = new Map();
+
+  for (const row of db.prepare("SELECT * FROM pulse_profiles").all()) {
+    const normalized = normalizePulseProfileRecord(row);
+    if (!normalized?.wallet) continue;
+    const profile = formatPulseProfile(normalized);
+    const entry = ensurePulseWalletActivity(analytics, normalized.wallet);
+    if (!entry) continue;
+    entry.displayName = profile.displayName || entry.displayName;
+    entry.points = profile.points;
+    entry.currentStreak = profile.currentStreak;
+    entry.longestStreak = profile.longestStreak;
+    entry.totalCheckIns = profile.totalCheckIns;
+    notePulseWalletTimestamp(entry, normalized.createdAt || normalized.updatedAt);
+  }
+
+  const authoredPosts = db.prepare(`
+    SELECT
+      p.wallet,
+      p.lane,
+      p.created_at,
+      COUNT(v.wallet) AS upvotes
+    FROM pulse_posts p
+    LEFT JOIN pulse_post_upvotes v ON v.post_id = p.id
+    GROUP BY p.id
+  `).all();
+
+  for (const post of authoredPosts) {
+    const entry = ensurePulseWalletActivity(analytics, post.wallet);
+    if (!entry) continue;
+    entry.postsShared += 1;
+    entry.postUpvotesEarned += Number(post.upvotes || 0);
+    if (entry.laneCounts[post.lane] !== undefined) {
+      entry.laneCounts[post.lane] += 1;
+    }
+    notePulseWalletTimestamp(entry, post.created_at);
+  }
+
+  for (const job of jobs) {
+    const budget = toUsdcNumber(job.budget);
+    const createdAt = Number(job.createdAt || 0);
+
+    if (job.client && !sameAddress(job.client, ZERO_ADDRESS)) {
+      const clientEntry = ensurePulseWalletActivity(analytics, job.client);
+      if (clientEntry) {
+        clientEntry.jobsAsClient += 1;
+        clientEntry.trackedVolumeUsdc += budget;
+        notePulseWalletTimestamp(clientEntry, createdAt);
+      }
+    }
+
+    if (job.agent && !sameAddress(job.agent, ZERO_ADDRESS)) {
+      const workerEntry = ensurePulseWalletActivity(analytics, job.agent);
+      if (workerEntry) {
+        workerEntry.jobsAsWorker += 1;
+        workerEntry.trackedVolumeUsdc += budget;
+        notePulseWalletTimestamp(workerEntry, createdAt);
+      }
+    }
+  }
+
+  for (const campaign of campaigns) {
+    if (!campaign.creator || sameAddress(campaign.creator, ZERO_ADDRESS)) continue;
+    const creatorEntry = ensurePulseWalletActivity(analytics, campaign.creator);
+    if (!creatorEntry) continue;
+    creatorEntry.campaignsCreated += 1;
+    creatorEntry.trackedVolumeUsdc += toUsdcNumber(campaign.prizePool);
+    notePulseWalletTimestamp(creatorEntry, Number(campaign.createdAt || 0));
+  }
+
+  return analytics;
+}
+
+function getPulseArcIdUnlockRecord(db, wallet) {
+  return db.prepare("SELECT wallet, unlocked_at, updated_at FROM pulse_arc_id_unlocks WHERE wallet = ?").get(String(wallet || "").toLowerCase()) || null;
+}
+
+function buildPulseArcIdProfile(db, wallet, jobs = [], campaigns = []) {
+  const canonicalWallet = String(wallet || "").toLowerCase();
+  const analyticsMap = buildPulseWalletAnalytics(db, jobs, campaigns);
+  const entry = analyticsMap.get(canonicalWallet) || createPulseWalletActivity(canonicalWallet);
+  const summary = formatPulseWalletActivity(entry);
+  const unlockRecord = getPulseArcIdUnlockRecord(db, canonicalWallet);
+
+  const rankedWallets = [...analyticsMap.values()]
+    .map(formatPulseWalletActivity)
+    .filter(item => item.totalTrackedActions > 0 || item.points > 0 || item.trackedVolumeUsdcRaw > 0 || item.memberSince > 0);
+
+  if (!rankedWallets.some(item => sameAddress(item.wallet, canonicalWallet))) {
+    rankedWallets.push(summary);
+  }
+
+  rankedWallets.sort((a, b) => (
+    b.activityScore - a.activityScore
+    || b.trackedVolumeUsdcRaw - a.trackedVolumeUsdcRaw
+    || b.points - a.points
+    || a.memberSince - b.memberSince
+    || a.wallet.localeCompare(b.wallet)
+  ));
+
+  const rankPosition = Math.max(1, rankedWallets.findIndex(item => sameAddress(item.wallet, canonicalWallet)) + 1);
+  const totalRanked = Math.max(1, rankedWallets.length);
+  const topPercent = totalRanked <= 1 ? 1 : Math.max(1, Math.round((rankPosition / totalRanked) * 100));
+  const badge = describePulseArcIdBadge(summary, topPercent);
+
+  return {
+    scope: "tracked-beta",
+    wallet: canonicalWallet,
+    walletLabel: shortWallet(canonicalWallet),
+    unlocked: Boolean(unlockRecord),
+    unlockedAt: Number(unlockRecord?.unlocked_at || 0),
+    unlockMode: "beta-free",
+    identityRegistryUrl: `https://testnet.arcscan.app/address/${IDENTITY_REGISTRY}`,
+    reputationRegistryUrl: `https://testnet.arcscan.app/address/${REPUTATION_REGISTRY}`,
+    badge,
+    rank: {
+      position: rankPosition,
+      total: totalRanked,
+      topPercent,
+      label: totalRanked > 1 ? `Top ${topPercent}% builder` : "Founding builder",
+    },
+    teaser: {
+      points: summary.points,
+      trackedActions: summary.totalTrackedActions,
+      trackedVolumeUsdc: summary.trackedVolumeUsdc,
+      currentStreak: summary.currentStreak,
+    },
+    profile: summary,
+    notes: [
+      "Arc ID beta is based on tracked AgentMarket and ArcPulse activity right now.",
+      "A paid Arc transaction unlock can replace this saved beta unlock without changing the card model.",
+      "Full-network Arc identity stats should switch on once an indexer is attached.",
+    ],
+  };
+}
+
+function unlockPulseArcId(db, wallet, displayName = "") {
+  const unlockRecord = db.transaction((targetWallet, label) => {
+    const profile = ensurePulseProfile(db, targetWallet, label);
+    const canonicalWallet = profile.wallet;
+    const now = Date.now();
+
+    db.prepare(`
+      INSERT INTO pulse_arc_id_unlocks (wallet, unlocked_at, updated_at)
+      VALUES (?, ?, ?)
+      ON CONFLICT(wallet) DO UPDATE SET
+        updated_at = excluded.updated_at
+    `).run(canonicalWallet, now, now);
+
+    return getPulseArcIdUnlockRecord(db, canonicalWallet);
+  });
+
+  return unlockRecord(wallet, displayName);
 }
 
 function getPulsePostById(db, postId, viewerWallet = "") {
@@ -1132,6 +1414,37 @@ app.post("/api/pulse/checkin", async (req, res) => {
     res.json(recordPulseCheckIn(pulseDb, wallet, displayName));
   } catch (err) {
     res.status(400).json({ error: err.message || "Could not complete the ArcPulse check-in" });
+  }
+});
+
+app.get("/api/pulse/arc-id/:address", async (req, res) => {
+  try {
+    const pulseDb = await ensurePulseDatabase();
+    const wallet = normalizeAddress(req.params.address);
+    const [jobs, campaigns] = await Promise.all([
+      getAllFormattedJobs(),
+      getAllFormattedCampaigns(),
+    ]);
+    ensurePulseProfile(pulseDb, wallet);
+    res.json(buildPulseArcIdProfile(pulseDb, wallet, jobs, campaigns));
+  } catch (err) {
+    res.status(400).json({ error: err.message || "Could not load the Arc ID profile" });
+  }
+});
+
+app.post("/api/pulse/arc-id/unlock", async (req, res) => {
+  try {
+    const pulseDb = await ensurePulseDatabase();
+    const wallet = normalizeAddress(req.body?.wallet);
+    const displayName = normalizePulseText(req.body?.displayName, "Display name", 40, { allowEmpty: true });
+    unlockPulseArcId(pulseDb, wallet, displayName);
+    const [jobs, campaigns] = await Promise.all([
+      getAllFormattedJobs(),
+      getAllFormattedCampaigns(),
+    ]);
+    res.json(buildPulseArcIdProfile(pulseDb, wallet, jobs, campaigns));
+  } catch (err) {
+    res.status(400).json({ error: err.message || "Could not unlock Arc ID" });
   }
 });
 

@@ -1600,6 +1600,154 @@
       z-index: 1;
     }
 
+    .pulse-hero-layout {
+      display: grid;
+      gap: 18px;
+      grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.95fr);
+      margin-bottom: 22px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .pulse-hero-layout .pulse-topline {
+      margin-bottom: 0;
+    }
+
+    .pulse-identity-card {
+      background:
+        radial-gradient(circle at top right, rgba(122,255,200,0.14), transparent 36%),
+        radial-gradient(circle at bottom left, rgba(89,199,255,0.12), transparent 30%),
+        linear-gradient(180deg, rgba(8,12,18,0.96), rgba(11,16,24,0.92));
+      border: 1px solid rgba(166,246,255,0.16);
+      border-radius: 22px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
+      display: grid;
+      gap: 14px;
+      min-height: 100%;
+      overflow: hidden;
+      padding: 20px;
+      position: relative;
+    }
+
+    .pulse-identity-card::before {
+      background: linear-gradient(90deg, rgba(166,246,255,0.28), rgba(122,255,200,0.12), transparent);
+      content: '';
+      height: 1px;
+      inset: 0 0 auto 0;
+      position: absolute;
+    }
+
+    .pulse-identity-card.unlocked {
+      border-color: rgba(122,255,200,0.2);
+    }
+
+    .pulse-identity-top {
+      align-items: flex-start;
+      display: flex;
+      gap: 14px;
+      justify-content: space-between;
+    }
+
+    .pulse-identity-title {
+      font-family: var(--font-head);
+      font-size: clamp(22px, 2vw, 28px);
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+
+    .pulse-identity-copy {
+      color: rgba(232,232,240,0.68);
+      font-size: 13px;
+      line-height: 1.65;
+      max-width: 38ch;
+    }
+
+    .pulse-identity-rank {
+      display: grid;
+      gap: 4px;
+      justify-items: end;
+      text-align: right;
+    }
+
+    .pulse-identity-rank strong {
+      font-family: var(--font-head);
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+    }
+
+    .pulse-identity-rank span {
+      color: rgba(232,232,240,0.5);
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .pulse-identity-data {
+      display: grid;
+      gap: 10px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      transition: filter 0.2s, opacity 0.2s;
+    }
+
+    .pulse-identity-card.locked .pulse-identity-data {
+      filter: blur(8px);
+      opacity: 0.56;
+    }
+
+    .pulse-identity-stat {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 16px;
+      min-width: 0;
+      padding: 12px;
+    }
+
+    .pulse-identity-stat-value {
+      font-family: var(--font-head);
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      line-height: 1;
+      margin-bottom: 6px;
+      overflow-wrap: anywhere;
+    }
+
+    .pulse-identity-stat-label {
+      color: rgba(232,232,240,0.46);
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+    }
+
+    .pulse-identity-stat-sub {
+      color: rgba(232,232,240,0.6);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .pulse-identity-unlock {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 18px;
+      display: grid;
+      gap: 12px;
+      padding: 14px;
+    }
+
+    .pulse-identity-unlock-row {
+      align-items: center;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: space-between;
+    }
+
     .pulse-kicker {
       color: rgba(232,232,240,0.52);
       font-family: var(--font-mono);
@@ -2310,6 +2458,10 @@
       margin-bottom: 22px;
     }
 
+    .pulse-stage > :first-child .pulse-hero-layout .pulse-topline {
+      margin-bottom: 0;
+    }
+
     .pulse-stage > :first-child .pulse-copy {
       max-width: 820px;
     }
@@ -2481,6 +2633,9 @@
     html[data-theme="light"] .pulse-stage > :first-child,
     html[data-theme="light"] .pulse-metric,
     html[data-theme="light"] .pulse-summary-card,
+    html[data-theme="light"] .pulse-identity-card,
+    html[data-theme="light"] .pulse-identity-stat,
+    html[data-theme="light"] .pulse-identity-unlock,
     html[data-theme="light"] .pulse-feed-compose,
     html[data-theme="light"] .pulse-feed-card,
     html[data-theme="light"] .pulse-checkin-stat,
@@ -2565,6 +2720,10 @@
     html[data-theme="light"] .pulse-note,
     html[data-theme="light"] .pulse-copy,
     html[data-theme="light"] .pulse-kicker,
+    html[data-theme="light"] .pulse-identity-copy,
+    html[data-theme="light"] .pulse-identity-rank span,
+    html[data-theme="light"] .pulse-identity-stat-label,
+    html[data-theme="light"] .pulse-identity-stat-sub,
     html[data-theme="light"] .pulse-metric-label,
     html[data-theme="light"] .pulse-metric-sub,
     html[data-theme="light"] .pulse-summary-label,
@@ -2619,6 +2778,19 @@
       border-color: rgba(19,32,51,0.08);
     }
 
+    html[data-theme="light"] .pulse-identity-card {
+      background:
+        radial-gradient(circle at top right, rgba(122,255,200,0.18), transparent 38%),
+        radial-gradient(circle at bottom left, rgba(89,199,255,0.14), transparent 28%),
+        linear-gradient(180deg, rgba(255,255,255,0.98), rgba(239,246,252,0.94));
+      border-color: rgba(19,32,51,0.1);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.62), 0 18px 34px rgba(39,64,94,0.08);
+    }
+
+    html[data-theme="light"] .pulse-identity-card::before {
+      background: linear-gradient(90deg, rgba(31,134,218,0.26), rgba(122,255,200,0.18), transparent);
+    }
+
     html[data-theme="light"] .pulse-donut::after {
       background: rgba(247,250,255,0.96);
       border-color: rgba(19,32,51,0.08);
@@ -2662,7 +2834,8 @@
       .section-head, .dashboard-header { align-items: flex-start; flex-direction: column; gap: 12px; }
       .agents-grid { grid-template-columns: 1fr; }
       .pulse-grid,
-      .pulse-donut-layout { grid-template-columns: 1fr; }
+      .pulse-donut-layout,
+      .pulse-hero-layout { grid-template-columns: 1fr; }
       .pulse-metrics,
       .pulse-stage > :first-child .pulse-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .pulse-ranking-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -2686,7 +2859,8 @@
       .pulse-metrics,
       .pulse-stage > :first-child .pulse-metrics,
       .pulse-ranking-grid,
-      .pulse-summary-grid { grid-template-columns: 1fr; }
+      .pulse-summary-grid,
+      .pulse-identity-data { grid-template-columns: 1fr; }
       .pulse-stage > :first-child .pulse-metric:nth-child(5) { grid-column: auto; }
       .stat-cell { padding: 18px; }
       .form-row { grid-template-columns: 1fr; }
@@ -2722,7 +2896,9 @@
       .detail-val { max-width: 100%; text-align: left; }
       .pulse-topline,
       .pulse-card-head,
-      .pulse-ranking-top { flex-direction: column; }
+      .pulse-ranking-top,
+      .pulse-identity-top,
+      .pulse-identity-unlock-row { flex-direction: column; }
       .pulse-hero-header { padding: 24px; }
       .pulse-hero-header .flow-title { font-size: 42px; max-width: none; }
       .pulse-block-row,
@@ -2731,6 +2907,7 @@
       .pulse-feed-actions,
       .pulse-checkin-row,
       .pulse-leaderboard-row { flex-direction: column; align-items: flex-start; }
+      .pulse-identity-rank { justify-items: start; text-align: left; }
       .chat-meta { flex-direction: column; gap: 2px; }
       .bridge-summary-item + .bridge-summary-item { border-top: 0; }
       .job-actions-row { width: 100%; }
@@ -2870,12 +3047,17 @@
 
       <div class="pulse-stack pulse-stage">
         <div class="pulse-panel">
-          <div class="pulse-topline">
-            <div>
-              <div class="pulse-kicker">Hybrid source mode</div>
-              <div class="pulse-copy">Latest blocks come straight from Arc RPC. Volume, categories, and rankings below are tracked from this live marketplace contract set until Goldsky or Envio indexing is attached. Community posts, votes, and streaks now persist in the backend Pulse store.</div>
+          <div class="pulse-hero-layout">
+            <div class="pulse-topline">
+              <div>
+                <div class="pulse-kicker">Hybrid source mode</div>
+                <div class="pulse-copy">Latest blocks come straight from Arc RPC. Volume, categories, and rankings below are tracked from this live marketplace contract set until Goldsky or Envio indexing is attached. Community posts, votes, and streaks now persist in the backend Pulse store.</div>
+              </div>
+              <span class="badge badge-verified">Live Beta</span>
             </div>
-            <span class="badge badge-verified">Live Beta</span>
+            <div id="pulseArcIdCard" class="pulse-identity-card locked">
+              <div class="pulse-chart-empty">Loading Arc ID...</div>
+            </div>
           </div>
           <div class="pulse-metrics">
             <div class="pulse-metric">
@@ -3049,8 +3231,8 @@
         <div class="pulse-panel">
           <div class="pulse-card-head">
             <div>
-              <div class="pulse-card-title">What this unlocks next</div>
-              <div class="pulse-note">ArcPulse can grow from this base into rankings, Arc ID, feed, streaks, and points without rewiring the whole app again.</div>
+              <div class="pulse-card-title">What opens next</div>
+              <div class="pulse-note">ArcPulse now has Arc ID, feed, streaks, and rankings in beta. The next layer is paid unlocks, minting, and full-network indexing.</div>
             </div>
           </div>
           <div class="pulse-summary-grid">
@@ -3654,6 +3836,7 @@ let bridgeSupportedChains = [];
 let pulseState = null;
 let pulseLoading = false;
 let pulseFeedLane = 'all';
+let pulseArcIdBusy = false;
 let currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
 
 const NAV_PAGE_LABELS = {
@@ -4621,6 +4804,148 @@ function renderPulseCheckIn(statusPayload = null) {
   `;
 }
 
+function renderPulseArcId(payload = null) {
+  const mount = document.getElementById('pulseArcIdCard');
+  if (!mount) return;
+
+  if (payload?.error) {
+    mount.className = 'pulse-identity-card locked';
+    mount.innerHTML = `
+      <div class="pulse-identity-top">
+        <div>
+          <div class="pulse-kicker">Arc ID v1</div>
+          <div class="pulse-identity-title">Arc ID offline</div>
+          <div class="pulse-identity-copy">${escapeHtml(payload.error)}</div>
+        </div>
+        <span class="pulse-rank-badge">Beta</span>
+      </div>
+      <div class="pulse-identity-unlock">
+        <div class="pulse-mini-title">Try again in a moment</div>
+        <div class="pulse-note">Arc ID reads from the same Pulse backend and tracked marketplace signal as the rest of this page.</div>
+      </div>
+    `;
+    return;
+  }
+
+  const hasWallet = Boolean(currentWallet);
+  const profile = payload?.profile || {};
+  const teaser = payload?.teaser || {};
+  const unlocked = Boolean(payload?.unlocked);
+  const displayName = profile.displayName || (hasWallet ? shortAddr(currentWallet) : 'Your wallet');
+  const badge = payload?.badge || 'Arc ID beta';
+  const rankLabel = payload?.rank?.label || 'Tracked beta';
+  const walletLabel = payload?.walletLabel || (hasWallet ? shortAddr(currentWallet) : 'Connect wallet');
+
+  const previewStats = hasWallet && payload
+    ? [
+        {
+          label: 'Tracked actions',
+          value: formatCompactNumber(profile.totalTrackedActions || teaser.trackedActions || 0),
+          sub: `${profile.jobsAsClient || 0} client / ${profile.jobsAsWorker || 0} worker`,
+        },
+        {
+          label: 'USDC activity',
+          value: formatPulseUsdc(profile.trackedVolumeUsdc || teaser.trackedVolumeUsdc || 0),
+          sub: `${profile.campaignsCreated || 0} campaigns created`,
+        },
+        {
+          label: 'Pulse points',
+          value: formatCompactNumber(profile.points || teaser.points || 0),
+          sub: `${profile.totalCheckIns || 0} total check-ins`,
+        },
+        {
+          label: 'Streak state',
+          value: `${formatCompactNumber(profile.currentStreak || teaser.currentStreak || 0)}d`,
+          sub: `Longest ${formatCompactNumber(profile.longestStreak || 0)}d`,
+        },
+        {
+          label: 'Most used lane',
+          value: profile.mostUsedLane || 'Build',
+          sub: profile.mostUsedApp ? `Most used app ${profile.mostUsedApp}` : 'ArcPulse lane preview',
+        },
+        {
+          label: 'Member since',
+          value: profile.memberSinceLabel || 'No activity yet',
+          sub: walletLabel,
+        },
+      ]
+    : [
+        { label: 'Tracked actions', value: '12', sub: 'Jobs, posts, check-ins' },
+        { label: 'USDC activity', value: '$42.00', sub: 'Marketplace volume preview' },
+        { label: 'Pulse points', value: '92', sub: 'Streak and contribution score' },
+        { label: 'Streak state', value: '7d', sub: 'Longest 12d' },
+        { label: 'Most used lane', value: 'Build', sub: 'Pulse lane preview' },
+        { label: 'Member since', value: 'Apr 2026', sub: 'Wallet card teaser' },
+      ];
+
+  const unlockPanel = !hasWallet
+    ? `
+      <div class="pulse-identity-unlock">
+        <div class="pulse-identity-unlock-row">
+          <div>
+            <div class="pulse-mini-title">Connect to preview</div>
+            <div class="pulse-note">Arc ID turns your tracked marketplace activity, Pulse streaks, and community posts into one wallet-facing card.</div>
+          </div>
+          <button class="btn btn-primary" type="button" onclick="connectWallet()">Connect wallet</button>
+        </div>
+      </div>
+    `
+    : unlocked
+      ? `
+        <div class="pulse-identity-unlock">
+          <div class="pulse-identity-unlock-row">
+            <div>
+              <div class="pulse-mini-title">Arc ID unlocked</div>
+              <div class="pulse-note">Saved ${escapeHtml(formatPulseTimestamp(payload?.unlockedAt || 0))}. Paid Arc unlocks and collectible minting can slot into this same card next.</div>
+            </div>
+            <button class="btn btn-outline" type="button" disabled>Mint next</button>
+          </div>
+        </div>
+      `
+      : `
+        <div class="pulse-identity-unlock">
+          <div class="pulse-identity-unlock-row">
+            <div>
+              <div class="pulse-mini-title">Preview ready for ${escapeHtml(walletLabel)}</div>
+              <div class="pulse-note">Unlock once in beta to pin this identity card to your Pulse profile. The paid Arc transaction can replace this saved beta action later.</div>
+            </div>
+            <button class="btn btn-primary" type="button" onclick="unlockPulseArcId()" id="pulseArcIdUnlockBtn" ${pulseArcIdBusy ? 'disabled' : ''}>${pulseArcIdBusy ? 'Unlocking...' : 'Unlock Arc ID beta'}</button>
+          </div>
+        </div>
+      `;
+
+  mount.className = `pulse-identity-card ${unlocked ? 'unlocked' : 'locked'}`;
+  mount.innerHTML = `
+    <div class="pulse-identity-top">
+      <div>
+        <div class="pulse-kicker">Arc ID v1</div>
+        <div class="pulse-identity-title">${escapeHtml(displayName)}</div>
+        <div class="pulse-identity-copy">
+          ${hasWallet
+            ? (unlocked
+              ? 'Your saved Arc ID beta blends tracked marketplace, streak, and community signals into one wallet-facing card while full-network indexing is still coming online.'
+              : 'Your tracked ArcPulse profile is ready. This preview uses live marketplace and community data now so the paid Arc unlock can snap in later without changing the model.')
+            : 'A persistent identity surface for the people actually moving through AgentMarket and ArcPulse.'}
+        </div>
+      </div>
+      <div class="pulse-identity-rank">
+        <strong>${escapeHtml(rankLabel)}</strong>
+        <span>${escapeHtml(badge)}</span>
+      </div>
+    </div>
+    <div class="pulse-identity-data">
+      ${previewStats.map(item => `
+        <div class="pulse-identity-stat">
+          <div class="pulse-identity-stat-label">${escapeHtml(item.label)}</div>
+          <div class="pulse-identity-stat-value">${escapeHtml(String(item.value))}</div>
+          <div class="pulse-identity-stat-sub">${escapeHtml(item.sub)}</div>
+        </div>
+      `).join('')}
+    </div>
+    ${unlockPanel}
+  `;
+}
+
 function renderPulseFeed(payload = {}) {
   renderPulseFeedFilters(payload?.counts || { all: 0, build: 0, thread: 0, art: 0 });
 
@@ -4776,6 +5101,44 @@ async function runPulseCheckIn() {
   }
 }
 
+async function unlockPulseArcId() {
+  if (!currentWallet) {
+    toast('Connect Wallet', 'Connect your wallet before unlocking Arc ID.', 'info');
+    return;
+  }
+  if (pulseArcIdBusy) return;
+
+  pulseArcIdBusy = true;
+  const button = document.getElementById('pulseArcIdUnlockBtn');
+  const previousLabel = button?.textContent || 'Unlock Arc ID beta';
+  if (button) {
+    button.disabled = true;
+    button.textContent = 'Unlocking...';
+  }
+
+  const authorInput = document.getElementById('pulsePostAuthor');
+
+  try {
+    await fetchPulseJson('/api/pulse/arc-id/unlock', {
+      method: 'POST',
+      body: JSON.stringify({
+        wallet: currentWallet,
+        displayName: authorInput?.value || '',
+      }),
+    });
+    toast('Arc ID Unlocked', 'Your Pulse identity card is now saved for this wallet.', 'success');
+    await loadPulse(true);
+  } catch (e) {
+    toast('Unlock Failed', e.message || 'Could not unlock Arc ID.', 'error');
+  } finally {
+    pulseArcIdBusy = false;
+    if (button) {
+      button.disabled = false;
+      button.textContent = previousLabel;
+    }
+  }
+}
+
 async function loadPulse(force = false) {
   if (!window.AGENTMARKET_RUNTIME_CONFIG?.pulseEnabled) return;
   if (pulseLoading && !force) return;
@@ -4785,16 +5148,19 @@ async function loadPulse(force = false) {
     const communityQuery = new URLSearchParams({ lane: pulseFeedLane });
     if (currentWallet) communityQuery.set('viewer', currentWallet);
 
-    const [overview, community, leaderboards, checkIn] = await Promise.all([
+    const [overview, community, leaderboards, checkIn, arcId] = await Promise.all([
       fetchPulseJson('/api/pulse/overview'),
       fetchPulseJson(`/api/pulse/community?${communityQuery.toString()}`),
       fetchPulseJson('/api/pulse/leaderboards'),
       currentWallet
         ? fetchPulseJson(`/api/pulse/checkin/${encodeURIComponent(currentWallet)}`)
         : Promise.resolve(null),
+      currentWallet
+        ? fetchPulseJson(`/api/pulse/arc-id/${encodeURIComponent(currentWallet)}`)
+        : Promise.resolve(null),
     ]);
 
-    pulseState = { overview, community, leaderboards, checkIn };
+    pulseState = { overview, community, leaderboards, checkIn, arcId };
 
     setPulseMetric('pulseLatestBlock', `#${formatCompactNumber(overview?.overview?.latestBlockNumber || 0)}`);
     setPulseMetric('pulseAvgBlockTime', `${Number(overview?.overview?.avgBlockTimeSec || 0).toFixed(2)}s`);
@@ -4820,6 +5186,7 @@ async function loadPulse(force = false) {
     renderPulseFeed(community || {});
     renderPulseLeaderboards(leaderboards || {});
     renderPulseCheckIn(checkIn);
+    renderPulseArcId(arcId);
     renderPulseNotes(overview?.notes || []);
   } catch (e) {
     const message = e.message || 'Could not load ArcPulse.';
@@ -4844,6 +5211,7 @@ async function loadPulse(force = false) {
       const el = document.getElementById(id);
       if (el) el.textContent = '--';
     });
+    renderPulseArcId(currentWallet ? { error: message } : null);
     renderPulseNotes([message]);
   } finally {
     pulseLoading = false;

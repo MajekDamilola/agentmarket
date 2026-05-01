@@ -4,6 +4,7 @@ import { createPublicClient, http, formatUnits } from "viem";
 import { arcTestnet } from "viem/chains";
 import dotenv from "dotenv";
 import { promises as fs } from "fs";
+import { DatabaseSync } from "node:sqlite";
 import path from "path";
 import { fileURLToPath } from "url";
 
@@ -47,12 +48,9 @@ const PULSE_RECENT_BLOCK_LIMIT = 6;
 const PULSE_SERIES_DAYS = 14;
 const PULSE_FEED_LIMIT = 250;
 const PULSE_LEADERBOARD_LIMIT = 10;
-const PULSE_STORE_PATH = path.resolve(__dirname, "..", "cache", "pulse-store.json");
+const PULSE_JSON_STORE_PATH = path.resolve(__dirname, "..", "cache", "pulse-store.json");
+const PULSE_DB_PATH = path.resolve(__dirname, "..", "cache", "pulse-store.sqlite");
 const PULSE_LANES = new Set(["build", "thread", "art"]);
-const DEFAULT_PULSE_STORE = {
-  feedPosts: [],
-  profiles: {},
-};
 
 // ─── ABIs ─────────────────────────────────────────────────────────
 const JOB_BOARD_ABI = [
@@ -114,16 +112,8 @@ function dayKeyDiff(fromDay, toDay) {
   return Math.round((to - from) / DAY_MS);
 }
 
-function createDefaultPulseStore() {
-  return {
-    feedPosts: [],
-    profiles: {},
-  };
-}
-
-let pulseStoreCache = null;
-let pulseStoreLoadPromise = null;
-let pulseStoreWritePromise = Promise.resolve();
+let pulseDb = null;
+let pulseDbReadyPromise = null;
 
 function isArchivedCompletedJob(job, now = Date.now()) {
   return Number(job?.status) === 3 && Number(job?.completedAt) > 0 && (now - Number(job.completedAt)) > COMPLETED_JOB_RETENTION_MS;
@@ -375,39 +365,216 @@ function buildTrackedAppRankings(jobs, campaigns) {
   }];
 }
 
-async function ensurePulseStoreLoaded() {
-  if (pulseStoreCache) return pulseStoreCache;
-  if (!pulseStoreLoadPromise) {
-    pulseStoreLoadPromise = (async () => {
-      try {
-        const raw = await fs.readFile(PULSE_STORE_PATH, "utf8");
-        const parsed = JSON.parse(raw);
-        pulseStoreCache = {
-          feedPosts: Array.isArray(parsed?.feedPosts) ? parsed.feedPosts : [],
-          profiles: parsed?.profiles && typeof parsed.profiles === "object" ? parsed.profiles : {},
-        };
-      } catch (err) {
-        if (err?.code !== "ENOENT") {
-          console.warn("Could not read ArcPulse store, creating a fresh one:", err.message);
-        }
-        pulseStoreCache = createDefaultPulseStore();
-        await fs.mkdir(path.dirname(PULSE_STORE_PATH), { recursive: true });
-        await fs.writeFile(PULSE_STORE_PATH, JSON.stringify(pulseStoreCache, null, 2));
-      }
-      return pulseStoreCache;
-    })();
-  }
-  return pulseStoreLoadPromise;
+function pulseMetaGet(db, key) {
+  const row = db.prepare("SELECT value FROM pulse_meta WHERE key = ?").get(key);
+  return row ? String(row.value || "") : "";
 }
 
-async function persistPulseStore(store) {
-  pulseStoreCache = store;
-  pulseStoreWritePromise = pulseStoreWritePromise.then(async () => {
-    await fs.mkdir(path.dirname(PULSE_STORE_PATH), { recursive: true });
-    await fs.writeFile(PULSE_STORE_PATH, JSON.stringify(store, null, 2));
+function pulseMetaSet(db, key, value) {
+  db.prepare(`
+    INSERT INTO pulse_meta (key, value, updated_at)
+    VALUES (?, ?, ?)
+    ON CONFLICT(key) DO UPDATE SET
+      value = excluded.value,
+      updated_at = excluded.updated_at
+  `).run(key, String(value ?? ""), Date.now());
+}
+
+function normalizePulseProfileRecord(record) {
+  if (!record) return null;
+  return {
+    wallet: String(record.wallet || "").toLowerCase(),
+    displayName: record.display_name || record.displayName || "",
+    points: Number(record.points || 0),
+    currentStreak: Number(record.current_streak ?? record.currentStreak ?? 0),
+    longestStreak: Number(record.longest_streak ?? record.longestStreak ?? 0),
+    totalCheckIns: Number(record.total_checkins ?? record.totalCheckIns ?? 0),
+    lastCheckInDay: record.last_check_in_day ?? record.lastCheckInDay ?? "",
+    createdAt: Number(record.created_at ?? record.createdAt ?? 0),
+    updatedAt: Number(record.updated_at ?? record.updatedAt ?? 0),
+  };
+}
+
+function normalizePulsePostRecord(record) {
+  if (!record) return null;
+  return {
+    id: record.id,
+    lane: record.lane,
+    title: record.title,
+    body: record.body,
+    link: record.link || "",
+    wallet: String(record.wallet || "").toLowerCase(),
+    authorName: record.author_name || record.authorName || "",
+    createdAt: Number(record.created_at ?? record.createdAt ?? Date.now()),
+    upvotes: Number(record.upvotes || 0),
+    upvotedByViewer: Boolean(record.upvoted_by_viewer ?? record.upvotedByViewer ?? false),
+    upvoters: Array.isArray(record.upvoters) ? record.upvoters : [],
+  };
+}
+
+async function migrateLegacyPulseStore(db) {
+  if (pulseMetaGet(db, "storage-version")) return;
+
+  const existingPosts = Number(db.prepare("SELECT COUNT(*) AS count FROM pulse_posts").get()?.count || 0);
+  const existingProfiles = Number(db.prepare("SELECT COUNT(*) AS count FROM pulse_profiles").get()?.count || 0);
+  if (existingPosts > 0 || existingProfiles > 0) {
+    pulseMetaSet(db, "storage-version", "sqlite-v1");
+    return;
+  }
+
+  let legacyStore = null;
+  try {
+    const raw = await fs.readFile(PULSE_JSON_STORE_PATH, "utf8");
+    const parsed = JSON.parse(raw);
+    legacyStore = {
+      feedPosts: Array.isArray(parsed?.feedPosts) ? parsed.feedPosts : [],
+      profiles: parsed?.profiles && typeof parsed.profiles === "object" ? parsed.profiles : {},
+    };
+  } catch (err) {
+    if (err?.code !== "ENOENT") {
+      console.warn("Could not read legacy ArcPulse JSON store:", err.message);
+    }
+  }
+
+  if (!legacyStore) {
+    pulseMetaSet(db, "storage-version", "sqlite-v1");
+    return;
+  }
+
+  const importLegacyStore = db.transaction((store) => {
+    const upsertProfile = db.prepare(`
+      INSERT INTO pulse_profiles (
+        wallet, display_name, points, current_streak, longest_streak,
+        total_checkins, last_check_in_day, created_at, updated_at
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT(wallet) DO UPDATE SET
+        display_name = excluded.display_name,
+        points = excluded.points,
+        current_streak = excluded.current_streak,
+        longest_streak = excluded.longest_streak,
+        total_checkins = excluded.total_checkins,
+        last_check_in_day = excluded.last_check_in_day,
+        created_at = excluded.created_at,
+        updated_at = excluded.updated_at
+    `);
+    const upsertPost = db.prepare(`
+      INSERT INTO pulse_posts (id, lane, title, body, link, wallet, author_name, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT(id) DO UPDATE SET
+        lane = excluded.lane,
+        title = excluded.title,
+        body = excluded.body,
+        link = excluded.link,
+        wallet = excluded.wallet,
+        author_name = excluded.author_name,
+        created_at = excluded.created_at
+    `);
+    const insertUpvote = db.prepare(`
+      INSERT OR IGNORE INTO pulse_post_upvotes (post_id, wallet, created_at)
+      VALUES (?, ?, ?)
+    `);
+
+    for (const profile of Object.values(store.profiles || {})) {
+      const item = normalizePulseProfileRecord(profile);
+      if (!item?.wallet) continue;
+      upsertProfile.run(
+        item.wallet.toLowerCase(),
+        item.displayName || "",
+        item.points,
+        item.currentStreak,
+        item.longestStreak,
+        item.totalCheckIns,
+        item.lastCheckInDay || "",
+        item.createdAt || Date.now(),
+        item.updatedAt || Date.now(),
+      );
+    }
+
+    for (const post of store.feedPosts || []) {
+      const item = normalizePulsePostRecord(post);
+      if (!item?.id || !item?.wallet || !PULSE_LANES.has(item.lane)) continue;
+      const createdAt = item.createdAt || Date.now();
+      upsertPost.run(
+        item.id,
+        item.lane,
+        item.title || "Untitled post",
+        item.body || "",
+        item.link || "",
+        item.wallet.toLowerCase(),
+        item.authorName || shortWallet(item.wallet),
+        createdAt,
+      );
+      for (const upvoter of item.upvoters || []) {
+        if (!upvoter) continue;
+        insertUpvote.run(item.id, String(upvoter).toLowerCase(), createdAt);
+      }
+    }
   });
-  await pulseStoreWritePromise;
-  return pulseStoreCache;
+
+  importLegacyStore(legacyStore);
+  pulseMetaSet(db, "storage-version", "sqlite-v1");
+}
+
+async function ensurePulseDatabase() {
+  if (pulseDb) return pulseDb;
+  if (!pulseDbReadyPromise) {
+    pulseDbReadyPromise = (async () => {
+      await fs.mkdir(path.dirname(PULSE_DB_PATH), { recursive: true });
+      const db = new DatabaseSync(PULSE_DB_PATH);
+      db.exec(`
+        PRAGMA journal_mode = WAL;
+        PRAGMA foreign_keys = ON;
+
+        CREATE TABLE IF NOT EXISTS pulse_meta (
+          key TEXT PRIMARY KEY,
+          value TEXT NOT NULL,
+          updated_at INTEGER NOT NULL
+        );
+
+        CREATE TABLE IF NOT EXISTS pulse_profiles (
+          wallet TEXT PRIMARY KEY,
+          display_name TEXT NOT NULL DEFAULT '',
+          points INTEGER NOT NULL DEFAULT 0,
+          current_streak INTEGER NOT NULL DEFAULT 0,
+          longest_streak INTEGER NOT NULL DEFAULT 0,
+          total_checkins INTEGER NOT NULL DEFAULT 0,
+          last_check_in_day TEXT NOT NULL DEFAULT '',
+          created_at INTEGER NOT NULL,
+          updated_at INTEGER NOT NULL
+        );
+
+        CREATE TABLE IF NOT EXISTS pulse_posts (
+          id TEXT PRIMARY KEY,
+          lane TEXT NOT NULL,
+          title TEXT NOT NULL,
+          body TEXT NOT NULL,
+          link TEXT NOT NULL DEFAULT '',
+          wallet TEXT NOT NULL,
+          author_name TEXT NOT NULL DEFAULT '',
+          created_at INTEGER NOT NULL
+        );
+
+        CREATE TABLE IF NOT EXISTS pulse_post_upvotes (
+          post_id TEXT NOT NULL,
+          wallet TEXT NOT NULL,
+          created_at INTEGER NOT NULL,
+          PRIMARY KEY (post_id, wallet),
+          FOREIGN KEY (post_id) REFERENCES pulse_posts(id) ON DELETE CASCADE
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_pulse_posts_created_at ON pulse_posts(created_at DESC);
+        CREATE INDEX IF NOT EXISTS idx_pulse_posts_lane_created_at ON pulse_posts(lane, created_at DESC);
+        CREATE INDEX IF NOT EXISTS idx_pulse_profiles_points ON pulse_profiles(points DESC, updated_at DESC);
+        CREATE INDEX IF NOT EXISTS idx_pulse_profiles_streak ON pulse_profiles(current_streak DESC, longest_streak DESC, points DESC);
+        CREATE INDEX IF NOT EXISTS idx_pulse_upvotes_wallet ON pulse_post_upvotes(wallet);
+      `);
+      await migrateLegacyPulseStore(db);
+      pulseDb = db;
+      return db;
+    })();
+  }
+  return pulseDbReadyPromise;
 }
 
 function normalizePulseLane(value) {
@@ -445,25 +612,31 @@ function getComputedCurrentStreak(profile, todayKey = utcDayKey(Date.now())) {
   return 0;
 }
 
-function ensurePulseProfile(store, wallet, displayName = "") {
-  const key = wallet.toLowerCase();
-  if (!store.profiles[key]) {
-    store.profiles[key] = {
-      wallet,
-      displayName: displayName || "",
-      points: 0,
-      currentStreak: 0,
-      longestStreak: 0,
-      totalCheckIns: 0,
-      lastCheckInDay: "",
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-    };
-  } else {
-    store.profiles[key].wallet = store.profiles[key].wallet || wallet;
-    if (displayName) store.profiles[key].displayName = displayName;
-  }
-  return store.profiles[key];
+function getPulseProfileRecord(db, wallet) {
+  const row = db.prepare("SELECT * FROM pulse_profiles WHERE wallet = ?").get(String(wallet || "").toLowerCase());
+  return normalizePulseProfileRecord(row);
+}
+
+function ensurePulseProfile(db, wallet, displayName = "") {
+  const canonicalWallet = String(wallet || "").toLowerCase();
+  const now = Date.now();
+  db.prepare(`
+    INSERT INTO pulse_profiles (
+      wallet, display_name, points, current_streak, longest_streak,
+      total_checkins, last_check_in_day, created_at, updated_at
+    )
+    VALUES (?, ?, 0, 0, 0, 0, '', ?, ?)
+    ON CONFLICT(wallet) DO UPDATE SET
+      display_name = CASE
+        WHEN excluded.display_name <> '' THEN excluded.display_name
+        ELSE pulse_profiles.display_name
+      END,
+      updated_at = CASE
+        WHEN excluded.display_name <> '' THEN excluded.updated_at
+        ELSE pulse_profiles.updated_at
+      END
+  `).run(canonicalWallet, displayName || "", now, now);
+  return getPulseProfileRecord(db, canonicalWallet);
 }
 
 function formatPulseProfile(profile) {
@@ -483,54 +656,71 @@ function formatPulseProfile(profile) {
 }
 
 function formatPulsePost(post, viewerWallet = "") {
+  const item = normalizePulsePostRecord(post);
   const viewer = viewerWallet ? viewerWallet.toLowerCase() : "";
-  const upvoters = Array.isArray(post?.upvoters) ? post.upvoters : [];
+  const upvoters = Array.isArray(item?.upvoters) ? item.upvoters : [];
+  const upvotes = item?.upvotes > 0 ? item.upvotes : upvoters.length;
+  const upvotedByViewer = item?.upvotedByViewer || (viewer ? upvoters.includes(viewer) : false);
   return {
-    id: post.id,
-    lane: post.lane,
-    title: post.title,
-    body: post.body,
-    link: post.link || "",
-    authorName: post.authorName || shortWallet(post.wallet),
-    wallet: post.wallet,
-    createdAt: Number(post.createdAt || Date.now()),
-    upvotes: upvoters.length,
-    upvotedByViewer: viewer ? upvoters.includes(viewer) : false,
+    id: item.id,
+    lane: item.lane,
+    title: item.title,
+    body: item.body,
+    link: item.link || "",
+    authorName: item.authorName || shortWallet(item.wallet),
+    wallet: item.wallet,
+    createdAt: Number(item.createdAt || Date.now()),
+    upvotes,
+    upvotedByViewer,
   };
 }
 
-function getPulseCommunityResponse(store, laneFilter = "all", viewerWallet = "") {
+function getPulseCommunityResponse(db, laneFilter = "all", viewerWallet = "") {
   const lane = String(laneFilter || "all").trim().toLowerCase();
   if (lane !== "all" && !PULSE_LANES.has(lane)) {
     throw new Error("Lane filter must be all, build, thread, or art");
   }
 
-  const feedPosts = Array.isArray(store.feedPosts) ? store.feedPosts : [];
   const counts = {
-    all: feedPosts.length,
+    all: Number(db.prepare("SELECT COUNT(*) AS count FROM pulse_posts").get()?.count || 0),
     build: 0,
     thread: 0,
     art: 0,
   };
-
-  for (const post of feedPosts) {
-    if (counts[post.lane] !== undefined) counts[post.lane] += 1;
+  const laneCounts = db.prepare(`
+    SELECT lane, COUNT(*) AS count
+    FROM pulse_posts
+    GROUP BY lane
+  `).all();
+  for (const row of laneCounts) {
+    if (counts[row.lane] !== undefined) counts[row.lane] = Number(row.count || 0);
   }
 
-  const items = feedPosts
-    .filter(post => lane === "all" ? true : post.lane === lane)
-    .sort((a, b) => {
-      const voteDelta = (Array.isArray(b.upvoters) ? b.upvoters.length : 0) - (Array.isArray(a.upvoters) ? a.upvoters.length : 0);
-      if (voteDelta !== 0) return voteDelta;
-      return Number(b.createdAt || 0) - Number(a.createdAt || 0);
-    })
-    .map(post => formatPulsePost(post, viewerWallet));
+  const items = db.prepare(`
+    SELECT
+      p.id,
+      p.lane,
+      p.title,
+      p.body,
+      p.link,
+      p.wallet,
+      p.author_name,
+      p.created_at,
+      COUNT(v.wallet) AS upvotes,
+      MAX(CASE WHEN v.wallet = ? THEN 1 ELSE 0 END) AS upvoted_by_viewer
+    FROM pulse_posts p
+    LEFT JOIN pulse_post_upvotes v ON v.post_id = p.id
+    WHERE (? = 'all' OR p.lane = ?)
+    GROUP BY p.id
+    ORDER BY upvotes DESC, p.created_at DESC
+    LIMIT ?
+  `).all(viewerWallet ? viewerWallet.toLowerCase() : "", lane, lane, PULSE_FEED_LIMIT).map(post => formatPulsePost(post, viewerWallet));
 
   return { lane, counts, items };
 }
 
-function getPulseLeaderboards(store) {
-  const profiles = Object.values(store.profiles || {}).map(formatPulseProfile);
+function getPulseLeaderboards(db) {
+  const profiles = db.prepare("SELECT * FROM pulse_profiles").all().map(row => formatPulseProfile(normalizePulseProfileRecord(row)));
   const topEarners = [...profiles]
     .filter(profile => profile.points > 0)
     .sort((a, b) => b.points - a.points || b.longestStreak - a.longestStreak || b.updatedAt - a.updatedAt)
@@ -543,12 +733,180 @@ function getPulseLeaderboards(store) {
   return { topEarners, longestStreaks };
 }
 
+function getPulseStorageCounts(db) {
+  return {
+    communityPosts: Number(db.prepare("SELECT COUNT(*) AS count FROM pulse_posts").get()?.count || 0),
+    pulseProfiles: Number(db.prepare("SELECT COUNT(*) AS count FROM pulse_profiles").get()?.count || 0),
+  };
+}
+
+function getPulsePostById(db, postId, viewerWallet = "") {
+  const row = db.prepare(`
+    SELECT
+      p.id,
+      p.lane,
+      p.title,
+      p.body,
+      p.link,
+      p.wallet,
+      p.author_name,
+      p.created_at,
+      COUNT(v.wallet) AS upvotes,
+      MAX(CASE WHEN v.wallet = ? THEN 1 ELSE 0 END) AS upvoted_by_viewer
+    FROM pulse_posts p
+    LEFT JOIN pulse_post_upvotes v ON v.post_id = p.id
+    WHERE p.id = ?
+    GROUP BY p.id
+  `).get(viewerWallet ? viewerWallet.toLowerCase() : "", postId);
+  return row ? formatPulsePost(row, viewerWallet) : null;
+}
+
+function createPulsePost(db, { wallet, lane, authorName, title, body, link }) {
+  const createPost = db.transaction((payload) => {
+    const now = Date.now();
+    const profile = ensurePulseProfile(db, payload.wallet, payload.authorName);
+    const canonicalWallet = profile.wallet;
+    const authorLabel = profile.displayName || payload.authorName || shortWallet(payload.wallet);
+    const post = {
+      id: `pulse-${now}-${Math.random().toString(36).slice(2, 8)}`,
+      lane: payload.lane,
+      title: payload.title,
+      body: payload.body,
+      link: payload.link,
+      wallet: canonicalWallet,
+      authorName: authorLabel,
+      createdAt: now,
+      upvotes: 0,
+      upvotedByViewer: false,
+    };
+
+    db.prepare(`
+      INSERT INTO pulse_posts (id, lane, title, body, link, wallet, author_name, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      post.id,
+      post.lane,
+      post.title,
+      post.body,
+      post.link,
+      post.wallet,
+      post.authorName,
+      post.createdAt,
+    );
+
+    db.prepare(`
+      UPDATE pulse_profiles
+      SET
+        display_name = CASE
+          WHEN ? <> '' THEN ?
+          ELSE display_name
+        END,
+        updated_at = ?
+      WHERE wallet = ?
+    `).run(payload.authorName || "", payload.authorName || "", now, canonicalWallet);
+
+    return post;
+  });
+
+  return createPost({ wallet, lane, authorName, title, body, link });
+}
+
+function togglePulseVote(db, postId, wallet) {
+  const changeVote = db.transaction((targetPostId, voterWallet) => {
+    const postExists = db.prepare("SELECT id FROM pulse_posts WHERE id = ?").get(targetPostId);
+    if (!postExists) throw new Error("Pulse post not found");
+
+    const normalizedWallet = voterWallet.toLowerCase();
+    const existingVote = db.prepare(`
+      SELECT 1
+      FROM pulse_post_upvotes
+      WHERE post_id = ? AND wallet = ?
+    `).get(targetPostId, normalizedWallet);
+
+    let added = false;
+    if (existingVote) {
+      db.prepare("DELETE FROM pulse_post_upvotes WHERE post_id = ? AND wallet = ?").run(targetPostId, normalizedWallet);
+    } else {
+      db.prepare(`
+        INSERT INTO pulse_post_upvotes (post_id, wallet, created_at)
+        VALUES (?, ?, ?)
+      `).run(targetPostId, normalizedWallet, Date.now());
+      added = true;
+    }
+
+    return {
+      added,
+      post: getPulsePostById(db, targetPostId, voterWallet),
+    };
+  });
+
+  return changeVote(postId, wallet);
+}
+
+function recordPulseCheckIn(db, wallet, displayName = "") {
+  const completeCheckIn = db.transaction((targetWallet, label) => {
+    const todayKey = utcDayKey(Date.now());
+    const profile = ensurePulseProfile(db, targetWallet, label);
+    const canonicalWallet = profile.wallet;
+
+    if (profile.lastCheckInDay === todayKey) {
+      return {
+        alreadyCheckedIn: true,
+        todayKey,
+        profile: formatPulseProfile(profile),
+      };
+    }
+
+    const diff = profile.lastCheckInDay ? dayKeyDiff(profile.lastCheckInDay, todayKey) : null;
+    const currentStreak = diff === 1 ? Number(profile.currentStreak || 0) + 1 : 1;
+    const longestStreak = Math.max(Number(profile.longestStreak || 0), currentStreak);
+    const points = Number(profile.points || 0) + 10;
+    const totalCheckIns = Number(profile.totalCheckIns || 0) + 1;
+    const updatedAt = Date.now();
+
+    db.prepare(`
+      UPDATE pulse_profiles
+      SET
+        display_name = CASE
+          WHEN ? <> '' THEN ?
+          ELSE display_name
+        END,
+        points = ?,
+        current_streak = ?,
+        longest_streak = ?,
+        total_checkins = ?,
+        last_check_in_day = ?,
+        updated_at = ?
+      WHERE wallet = ?
+    `).run(
+      label || "",
+      label || "",
+      points,
+      currentStreak,
+      longestStreak,
+      totalCheckIns,
+      todayKey,
+      updatedAt,
+      canonicalWallet,
+    );
+
+    return {
+      alreadyCheckedIn: false,
+      todayKey,
+      earnedPoints: 10,
+      profile: formatPulseProfile(getPulseProfileRecord(db, canonicalWallet)),
+    };
+  });
+
+  return completeCheckIn(wallet, displayName);
+}
+
 async function getPulseSnapshot() {
-  const [jobs, campaigns, recentBlocks, pulseStore] = await Promise.all([
+  const [jobs, campaigns, recentBlocks, pulseDb] = await Promise.all([
     getAllFormattedJobs(),
     getAllFormattedCampaigns(),
     getRecentBlocks(),
-    ensurePulseStoreLoaded(),
+    ensurePulseDatabase(),
   ]);
 
   const activeJobs = jobs.filter(job => !isArchivedCompletedJob(job));
@@ -569,6 +927,7 @@ async function getPulseSnapshot() {
     + campaigns.reduce((sum, campaign) => sum + toUsdcNumber(campaign.prizePool), 0);
   const settledVolume = completedJobs.reduce((sum, job) => sum + toUsdcNumber(job.budget), 0);
   const recentBlockTxCount = recentBlocks.reduce((sum, block) => sum + Number(block.txCount || 0), 0);
+  const pulseCounts = getPulseStorageCounts(pulseDb);
 
   return {
     generatedAt: Date.now(),
@@ -584,8 +943,8 @@ async function getPulseSnapshot() {
       openJobs: openJobs.length,
       activeCampaigns: activeCampaigns.length,
       trackedWallets: trackedWallets.size,
-      communityPosts: Array.isArray(pulseStore.feedPosts) ? pulseStore.feedPosts.length : 0,
-      pulseProfiles: Object.keys(pulseStore.profiles || {}).length,
+      communityPosts: pulseCounts.communityPosts,
+      pulseProfiles: pulseCounts.pulseProfiles,
     },
     recentBlocks,
     volume14d: buildPulseSeries(jobs),
@@ -594,7 +953,7 @@ async function getPulseSnapshot() {
     notes: [
       "Live Arc blocks come directly from the Arc RPC endpoint.",
       "Volume, categories, and rankings are currently tracked from the AgentMarket contracts only.",
-      "Community feed and streaks in this beta use file-backed backend persistence.",
+      "Community feed, votes, and streaks now persist in a SQLite-backed Pulse store.",
       "Full-network ArcPulse rankings should use an indexer such as Goldsky or Envio.",
     ],
   };
@@ -705,9 +1064,9 @@ app.get("/api/pulse/overview", async (req, res) => {
 // ─── Chat ─────────────────────────────────────────────────────────
 app.get("/api/pulse/community", async (req, res) => {
   try {
-    const store = await ensurePulseStoreLoaded();
+    const pulseDb = await ensurePulseDatabase();
     const viewerWallet = req.query?.viewer ? normalizeAddress(req.query.viewer) : "";
-    res.json(getPulseCommunityResponse(store, req.query?.lane || "all", viewerWallet));
+    res.json(getPulseCommunityResponse(pulseDb, req.query?.lane || "all", viewerWallet));
   } catch (err) {
     res.status(400).json({ error: err.message || "Could not load the ArcPulse community feed" });
   }
@@ -715,31 +1074,14 @@ app.get("/api/pulse/community", async (req, res) => {
 
 app.post("/api/pulse/community", async (req, res) => {
   try {
-    const store = await ensurePulseStoreLoaded();
+    const pulseDb = await ensurePulseDatabase();
     const wallet = normalizeAddress(req.body?.wallet);
     const lane = normalizePulseLane(req.body?.lane);
     const authorName = normalizePulseText(req.body?.authorName, "Display name", 40, { allowEmpty: true });
     const title = normalizePulseText(req.body?.title, "Title", 80);
     const body = normalizePulseText(req.body?.body, "Post", 600, { collapseWhitespace: false });
     const link = normalizePulseUrl(req.body?.link);
-
-    const profile = ensurePulseProfile(store, wallet, authorName);
-    const post = {
-      id: `pulse-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-      lane,
-      title,
-      body,
-      link,
-      wallet,
-      authorName: profile.displayName || authorName || shortWallet(wallet),
-      createdAt: Date.now(),
-      upvoters: [],
-    };
-
-    store.feedPosts = [post, ...(Array.isArray(store.feedPosts) ? store.feedPosts : [])].slice(0, PULSE_FEED_LIMIT);
-    profile.updatedAt = Date.now();
-    await persistPulseStore(store);
-
+    const post = createPulsePost(pulseDb, { wallet, lane, authorName, title, body, link });
     res.status(201).json(formatPulsePost(post, wallet));
   } catch (err) {
     res.status(400).json({ error: err.message || "Could not publish to the ArcPulse feed" });
@@ -748,35 +1090,21 @@ app.post("/api/pulse/community", async (req, res) => {
 
 app.post("/api/pulse/community/:postId/upvote", async (req, res) => {
   try {
-    const store = await ensurePulseStoreLoaded();
+    const pulseDb = await ensurePulseDatabase();
     const wallet = normalizeAddress(req.body?.wallet);
-    const voterKey = wallet.toLowerCase();
-    const post = (Array.isArray(store.feedPosts) ? store.feedPosts : []).find(item => item.id === req.params.postId);
-    if (!post) return res.status(404).json({ error: "Pulse post not found" });
-
-    if (!Array.isArray(post.upvoters)) post.upvoters = [];
-    const voterIndex = post.upvoters.indexOf(voterKey);
-    const added = voterIndex === -1;
-    if (added) {
-      post.upvoters.push(voterKey);
-    } else {
-      post.upvoters.splice(voterIndex, 1);
-    }
-
-    await persistPulseStore(store);
-    res.json({
-      added,
-      post: formatPulsePost(post, wallet),
-    });
+    const result = togglePulseVote(pulseDb, req.params.postId, wallet);
+    if (!result?.post) return res.status(404).json({ error: "Pulse post not found" });
+    res.json(result);
   } catch (err) {
-    res.status(400).json({ error: err.message || "Could not update the ArcPulse vote" });
+    const message = err.message || "Could not update the ArcPulse vote";
+    res.status(message === "Pulse post not found" ? 404 : 400).json({ error: message });
   }
 });
 
 app.get("/api/pulse/leaderboards", async (req, res) => {
   try {
-    const store = await ensurePulseStoreLoaded();
-    res.json(getPulseLeaderboards(store));
+    const pulseDb = await ensurePulseDatabase();
+    res.json(getPulseLeaderboards(pulseDb));
   } catch (err) {
     res.status(500).json({ error: err.message || "Could not load ArcPulse leaderboards" });
   }
@@ -784,9 +1112,9 @@ app.get("/api/pulse/leaderboards", async (req, res) => {
 
 app.get("/api/pulse/checkin/:address", async (req, res) => {
   try {
-    const store = await ensurePulseStoreLoaded();
+    const pulseDb = await ensurePulseDatabase();
     const wallet = normalizeAddress(req.params.address);
-    const profile = ensurePulseProfile(store, wallet);
+    const profile = ensurePulseProfile(pulseDb, wallet);
     res.json({
       todayKey: utcDayKey(Date.now()),
       profile: formatPulseProfile(profile),
@@ -798,36 +1126,10 @@ app.get("/api/pulse/checkin/:address", async (req, res) => {
 
 app.post("/api/pulse/checkin", async (req, res) => {
   try {
-    const store = await ensurePulseStoreLoaded();
+    const pulseDb = await ensurePulseDatabase();
     const wallet = normalizeAddress(req.body?.wallet);
     const displayName = normalizePulseText(req.body?.displayName, "Display name", 40, { allowEmpty: true });
-    const todayKey = utcDayKey(Date.now());
-    const profile = ensurePulseProfile(store, wallet, displayName);
-
-    if (profile.lastCheckInDay === todayKey) {
-      return res.json({
-        alreadyCheckedIn: true,
-        todayKey,
-        profile: formatPulseProfile(profile),
-      });
-    }
-
-    const diff = profile.lastCheckInDay ? dayKeyDiff(profile.lastCheckInDay, todayKey) : null;
-    profile.currentStreak = diff === 1 ? Number(profile.currentStreak || 0) + 1 : 1;
-    profile.longestStreak = Math.max(Number(profile.longestStreak || 0), profile.currentStreak);
-    profile.points = Number(profile.points || 0) + 10;
-    profile.totalCheckIns = Number(profile.totalCheckIns || 0) + 1;
-    profile.lastCheckInDay = todayKey;
-    profile.updatedAt = Date.now();
-    if (displayName) profile.displayName = displayName;
-
-    await persistPulseStore(store);
-    res.json({
-      alreadyCheckedIn: false,
-      todayKey,
-      earnedPoints: 10,
-      profile: formatPulseProfile(profile),
-    });
+    res.json(recordPulseCheckIn(pulseDb, wallet, displayName));
   } catch (err) {
     res.status(400).json({ error: err.message || "Could not complete the ArcPulse check-in" });
   }

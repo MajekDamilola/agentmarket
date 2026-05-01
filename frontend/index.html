@@ -1551,7 +1551,7 @@
     .pulse-metrics {
       display: grid;
       gap: 12px;
-      grid-template-columns: repeat(5, minmax(0, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
       position: relative;
       z-index: 1;
     }
@@ -1561,17 +1561,20 @@
       border: 1px solid rgba(255,255,255,0.08);
       border-radius: 18px;
       min-height: 112px;
+      min-width: 0;
+      overflow: hidden;
       padding: 18px;
     }
 
     .pulse-metric-value {
       color: var(--text);
       font-family: var(--font-head);
-      font-size: clamp(24px, 3vw, 34px);
+      font-size: clamp(22px, 2.4vw, 34px);
       font-weight: 800;
       letter-spacing: -0.04em;
       line-height: 1;
       margin-bottom: 8px;
+      overflow-wrap: anywhere;
     }
 
     .pulse-metric-label {
@@ -1857,6 +1860,7 @@
       background: rgba(255,255,255,0.02);
       border: 1px solid rgba(255,255,255,0.06);
       border-radius: 14px;
+      min-width: 0;
       padding: 12px;
     }
 
@@ -1874,6 +1878,286 @@
       letter-spacing: 0.12em;
       margin-top: 5px;
       text-transform: uppercase;
+    }
+
+    .pulse-segment-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .pulse-segment-btn {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 999px;
+      color: rgba(232,232,240,0.62);
+      cursor: pointer;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      padding: 9px 12px;
+      text-transform: uppercase;
+      transition: border-color 0.2s, background 0.2s, color 0.2s;
+    }
+
+    .pulse-segment-btn.active,
+    .pulse-segment-btn:hover {
+      background: rgba(166,246,255,0.06);
+      border-color: rgba(166,246,255,0.18);
+      color: var(--text);
+    }
+
+    .pulse-feed-compose {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 20px;
+      display: grid;
+      gap: 12px;
+      margin-bottom: 16px;
+      padding: 16px;
+    }
+
+    .pulse-feed-form-grid {
+      display: grid;
+      gap: 10px;
+      grid-template-columns: minmax(0, 160px) minmax(0, 1fr);
+    }
+
+    .pulse-feed-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .pulse-feed-card {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 18px;
+      display: grid;
+      gap: 12px;
+      padding: 16px;
+    }
+
+    .pulse-feed-head {
+      align-items: flex-start;
+      display: flex;
+      gap: 10px;
+      justify-content: space-between;
+    }
+
+    .pulse-feed-lane {
+      border-radius: 999px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      padding: 6px 9px;
+      text-transform: uppercase;
+    }
+
+    .pulse-feed-lane.build {
+      background: rgba(79,209,165,0.1);
+      border: 1px solid rgba(79,209,165,0.18);
+      color: var(--success);
+    }
+
+    .pulse-feed-lane.thread {
+      background: rgba(124,109,250,0.12);
+      border: 1px solid rgba(124,109,250,0.18);
+      color: #9a8dff;
+    }
+
+    .pulse-feed-lane.art {
+      background: rgba(246,201,14,0.12);
+      border: 1px solid rgba(246,201,14,0.2);
+      color: var(--gold);
+    }
+
+    .pulse-feed-title {
+      font-family: var(--font-head);
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+      margin-bottom: 6px;
+    }
+
+    .pulse-feed-body {
+      color: rgba(232,232,240,0.68);
+      font-size: 14px;
+      line-height: 1.65;
+      white-space: pre-wrap;
+    }
+
+    .pulse-feed-actions {
+      align-items: center;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: space-between;
+    }
+
+    .pulse-feed-meta {
+      color: rgba(232,232,240,0.44);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      line-height: 1.5;
+    }
+
+    .pulse-inline-link {
+      color: var(--brand-ice);
+      text-decoration: none;
+    }
+
+    .pulse-inline-link:hover {
+      text-decoration: underline;
+    }
+
+    .pulse-vote-btn {
+      align-items: center;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 999px;
+      color: rgba(232,232,240,0.7);
+      cursor: pointer;
+      display: inline-flex;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      gap: 6px;
+      padding: 8px 11px;
+      transition: border-color 0.2s, background 0.2s, color 0.2s;
+    }
+
+    .pulse-vote-btn.active,
+    .pulse-vote-btn:hover {
+      background: rgba(89,199,255,0.08);
+      border-color: rgba(89,199,255,0.18);
+      color: var(--brand-ice);
+    }
+
+    .pulse-empty-box {
+      align-items: center;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 18px;
+      color: rgba(232,232,240,0.54);
+      display: flex;
+      justify-content: center;
+      min-height: 120px;
+      padding: 18px;
+      text-align: center;
+    }
+
+    .pulse-checkin-shell {
+      display: grid;
+      gap: 16px;
+    }
+
+    .pulse-checkin-grid {
+      display: grid;
+      gap: 10px;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .pulse-checkin-stat {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 16px;
+      min-width: 0;
+      padding: 14px;
+    }
+
+    .pulse-checkin-value {
+      font-family: var(--font-head);
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+
+    .pulse-checkin-label {
+      color: rgba(232,232,240,0.44);
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .pulse-checkin-action {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 18px;
+      display: grid;
+      gap: 12px;
+      padding: 16px;
+    }
+
+    .pulse-checkin-row {
+      align-items: center;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: space-between;
+    }
+
+    .pulse-mini-title {
+      font-family: var(--font-head);
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .pulse-leaderboard-stack {
+      display: grid;
+      gap: 16px;
+    }
+
+    .pulse-subhead {
+      color: rgba(232,232,240,0.7);
+      font-family: var(--font-head);
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+    }
+
+    .pulse-leaderboard-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .pulse-leaderboard-row {
+      align-items: center;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 16px;
+      display: flex;
+      gap: 12px;
+      justify-content: space-between;
+      padding: 12px 14px;
+    }
+
+    .pulse-leaderboard-rank {
+      align-items: center;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 999px;
+      color: rgba(232,232,240,0.72);
+      display: inline-flex;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      height: 28px;
+      justify-content: center;
+      min-width: 28px;
+      padding: 0 9px;
+    }
+
+    .pulse-leaderboard-value {
+      font-family: var(--font-head);
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      white-space: nowrap;
     }
 
     @media (max-width: 920px) {
@@ -1921,6 +2205,8 @@
       .pulse-donut-layout { grid-template-columns: 1fr; }
       .pulse-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .pulse-ranking-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .pulse-feed-form-grid,
+      .pulse-checkin-grid { grid-template-columns: 1fr; }
       .bridge-shell,
       .bridge-form-grid,
       .bridge-summary-grid,
@@ -1975,6 +2261,10 @@
       .pulse-ranking-top { flex-direction: column; }
       .pulse-block-row,
       .pulse-breakdown-row { grid-template-columns: 1fr; }
+      .pulse-feed-head,
+      .pulse-feed-actions,
+      .pulse-checkin-row,
+      .pulse-leaderboard-row { flex-direction: column; align-items: flex-start; }
       .chat-meta { flex-direction: column; gap: 2px; }
       .bridge-summary-item + .bridge-summary-item { border-top: 0; }
       .job-actions-row { width: 100%; }
@@ -2180,6 +2470,80 @@
               </div>
             </div>
             <div id="pulseRankings" class="pulse-chart-empty">Loading tracked app rankings...</div>
+          </div>
+        </div>
+
+        <div class="pulse-grid">
+          <div class="pulse-panel">
+            <div class="pulse-card-head">
+              <div>
+                <div class="pulse-card-title">Community feed</div>
+                <div class="pulse-note">Build, Thread, and Art share one public lane so the best contributions can surface together.</div>
+              </div>
+            </div>
+
+            <div id="pulseFeedFilters" class="pulse-segment-row"></div>
+
+            <div class="pulse-feed-compose">
+              <div class="pulse-note" id="pulseFeedComposeNote">Connect your wallet to publish to the ArcPulse feed.</div>
+              <div class="pulse-feed-form-grid">
+                <select id="pulsePostLane">
+                  <option value="build">Build</option>
+                  <option value="thread">Thread</option>
+                  <option value="art">Art</option>
+                </select>
+                <input type="text" id="pulsePostAuthor" maxlength="40" placeholder="Display name (optional)"/>
+              </div>
+              <input type="text" id="pulsePostTitle" maxlength="80" placeholder="Short headline for what you shipped or shared"/>
+              <input type="url" id="pulsePostLink" placeholder="https://link-to-demo-doc-thread-or-artwork"/>
+              <textarea id="pulsePostBody" maxlength="600" placeholder="Tell the community what happened, what shipped, or what they should look at."></textarea>
+              <div class="pulse-feed-actions">
+                <span class="pulse-feed-meta">This beta stores posts in the backend file store so we can test the social loop now.</span>
+                <button class="btn btn-primary" onclick="submitPulsePost()" id="pulseSubmitBtn">Submit to Feed</button>
+              </div>
+            </div>
+
+            <div id="pulseFeedList" class="pulse-chart-empty">Loading community feed...</div>
+          </div>
+
+          <div class="pulse-panel">
+            <div class="pulse-card-head">
+              <div>
+                <div class="pulse-card-title">Daily check-in</div>
+                <div class="pulse-note">Start the retention loop now with points and streaks. The onchain micro-payment can replace this beta action later.</div>
+              </div>
+              <button class="btn btn-outline btn-sm" onclick="loadPulse(true)">Refresh</button>
+            </div>
+
+            <div class="pulse-checkin-shell">
+              <div class="pulse-checkin-grid">
+                <div class="pulse-checkin-stat">
+                  <div class="pulse-checkin-value" id="pulsePointsValue">0</div>
+                  <div class="pulse-checkin-label">Pulse points</div>
+                </div>
+                <div class="pulse-checkin-stat">
+                  <div class="pulse-checkin-value" id="pulseCurrentStreakValue">0</div>
+                  <div class="pulse-checkin-label">Current streak</div>
+                </div>
+                <div class="pulse-checkin-stat">
+                  <div class="pulse-checkin-value" id="pulseLongestStreakValue">0</div>
+                  <div class="pulse-checkin-label">Longest streak</div>
+                </div>
+              </div>
+
+              <div id="pulseCheckInBox" class="pulse-empty-box">Connect your wallet to start a streak.</div>
+
+              <div class="pulse-leaderboard-stack">
+                <div>
+                  <div class="pulse-subhead">Top earners</div>
+                  <div id="pulseTopEarners" class="pulse-chart-empty">Loading top earners...</div>
+                </div>
+                <div>
+                  <div class="pulse-subhead">Live streaks</div>
+                  <div id="pulseLongestStreaks" class="pulse-chart-empty">Loading streak leaderboard...</div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -2772,8 +3136,15 @@ let pendingDeliverableJobId = null;
 let bridgeSupportedChains = [];
 let pulseState = null;
 let pulseLoading = false;
+let pulseFeedLane = 'all';
 
 const PULSE_COLORS = ['#7c6dfa', '#59c7ff', '#7affc8', '#f6c90e', '#f87272', '#a6f6ff'];
+const PULSE_FEED_LANES = [
+  { id: 'all', label: 'All' },
+  { id: 'build', label: 'Build' },
+  { id: 'thread', label: 'Thread' },
+  { id: 'art', label: 'Art' },
+];
 
 const BRIDGE_CHAIN_LABELS = {
   Ethereum_Sepolia: 'Ethereum Sepolia',
@@ -2983,6 +3354,7 @@ function disconnectWallet() {
   updateWalletButtons();
   if (document.getElementById('page-dashboard').classList.contains('active')) loadDashboard();
   if (document.getElementById('page-bridge').classList.contains('active')) refreshBridgeDefaults();
+  if (document.getElementById('page-pulse').classList.contains('active')) loadPulse(true);
   window.arcUnifiedBalanceRefresh?.();
   toast('Wallet Disconnected', 'You can reconnect a different wallet now', 'info');
 }
@@ -2997,6 +3369,7 @@ async function connectWallet() {
     toast('Wallet Connected', shortAddr(currentWallet), 'success');
     if (document.getElementById('page-dashboard').classList.contains('active')) await loadDashboard();
     if (document.getElementById('page-bridge').classList.contains('active')) refreshBridgeDefaults();
+    if (document.getElementById('page-pulse').classList.contains('active')) await loadPulse(true);
     window.arcUnifiedBalanceRefresh?.();
   } catch(e) {
     toast('Connection Failed', e.message, 'error');
@@ -3520,39 +3893,353 @@ function renderPulseNotes(notes = []) {
   mount.innerHTML = notes.map(note => `<div class="pulse-note-item">${escapeHtml(note)}</div>`).join('');
 }
 
+function formatPulseTimestamp(timestamp) {
+  if (!timestamp) return 'Unknown time';
+  try {
+    return new Date(Number(timestamp)).toLocaleString([], {
+      month: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+    });
+  } catch {
+    return 'Unknown time';
+  }
+}
+
+async function fetchPulseJson(path, options = {}) {
+  const headers = { ...(options.headers || {}) };
+  if (options.body && !headers['Content-Type']) headers['Content-Type'] = 'application/json';
+
+  const res = await fetch(`${API}${path}`, { ...options, headers });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data?.error || 'Could not load ArcPulse.');
+  return data;
+}
+
+function renderPulseFeedFilters(counts = {}) {
+  const mount = document.getElementById('pulseFeedFilters');
+  if (!mount) return;
+  mount.innerHTML = PULSE_FEED_LANES.map(lane => `
+    <button
+      class="pulse-segment-btn ${pulseFeedLane === lane.id ? 'active' : ''}"
+      onclick="setPulseFeedLane('${lane.id}')"
+      type="button"
+    >
+      <span>${escapeHtml(lane.label)}</span>
+      <span class="mono">${escapeHtml(String(counts?.[lane.id] || 0))}</span>
+    </button>
+  `).join('');
+}
+
+function renderPulseLeaderboardList(mountId, items = [], mode = 'points') {
+  const mount = document.getElementById(mountId);
+  if (!mount) return;
+  if (!Array.isArray(items) || !items.length) {
+    mount.className = 'pulse-empty-box';
+    mount.textContent = mode === 'points' ? 'No point earners yet.' : 'No streaks yet.';
+    return;
+  }
+
+  mount.className = 'pulse-leaderboard-list';
+  mount.innerHTML = items.map((item, index) => {
+    const value = mode === 'points'
+      ? `${formatCompactNumber(item.points || 0)} pts`
+      : `${formatCompactNumber(item.currentStreak || 0)} day streak`;
+    const subValue = mode === 'points'
+      ? `${formatCompactNumber(item.currentStreak || 0)} day streak`
+      : `${formatCompactNumber(item.points || 0)} pts`;
+
+    return `
+      <div class="pulse-leaderboard-row">
+        <div class="pulse-ranking-title">
+          <span class="pulse-leaderboard-rank">#${escapeHtml(String(index + 1))}</span>
+          <div>
+            <div class="pulse-ranking-name">${escapeHtml(item.displayName || shortAddr(item.wallet))}</div>
+            <div class="pulse-feed-meta">
+              <span class="mono">${escapeHtml(shortAddr(item.wallet))}</span>
+              <span>${escapeHtml(`Longest ${item.longestStreak || 0}d`)}</span>
+            </div>
+          </div>
+        </div>
+        <div style="text-align:right">
+          <div class="pulse-leaderboard-value">${escapeHtml(value)}</div>
+          <div class="pulse-note">${escapeHtml(subValue)}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderPulseLeaderboards(payload = {}) {
+  renderPulseLeaderboardList('pulseTopEarners', payload?.topEarners || [], 'points');
+  renderPulseLeaderboardList('pulseLongestStreaks', payload?.longestStreaks || [], 'streak');
+}
+
+function renderPulseCheckIn(statusPayload = null) {
+  const box = document.getElementById('pulseCheckInBox');
+  const pointsValue = document.getElementById('pulsePointsValue');
+  const currentStreakValue = document.getElementById('pulseCurrentStreakValue');
+  const longestStreakValue = document.getElementById('pulseLongestStreakValue');
+  const authorInput = document.getElementById('pulsePostAuthor');
+
+  if (!currentWallet || !statusPayload?.profile) {
+    if (pointsValue) pointsValue.textContent = '--';
+    if (currentStreakValue) currentStreakValue.textContent = '--';
+    if (longestStreakValue) longestStreakValue.textContent = '--';
+    if (box) {
+      box.className = 'pulse-empty-box';
+      box.textContent = 'Connect your wallet to start a streak and collect Pulse Points.';
+    }
+    return;
+  }
+
+  const profile = statusPayload.profile;
+  if (pointsValue) pointsValue.textContent = formatCompactNumber(profile.points || 0);
+  if (currentStreakValue) currentStreakValue.textContent = formatCompactNumber(profile.currentStreak || 0);
+  if (longestStreakValue) longestStreakValue.textContent = formatCompactNumber(profile.longestStreak || 0);
+
+  if (authorInput && !authorInput.value.trim()) {
+    const suggestedName = profile.displayName && profile.displayName !== shortAddr(currentWallet) ? profile.displayName : '';
+    if (suggestedName) authorInput.value = suggestedName;
+  }
+
+  if (!box) return;
+
+  const canCheckInToday = Boolean(profile.canCheckInToday);
+  box.className = 'pulse-checkin-action';
+  box.innerHTML = `
+    <div class="pulse-checkin-row">
+      <div>
+        <div class="pulse-mini-title">${canCheckInToday ? 'Daily check-in ready' : 'Streak secured for today'}</div>
+        <div class="pulse-note">
+          ${canCheckInToday
+            ? `Check in now to add 10 Pulse Points. Total check-ins: ${escapeHtml(String(profile.totalCheckIns || 0))}.`
+            : `You already checked in for ${escapeHtml(statusPayload.todayKey || 'today')}. Total check-ins: ${escapeHtml(String(profile.totalCheckIns || 0))}.`}
+        </div>
+      </div>
+      <button
+        class="btn ${canCheckInToday ? 'btn-primary' : 'btn-outline'}"
+        onclick="runPulseCheckIn()"
+        type="button"
+        ${canCheckInToday ? '' : 'disabled'}
+      >
+        ${canCheckInToday ? 'Check in +10' : 'Checked in'}
+      </button>
+    </div>
+  `;
+}
+
+function renderPulseFeed(payload = {}) {
+  renderPulseFeedFilters(payload?.counts || { all: 0, build: 0, thread: 0, art: 0 });
+
+  const mount = document.getElementById('pulseFeedList');
+  const note = document.getElementById('pulseFeedComposeNote');
+  const submitBtn = document.getElementById('pulseSubmitBtn');
+  if (submitBtn) submitBtn.disabled = !currentWallet;
+  if (note) {
+    note.textContent = currentWallet
+      ? `Connected as ${shortAddr(currentWallet)}. Publish a quick signal to the ArcPulse feed.`
+      : 'Connect your wallet to publish to the ArcPulse feed.';
+  }
+  if (!mount) return;
+
+  const items = Array.isArray(payload?.items) ? payload.items : [];
+  if (!items.length) {
+    mount.className = 'pulse-empty-box';
+    mount.textContent = 'No posts in this lane yet. Be the first signal.';
+    return;
+  }
+
+  mount.className = 'pulse-feed-list';
+  mount.innerHTML = items.map(item => {
+    const laneClass = ['build', 'thread', 'art'].includes(item.lane) ? item.lane : 'build';
+    const voteAction = `togglePulseVote(${JSON.stringify(String(item.id || ''))})`;
+    const bodyHtml = escapeHtml(item.body || '').replace(/\n/g, '<br>');
+
+    return `
+      <article class="pulse-feed-card">
+        <div class="pulse-feed-head">
+          <div>
+            <div class="pulse-feed-meta">
+              <span class="pulse-feed-lane ${laneClass}">${escapeHtml(String(item.lane || 'build').toUpperCase())}</span>
+              <span>${escapeHtml(item.authorName || shortAddr(item.wallet))}</span>
+              <span class="mono">${escapeHtml(shortAddr(item.wallet))}</span>
+            </div>
+            <h3 class="pulse-feed-title">${escapeHtml(item.title || 'Untitled post')}</h3>
+          </div>
+          <div class="pulse-note">${escapeHtml(`${pulseAgeLabel(item.createdAt)} / ${formatPulseTimestamp(item.createdAt)}`)}</div>
+        </div>
+        <div class="pulse-feed-body">${bodyHtml}</div>
+        <div class="pulse-feed-actions">
+          <div class="pulse-feed-meta">
+            <span>${escapeHtml(`${item.upvotes || 0} upvotes`)}</span>
+            ${item.link ? `<a class="pulse-inline-link mono" href="${escapeHtml(item.link)}" target="_blank" rel="noreferrer">Open link</a>` : ''}
+          </div>
+          <button
+            class="pulse-vote-btn ${item.upvotedByViewer ? 'active' : ''}"
+            onclick='${voteAction}'
+            type="button"
+          >
+            ${item.upvotedByViewer ? 'Upvoted' : 'Upvote'}
+          </button>
+        </div>
+      </article>
+    `;
+  }).join('');
+}
+
+function setPulseFeedLane(lane) {
+  if (!PULSE_FEED_LANES.some(item => item.id === lane) || pulseFeedLane === lane) return;
+  pulseFeedLane = lane;
+  loadPulse(true);
+}
+
+async function submitPulsePost() {
+  if (!currentWallet) {
+    toast('Connect Wallet', 'Connect your wallet before publishing to ArcPulse.', 'info');
+    return;
+  }
+
+  const laneInput = document.getElementById('pulsePostLane');
+  const authorInput = document.getElementById('pulsePostAuthor');
+  const titleInput = document.getElementById('pulsePostTitle');
+  const linkInput = document.getElementById('pulsePostLink');
+  const bodyInput = document.getElementById('pulsePostBody');
+  const submitBtn = document.getElementById('pulseSubmitBtn');
+
+  if (!laneInput || !titleInput || !bodyInput || !submitBtn) return;
+
+  submitBtn.disabled = true;
+  const previousLabel = submitBtn.textContent;
+  submitBtn.textContent = 'Publishing...';
+
+  try {
+    await fetchPulseJson('/api/pulse/community', {
+      method: 'POST',
+      body: JSON.stringify({
+        wallet: currentWallet,
+        lane: laneInput.value,
+        authorName: authorInput?.value || '',
+        title: titleInput.value,
+        link: linkInput?.value || '',
+        body: bodyInput.value,
+      }),
+    });
+
+    titleInput.value = '';
+    if (linkInput) linkInput.value = '';
+    bodyInput.value = '';
+    toast('Post Published', 'Your ArcPulse update is now live in the community feed.', 'success');
+    await loadPulse(true);
+  } catch (e) {
+    toast('Publish Failed', e.message || 'Could not publish to ArcPulse.', 'error');
+  } finally {
+    submitBtn.disabled = !currentWallet;
+    submitBtn.textContent = previousLabel;
+  }
+}
+
+async function togglePulseVote(postId) {
+  if (!currentWallet) {
+    toast('Connect Wallet', 'Connect your wallet before voting on ArcPulse posts.', 'info');
+    return;
+  }
+
+  try {
+    const result = await fetchPulseJson(`/api/pulse/community/${encodeURIComponent(postId)}/upvote`, {
+      method: 'POST',
+      body: JSON.stringify({ wallet: currentWallet }),
+    });
+    toast(result?.added ? 'Signal Boosted' : 'Vote Removed', result?.added ? 'Your upvote is live.' : 'Your upvote has been removed.', 'success');
+    await loadPulse(true);
+  } catch (e) {
+    toast('Vote Failed', e.message || 'Could not update this ArcPulse vote.', 'error');
+  }
+}
+
+async function runPulseCheckIn() {
+  if (!currentWallet) {
+    toast('Connect Wallet', 'Connect your wallet before checking in.', 'info');
+    return;
+  }
+
+  const authorInput = document.getElementById('pulsePostAuthor');
+
+  try {
+    const result = await fetchPulseJson('/api/pulse/checkin', {
+      method: 'POST',
+      body: JSON.stringify({
+        wallet: currentWallet,
+        displayName: authorInput?.value || '',
+      }),
+    });
+    toast(
+      result?.alreadyCheckedIn ? 'Already Checked In' : 'Check-in Complete',
+      result?.alreadyCheckedIn ? 'Your streak is already locked for today.' : `You earned ${result?.earnedPoints || 10} Pulse Points.`,
+      result?.alreadyCheckedIn ? 'info' : 'success'
+    );
+    await loadPulse(true);
+  } catch (e) {
+    toast('Check-in Failed', e.message || 'Could not complete the ArcPulse check-in.', 'error');
+  }
+}
+
 async function loadPulse(force = false) {
   if (!window.AGENTMARKET_RUNTIME_CONFIG?.pulseEnabled) return;
   if (pulseLoading && !force) return;
 
   pulseLoading = true;
   try {
-    const res = await fetch(`${API}/api/pulse/overview`);
-    const data = await res.json();
-    if (!res.ok) throw new Error(data?.error || 'Could not load ArcPulse.');
-    pulseState = data;
+    const communityQuery = new URLSearchParams({ lane: pulseFeedLane });
+    if (currentWallet) communityQuery.set('viewer', currentWallet);
 
-    setPulseMetric('pulseLatestBlock', `#${formatCompactNumber(data?.overview?.latestBlockNumber || 0)}`);
-    setPulseMetric('pulseAvgBlockTime', `${Number(data?.overview?.avgBlockTimeSec || 0).toFixed(2)}s`);
-    setPulseMetric('pulseRecentTx', formatCompactNumber(data?.overview?.recentBlockTxCount || 0));
-    setPulseMetric('pulseTrackedVolume', formatPulseUsdc(data?.overview?.trackedEscrowVolumeUsdc || 0));
-    setPulseMetric('pulseTrackedWallets', formatCompactNumber(data?.overview?.trackedWallets || 0));
+    const [overview, community, leaderboards, checkIn] = await Promise.all([
+      fetchPulseJson('/api/pulse/overview'),
+      fetchPulseJson(`/api/pulse/community?${communityQuery.toString()}`),
+      fetchPulseJson('/api/pulse/leaderboards'),
+      currentWallet
+        ? fetchPulseJson(`/api/pulse/checkin/${encodeURIComponent(currentWallet)}`)
+        : Promise.resolve(null),
+    ]);
+
+    pulseState = { overview, community, leaderboards, checkIn };
+
+    setPulseMetric('pulseLatestBlock', `#${formatCompactNumber(overview?.overview?.latestBlockNumber || 0)}`);
+    setPulseMetric('pulseAvgBlockTime', `${Number(overview?.overview?.avgBlockTimeSec || 0).toFixed(2)}s`);
+    setPulseMetric('pulseRecentTx', formatCompactNumber(overview?.overview?.recentBlockTxCount || 0));
+    setPulseMetric('pulseTrackedVolume', formatPulseUsdc(overview?.overview?.trackedEscrowVolumeUsdc || 0));
+    setPulseMetric('pulseTrackedWallets', formatCompactNumber(overview?.overview?.trackedWallets || 0));
 
     const settledBadge = document.getElementById('pulseSettledBadge');
-    if (settledBadge) settledBadge.textContent = `Settled ${formatPulseUsdc(data?.overview?.settledVolumeUsdc || 0)}`;
+    if (settledBadge) settledBadge.textContent = `Settled ${formatPulseUsdc(overview?.overview?.settledVolumeUsdc || 0)}`;
 
-    renderPulseVolumeChart(data?.volume14d || []);
-    renderPulseCategoryBreakdown(data?.categoryBreakdown || []);
-    renderPulseBlocks(data?.recentBlocks || []);
-    renderPulseRankings(data?.appRankings || []);
-    renderPulseNotes(data?.notes || []);
+    renderPulseVolumeChart(overview?.volume14d || []);
+    renderPulseCategoryBreakdown(overview?.categoryBreakdown || []);
+    renderPulseBlocks(overview?.recentBlocks || []);
+    renderPulseRankings(overview?.appRankings || []);
+    renderPulseFeed(community || {});
+    renderPulseLeaderboards(leaderboards || {});
+    renderPulseCheckIn(checkIn);
+    renderPulseNotes(overview?.notes || []);
   } catch (e) {
     const message = e.message || 'Could not load ArcPulse.';
-    ['pulseVolumeChart', 'pulseCategoryBreakdown', 'pulseBlocks', 'pulseRankings'].forEach(id => {
+    renderPulseFeedFilters({ all: 0, build: 0, thread: 0, art: 0 });
+    ['pulseVolumeChart', 'pulseCategoryBreakdown', 'pulseBlocks', 'pulseRankings', 'pulseFeedList', 'pulseTopEarners', 'pulseLongestStreaks'].forEach(id => {
       const el = document.getElementById(id);
       if (el) {
         el.className = 'pulse-chart-empty';
         el.textContent = message;
       }
+    });
+    const checkInBox = document.getElementById('pulseCheckInBox');
+    if (checkInBox) {
+      checkInBox.className = 'pulse-empty-box';
+      checkInBox.textContent = message;
+    }
+    ['pulsePointsValue', 'pulseCurrentStreakValue', 'pulseLongestStreakValue'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = '--';
     });
     renderPulseNotes([message]);
   } finally {
@@ -4337,6 +5024,7 @@ async function init() {
       updateWalletButtons();
       if (document.getElementById('page-dashboard').classList.contains('active')) await loadDashboard();
       if (document.getElementById('page-bridge').classList.contains('active')) refreshBridgeDefaults();
+      if (document.getElementById('page-pulse').classList.contains('active')) await loadPulse(true);
       window.arcUnifiedBalanceRefresh?.();
     });
 
@@ -4348,6 +5036,7 @@ async function init() {
         updateWalletButtons();
         refreshBridgeDefaults();
         window.arcUnifiedBalanceRefresh?.();
+        if (document.getElementById('page-pulse').classList.contains('active')) await loadPulse(true);
       }
     } catch(e) {}
   }

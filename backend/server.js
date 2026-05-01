@@ -3,8 +3,14 @@ import cors from "cors";
 import { createPublicClient, http, formatUnits } from "viem";
 import { arcTestnet } from "viem/chains";
 import dotenv from "dotenv";
+import { promises as fs } from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 
 dotenv.config();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 app.use(cors());
@@ -39,6 +45,14 @@ const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
 const DAY_MS = 24 * 60 * 60 * 1000;
 const PULSE_RECENT_BLOCK_LIMIT = 6;
 const PULSE_SERIES_DAYS = 14;
+const PULSE_FEED_LIMIT = 250;
+const PULSE_LEADERBOARD_LIMIT = 10;
+const PULSE_STORE_PATH = path.resolve(__dirname, "..", "cache", "pulse-store.json");
+const PULSE_LANES = new Set(["build", "thread", "art"]);
+const DEFAULT_PULSE_STORE = {
+  feedPosts: [],
+  profiles: {},
+};
 
 // ─── ABIs ─────────────────────────────────────────────────────────
 const JOB_BOARD_ABI = [
@@ -71,6 +85,10 @@ function sameAddress(a, b) {
   return a?.toLowerCase() === b?.toLowerCase();
 }
 
+function shortWallet(address) {
+  return address ? `${address.slice(0, 6)}...${address.slice(-4)}` : "Anon";
+}
+
 function toUsdcNumber(value) {
   const amount = Number.parseFloat(String(value ?? 0));
   return Number.isFinite(amount) ? amount : 0;
@@ -87,6 +105,25 @@ function utcDayKey(timestamp) {
   const day = String(date.getUTCDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
 }
+
+function dayKeyDiff(fromDay, toDay) {
+  if (!fromDay || !toDay) return null;
+  const from = Date.parse(`${fromDay}T00:00:00Z`);
+  const to = Date.parse(`${toDay}T00:00:00Z`);
+  if (!Number.isFinite(from) || !Number.isFinite(to)) return null;
+  return Math.round((to - from) / DAY_MS);
+}
+
+function createDefaultPulseStore() {
+  return {
+    feedPosts: [],
+    profiles: {},
+  };
+}
+
+let pulseStoreCache = null;
+let pulseStoreLoadPromise = null;
+let pulseStoreWritePromise = Promise.resolve();
 
 function isArchivedCompletedJob(job, now = Date.now()) {
   return Number(job?.status) === 3 && Number(job?.completedAt) > 0 && (now - Number(job.completedAt)) > COMPLETED_JOB_RETENTION_MS;
@@ -338,11 +375,180 @@ function buildTrackedAppRankings(jobs, campaigns) {
   }];
 }
 
+async function ensurePulseStoreLoaded() {
+  if (pulseStoreCache) return pulseStoreCache;
+  if (!pulseStoreLoadPromise) {
+    pulseStoreLoadPromise = (async () => {
+      try {
+        const raw = await fs.readFile(PULSE_STORE_PATH, "utf8");
+        const parsed = JSON.parse(raw);
+        pulseStoreCache = {
+          feedPosts: Array.isArray(parsed?.feedPosts) ? parsed.feedPosts : [],
+          profiles: parsed?.profiles && typeof parsed.profiles === "object" ? parsed.profiles : {},
+        };
+      } catch (err) {
+        if (err?.code !== "ENOENT") {
+          console.warn("Could not read ArcPulse store, creating a fresh one:", err.message);
+        }
+        pulseStoreCache = createDefaultPulseStore();
+        await fs.mkdir(path.dirname(PULSE_STORE_PATH), { recursive: true });
+        await fs.writeFile(PULSE_STORE_PATH, JSON.stringify(pulseStoreCache, null, 2));
+      }
+      return pulseStoreCache;
+    })();
+  }
+  return pulseStoreLoadPromise;
+}
+
+async function persistPulseStore(store) {
+  pulseStoreCache = store;
+  pulseStoreWritePromise = pulseStoreWritePromise.then(async () => {
+    await fs.mkdir(path.dirname(PULSE_STORE_PATH), { recursive: true });
+    await fs.writeFile(PULSE_STORE_PATH, JSON.stringify(store, null, 2));
+  });
+  await pulseStoreWritePromise;
+  return pulseStoreCache;
+}
+
+function normalizePulseLane(value) {
+  const lane = String(value || "").trim().toLowerCase();
+  if (!PULSE_LANES.has(lane)) throw new Error("Lane must be build, thread, or art");
+  return lane;
+}
+
+function normalizePulseText(value, label, maxLength, { allowEmpty = false, collapseWhitespace = true } = {}) {
+  const raw = String(value ?? "");
+  const text = collapseWhitespace ? raw.trim().replace(/\s+/g, " ") : raw.trim();
+  if (!allowEmpty && !text) throw new Error(`${label} is required`);
+  if (text.length > maxLength) throw new Error(`${label} is too long`);
+  return text;
+}
+
+function normalizePulseUrl(value) {
+  const text = String(value || "").trim();
+  if (!text) return "";
+  try {
+    const url = new URL(text);
+    if (!["http:", "https:"].includes(url.protocol)) throw new Error("Invalid");
+    return url.toString();
+  } catch {
+    throw new Error("Link must be a valid http or https URL");
+  }
+}
+
+function getComputedCurrentStreak(profile, todayKey = utcDayKey(Date.now())) {
+  const base = Number(profile?.currentStreak || 0);
+  if (!profile?.lastCheckInDay) return 0;
+  const diff = dayKeyDiff(profile.lastCheckInDay, todayKey);
+  if (diff === null) return base;
+  if (diff <= 1) return base;
+  return 0;
+}
+
+function ensurePulseProfile(store, wallet, displayName = "") {
+  const key = wallet.toLowerCase();
+  if (!store.profiles[key]) {
+    store.profiles[key] = {
+      wallet,
+      displayName: displayName || "",
+      points: 0,
+      currentStreak: 0,
+      longestStreak: 0,
+      totalCheckIns: 0,
+      lastCheckInDay: "",
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    };
+  } else {
+    store.profiles[key].wallet = store.profiles[key].wallet || wallet;
+    if (displayName) store.profiles[key].displayName = displayName;
+  }
+  return store.profiles[key];
+}
+
+function formatPulseProfile(profile) {
+  const todayKey = utcDayKey(Date.now());
+  const currentStreak = getComputedCurrentStreak(profile, todayKey);
+  return {
+    wallet: profile.wallet,
+    displayName: profile.displayName || shortWallet(profile.wallet),
+    points: Number(profile.points || 0),
+    currentStreak,
+    longestStreak: Number(profile.longestStreak || 0),
+    totalCheckIns: Number(profile.totalCheckIns || 0),
+    lastCheckInDay: profile.lastCheckInDay || "",
+    canCheckInToday: profile.lastCheckInDay !== todayKey,
+    updatedAt: Number(profile.updatedAt || 0),
+  };
+}
+
+function formatPulsePost(post, viewerWallet = "") {
+  const viewer = viewerWallet ? viewerWallet.toLowerCase() : "";
+  const upvoters = Array.isArray(post?.upvoters) ? post.upvoters : [];
+  return {
+    id: post.id,
+    lane: post.lane,
+    title: post.title,
+    body: post.body,
+    link: post.link || "",
+    authorName: post.authorName || shortWallet(post.wallet),
+    wallet: post.wallet,
+    createdAt: Number(post.createdAt || Date.now()),
+    upvotes: upvoters.length,
+    upvotedByViewer: viewer ? upvoters.includes(viewer) : false,
+  };
+}
+
+function getPulseCommunityResponse(store, laneFilter = "all", viewerWallet = "") {
+  const lane = String(laneFilter || "all").trim().toLowerCase();
+  if (lane !== "all" && !PULSE_LANES.has(lane)) {
+    throw new Error("Lane filter must be all, build, thread, or art");
+  }
+
+  const feedPosts = Array.isArray(store.feedPosts) ? store.feedPosts : [];
+  const counts = {
+    all: feedPosts.length,
+    build: 0,
+    thread: 0,
+    art: 0,
+  };
+
+  for (const post of feedPosts) {
+    if (counts[post.lane] !== undefined) counts[post.lane] += 1;
+  }
+
+  const items = feedPosts
+    .filter(post => lane === "all" ? true : post.lane === lane)
+    .sort((a, b) => {
+      const voteDelta = (Array.isArray(b.upvoters) ? b.upvoters.length : 0) - (Array.isArray(a.upvoters) ? a.upvoters.length : 0);
+      if (voteDelta !== 0) return voteDelta;
+      return Number(b.createdAt || 0) - Number(a.createdAt || 0);
+    })
+    .map(post => formatPulsePost(post, viewerWallet));
+
+  return { lane, counts, items };
+}
+
+function getPulseLeaderboards(store) {
+  const profiles = Object.values(store.profiles || {}).map(formatPulseProfile);
+  const topEarners = [...profiles]
+    .filter(profile => profile.points > 0)
+    .sort((a, b) => b.points - a.points || b.longestStreak - a.longestStreak || b.updatedAt - a.updatedAt)
+    .slice(0, PULSE_LEADERBOARD_LIMIT);
+  const longestStreaks = [...profiles]
+    .filter(profile => profile.currentStreak > 0 || profile.longestStreak > 0)
+    .sort((a, b) => b.currentStreak - a.currentStreak || b.longestStreak - a.longestStreak || b.points - a.points)
+    .slice(0, PULSE_LEADERBOARD_LIMIT);
+
+  return { topEarners, longestStreaks };
+}
+
 async function getPulseSnapshot() {
-  const [jobs, campaigns, recentBlocks] = await Promise.all([
+  const [jobs, campaigns, recentBlocks, pulseStore] = await Promise.all([
     getAllFormattedJobs(),
     getAllFormattedCampaigns(),
     getRecentBlocks(),
+    ensurePulseStoreLoaded(),
   ]);
 
   const activeJobs = jobs.filter(job => !isArchivedCompletedJob(job));
@@ -378,6 +584,8 @@ async function getPulseSnapshot() {
       openJobs: openJobs.length,
       activeCampaigns: activeCampaigns.length,
       trackedWallets: trackedWallets.size,
+      communityPosts: Array.isArray(pulseStore.feedPosts) ? pulseStore.feedPosts.length : 0,
+      pulseProfiles: Object.keys(pulseStore.profiles || {}).length,
     },
     recentBlocks,
     volume14d: buildPulseSeries(jobs),
@@ -386,6 +594,7 @@ async function getPulseSnapshot() {
     notes: [
       "Live Arc blocks come directly from the Arc RPC endpoint.",
       "Volume, categories, and rankings are currently tracked from the AgentMarket contracts only.",
+      "Community feed and streaks in this beta use file-backed backend persistence.",
       "Full-network ArcPulse rankings should use an indexer such as Goldsky or Envio.",
     ],
   };
@@ -494,6 +703,136 @@ app.get("/api/pulse/overview", async (req, res) => {
 });
 
 // ─── Chat ─────────────────────────────────────────────────────────
+app.get("/api/pulse/community", async (req, res) => {
+  try {
+    const store = await ensurePulseStoreLoaded();
+    const viewerWallet = req.query?.viewer ? normalizeAddress(req.query.viewer) : "";
+    res.json(getPulseCommunityResponse(store, req.query?.lane || "all", viewerWallet));
+  } catch (err) {
+    res.status(400).json({ error: err.message || "Could not load the ArcPulse community feed" });
+  }
+});
+
+app.post("/api/pulse/community", async (req, res) => {
+  try {
+    const store = await ensurePulseStoreLoaded();
+    const wallet = normalizeAddress(req.body?.wallet);
+    const lane = normalizePulseLane(req.body?.lane);
+    const authorName = normalizePulseText(req.body?.authorName, "Display name", 40, { allowEmpty: true });
+    const title = normalizePulseText(req.body?.title, "Title", 80);
+    const body = normalizePulseText(req.body?.body, "Post", 600, { collapseWhitespace: false });
+    const link = normalizePulseUrl(req.body?.link);
+
+    const profile = ensurePulseProfile(store, wallet, authorName);
+    const post = {
+      id: `pulse-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      lane,
+      title,
+      body,
+      link,
+      wallet,
+      authorName: profile.displayName || authorName || shortWallet(wallet),
+      createdAt: Date.now(),
+      upvoters: [],
+    };
+
+    store.feedPosts = [post, ...(Array.isArray(store.feedPosts) ? store.feedPosts : [])].slice(0, PULSE_FEED_LIMIT);
+    profile.updatedAt = Date.now();
+    await persistPulseStore(store);
+
+    res.status(201).json(formatPulsePost(post, wallet));
+  } catch (err) {
+    res.status(400).json({ error: err.message || "Could not publish to the ArcPulse feed" });
+  }
+});
+
+app.post("/api/pulse/community/:postId/upvote", async (req, res) => {
+  try {
+    const store = await ensurePulseStoreLoaded();
+    const wallet = normalizeAddress(req.body?.wallet);
+    const voterKey = wallet.toLowerCase();
+    const post = (Array.isArray(store.feedPosts) ? store.feedPosts : []).find(item => item.id === req.params.postId);
+    if (!post) return res.status(404).json({ error: "Pulse post not found" });
+
+    if (!Array.isArray(post.upvoters)) post.upvoters = [];
+    const voterIndex = post.upvoters.indexOf(voterKey);
+    const added = voterIndex === -1;
+    if (added) {
+      post.upvoters.push(voterKey);
+    } else {
+      post.upvoters.splice(voterIndex, 1);
+    }
+
+    await persistPulseStore(store);
+    res.json({
+      added,
+      post: formatPulsePost(post, wallet),
+    });
+  } catch (err) {
+    res.status(400).json({ error: err.message || "Could not update the ArcPulse vote" });
+  }
+});
+
+app.get("/api/pulse/leaderboards", async (req, res) => {
+  try {
+    const store = await ensurePulseStoreLoaded();
+    res.json(getPulseLeaderboards(store));
+  } catch (err) {
+    res.status(500).json({ error: err.message || "Could not load ArcPulse leaderboards" });
+  }
+});
+
+app.get("/api/pulse/checkin/:address", async (req, res) => {
+  try {
+    const store = await ensurePulseStoreLoaded();
+    const wallet = normalizeAddress(req.params.address);
+    const profile = ensurePulseProfile(store, wallet);
+    res.json({
+      todayKey: utcDayKey(Date.now()),
+      profile: formatPulseProfile(profile),
+    });
+  } catch (err) {
+    res.status(400).json({ error: err.message || "Could not load ArcPulse check-in status" });
+  }
+});
+
+app.post("/api/pulse/checkin", async (req, res) => {
+  try {
+    const store = await ensurePulseStoreLoaded();
+    const wallet = normalizeAddress(req.body?.wallet);
+    const displayName = normalizePulseText(req.body?.displayName, "Display name", 40, { allowEmpty: true });
+    const todayKey = utcDayKey(Date.now());
+    const profile = ensurePulseProfile(store, wallet, displayName);
+
+    if (profile.lastCheckInDay === todayKey) {
+      return res.json({
+        alreadyCheckedIn: true,
+        todayKey,
+        profile: formatPulseProfile(profile),
+      });
+    }
+
+    const diff = profile.lastCheckInDay ? dayKeyDiff(profile.lastCheckInDay, todayKey) : null;
+    profile.currentStreak = diff === 1 ? Number(profile.currentStreak || 0) + 1 : 1;
+    profile.longestStreak = Math.max(Number(profile.longestStreak || 0), profile.currentStreak);
+    profile.points = Number(profile.points || 0) + 10;
+    profile.totalCheckIns = Number(profile.totalCheckIns || 0) + 1;
+    profile.lastCheckInDay = todayKey;
+    profile.updatedAt = Date.now();
+    if (displayName) profile.displayName = displayName;
+
+    await persistPulseStore(store);
+    res.json({
+      alreadyCheckedIn: false,
+      todayKey,
+      earnedPoints: 10,
+      profile: formatPulseProfile(profile),
+    });
+  } catch (err) {
+    res.status(400).json({ error: err.message || "Could not complete the ArcPulse check-in" });
+  }
+});
+
 app.get("/api/chats/:roomType/:roomId/messages", (req, res) => {
   try {
     res.json(getChatMessages(req.params.roomType, req.params.roomId));

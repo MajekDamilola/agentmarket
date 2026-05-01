@@ -77,6 +77,7 @@
       display: flex;
       align-items: center;
       gap: 20px;
+      justify-content: space-between;
       padding: 12px 28px;
       min-height: 72px;
     }
@@ -143,26 +144,70 @@
       text-transform: uppercase;
     }
 
+    .nav-menu-shell {
+      margin-left: auto;
+      position: relative;
+      z-index: 2;
+    }
+
     .nav-menu {
-      align-items: center;
+      background: rgba(8,11,17,0.98);
+      border: 1px solid rgba(166,246,255,0.12);
+      border-radius: 22px;
+      box-shadow: 0 22px 48px rgba(0,0,0,0.34);
+      display: none;
+      gap: 14px;
+      min-width: min(360px, calc(100vw - 32px));
+      padding: 14px;
+      position: absolute;
+      right: 0;
+      top: calc(100% + 12px);
+    }
+
+    body.nav-open .nav-menu { display: grid; }
+
+    .nav-menu-head {
+      align-items: flex-start;
       display: flex;
-      flex: 1;
-      gap: 16px;
+      gap: 12px;
       justify-content: space-between;
+      padding: 4px 4px 2px;
+    }
+
+    .nav-menu-title {
+      font-family: var(--font-head);
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 4px;
+    }
+
+    .nav-menu-copy {
+      color: rgba(232,232,240,0.52);
+      font-size: 12px;
+      line-height: 1.55;
+      max-width: 220px;
+    }
+
+    .nav-links {
+      display: grid;
+      gap: 8px;
       min-width: 0;
     }
 
-    .nav-links { display: flex; gap: 6px; min-width: 0; }
-
     .nav-btn {
-      background: none;
-      border: 1px solid transparent;
+      align-items: center;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.06);
       color: rgba(232,232,240,0.64);
+      display: flex;
       font-family: var(--font-body);
       font-size: 14px;
+      justify-content: space-between;
       padding: 10px 14px;
       border-radius: 12px;
       cursor: pointer;
+      width: 100%;
       transition: all 0.2s;
     }
     .nav-btn:hover,
@@ -179,20 +224,34 @@
     .nav-right { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
 
     .nav-toggle {
-      display: none;
       align-items: center;
+      display: inline-flex;
+      gap: 12px;
       justify-content: center;
-      width: 46px;
+      width: auto;
       height: 46px;
-      margin-left: auto;
       border-radius: 14px;
       border: 1px solid rgba(166,246,255,0.14);
       background: rgba(15,24,36,0.7);
       box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
       cursor: pointer;
+      padding: 0 16px;
     }
 
-    .nav-toggle span {
+    .nav-toggle-label {
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .nav-toggle-icon {
+      display: grid;
+      gap: 5px;
+    }
+
+    .nav-toggle-icon span {
       display: block;
       width: 18px;
       height: 2px;
@@ -201,13 +260,11 @@
       transition: transform 0.2s, opacity 0.2s;
     }
 
-    .nav-toggle span + span { margin-top: 5px; }
-
-    body.nav-open .nav-toggle span:first-child {
+    body.nav-open .nav-toggle-icon span:first-child {
       transform: translateY(3.5px) rotate(45deg);
     }
 
-    body.nav-open .nav-toggle span:last-child {
+    body.nav-open .nav-toggle-icon span:last-child {
       transform: translateY(-3.5px) rotate(-45deg);
     }
 
@@ -2339,29 +2396,19 @@
         gap: 12px;
         padding: 14px 16px;
       }
-      .nav-toggle { display: inline-flex; }
-      .nav-menu {
-        background: rgba(8,11,17,0.96);
-        border: 1px solid rgba(166,246,255,0.12);
-        border-radius: 20px;
-        box-shadow: 0 22px 48px rgba(0,0,0,0.34);
-        display: none;
-        flex-direction: column;
-        gap: 14px;
+      .nav-menu-shell {
+        margin-left: 0;
         order: 3;
-        padding: 14px;
         width: 100%;
       }
-      body.nav-open .nav-menu { display: flex; }
+      .nav-menu {
+        left: 0;
+        min-width: 0;
+        right: 0;
+        width: 100%;
+      }
       .nav-links {
-        display: grid;
-        gap: 8px;
         grid-template-columns: repeat(2, minmax(0, 1fr));
-        width: 100%;
-      }
-      .nav-btn {
-        background: rgba(255,255,255,0.02);
-        width: 100%;
       }
       .nav-right {
         flex-wrap: wrap;
@@ -2480,29 +2527,41 @@
       <span class="logo-sub">Agent commerce on Arc</span>
     </span>
   </button>
-  <button class="nav-toggle" id="navToggle" type="button" onclick="toggleMobileNav()" aria-label="Toggle navigation" aria-expanded="false" aria-controls="navMenu">
-    <span></span>
-    <span></span>
-  </button>
-  <div class="nav-menu" id="navMenu">
-    <div class="nav-links">
-      <button class="nav-btn active" data-page="home" onclick="showPage('home')">Browse</button>
-      <button class="nav-btn" data-page="pulse" onclick="showPage('pulse')">Pulse</button>
-      <button class="nav-btn" data-page="post" onclick="showPage('post')">Post</button>
-      <button class="nav-btn" data-page="bridge" onclick="showPage('bridge')">Fund</button>
-      <button class="nav-btn" data-page="pick" onclick="showPage('pick')">Work</button>
-      <button class="nav-btn" data-page="campaigns" onclick="showPage('campaigns')">Campaigns</button>
-      <button class="nav-btn" data-page="reviews" onclick="showPage('reviews')">Reviews</button>
-      <button class="nav-btn" data-page="dashboard" onclick="showPage('dashboard')">Dashboard</button>
-    </div>
-    <div class="nav-right">
-      <div class="wallet-bar" id="walletDisplay">
-        <div class="wallet-dot"></div>
-        <span>Arc Testnet</span>
+  <div class="nav-menu-shell">
+    <button class="nav-toggle" id="navToggle" type="button" onclick="toggleMobileNav()" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="navMenu">
+      <span class="nav-toggle-label">Menu</span>
+      <span class="nav-toggle-icon" aria-hidden="true">
+        <span></span>
+        <span></span>
+      </span>
+    </button>
+    <div class="nav-menu" id="navMenu">
+      <div class="nav-menu-head">
+        <div>
+          <div class="nav-menu-title">Navigate</div>
+          <div class="nav-menu-copy">Jump across every AgentMarket section from one cleaner header menu.</div>
+        </div>
+        <span class="badge badge-verified" id="navCurrentLabel">Browse</span>
       </div>
-      <button class="btn btn-outline btn-sm" onclick="connectWallet()" id="connectBtn">Connect Wallet</button>
-      <button class="btn btn-outline btn-sm" onclick="disconnectWallet()" id="disconnectBtn" style="display:none">Disconnect</button>
+      <div class="nav-links">
+        <button class="nav-btn active" data-page="home" onclick="showPage('home')"><span>Browse</span><span class="mono">Home</span></button>
+        <button class="nav-btn" data-page="pulse" onclick="showPage('pulse')"><span>Pulse</span><span class="mono">Arc</span></button>
+        <button class="nav-btn" data-page="post" onclick="showPage('post')"><span>Post</span><span class="mono">Jobs</span></button>
+        <button class="nav-btn" data-page="bridge" onclick="showPage('bridge')"><span>Fund</span><span class="mono">USDC</span></button>
+        <button class="nav-btn" data-page="pick" onclick="showPage('pick')"><span>Work</span><span class="mono">Pick</span></button>
+        <button class="nav-btn" data-page="campaigns" onclick="showPage('campaigns')"><span>Campaigns</span><span class="mono">Bounties</span></button>
+        <button class="nav-btn" data-page="reviews" onclick="showPage('reviews')"><span>Reviews</span><span class="mono">Trust</span></button>
+        <button class="nav-btn" data-page="dashboard" onclick="showPage('dashboard')"><span>Dashboard</span><span class="mono">Wallet</span></button>
+      </div>
     </div>
+  </div>
+  <div class="nav-right">
+    <div class="wallet-bar" id="walletDisplay">
+      <div class="wallet-dot"></div>
+      <span>Arc Testnet</span>
+    </div>
+    <button class="btn btn-outline btn-sm" onclick="connectWallet()" id="connectBtn">Connect Wallet</button>
+    <button class="btn btn-outline btn-sm" onclick="disconnectWallet()" id="disconnectBtn" style="display:none">Disconnect</button>
   </div>
 </nav>
 
@@ -3355,6 +3414,18 @@ let pulseState = null;
 let pulseLoading = false;
 let pulseFeedLane = 'all';
 
+const NAV_PAGE_LABELS = {
+  home: 'Browse',
+  pulse: 'Pulse',
+  post: 'Post',
+  bridge: 'Fund',
+  pick: 'Work',
+  campaigns: 'Campaigns',
+  reviews: 'Reviews',
+  dashboard: 'Dashboard',
+  'create-campaign': 'Campaigns',
+};
+
 const PULSE_COLORS = ['#7c6dfa', '#59c7ff', '#7affc8', '#f6c90e', '#f87272', '#a6f6ff'];
 const PULSE_FEED_LANES = [
   { id: 'all', label: 'All' },
@@ -3396,12 +3467,18 @@ function closeMobileNav() {
   setMobileNav(false);
 }
 
+function updateNavCurrentLabel(name) {
+  const label = document.getElementById('navCurrentLabel');
+  if (label) label.textContent = NAV_PAGE_LABELS[name] || 'Menu';
+}
+
 function showPage(name) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById('page-' + name).classList.add('active');
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   const navPage = name === 'create-campaign' ? 'campaigns' : name;
   document.querySelector(`.nav-btn[data-page="${navPage}"]`)?.classList.add('active');
+  updateNavCurrentLabel(name);
   closeMobileNav();
   if (name === 'pulse') loadPulse();
   if (name === 'dashboard') loadDashboard();
@@ -3416,6 +3493,18 @@ function showPage(name) {
 
 window.addEventListener('resize', () => {
   if (window.innerWidth > 920) closeMobileNav();
+});
+
+document.addEventListener('click', event => {
+  const shell = document.querySelector('.nav-menu-shell');
+  if (!shell || !document.body.classList.contains('nav-open')) return;
+  if (!shell.contains(event.target)) closeMobileNav();
+});
+
+document.addEventListener('keydown', event => {
+  if (event.key === 'Escape' && document.body.classList.contains('nav-open')) {
+    closeMobileNav();
+  }
 });
 
 function scrollToAgents() {

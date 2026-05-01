@@ -690,6 +690,11 @@
       max-width: 860px;
     }
 
+    .pulse-flow-page {
+      max-width: none;
+      width: 100%;
+    }
+
     .flow-header {
       margin-bottom: 18px;
     }
@@ -1603,7 +1608,7 @@
     .pulse-hero-layout {
       display: grid;
       gap: 18px;
-      grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.95fr);
+      grid-template-columns: minmax(0, 1.55fr) minmax(360px, 0.95fr);
       margin-bottom: 22px;
       position: relative;
       z-index: 1;
@@ -1828,7 +1833,7 @@
     .pulse-metrics {
       display: grid;
       gap: 12px;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
       position: relative;
       z-index: 1;
     }
@@ -2444,6 +2449,11 @@
         linear-gradient(180deg, rgba(9,11,17,0), rgba(9,11,17,0.42));
     }
 
+    #page-pulse .container {
+      max-width: 1560px;
+      padding: 44px 40px 80px;
+    }
+
     .pulse-hero-header {
       background:
         radial-gradient(circle at 100% 0%, rgba(124,109,250,0.22), transparent 34%),
@@ -2486,38 +2496,34 @@
       gap: 22px;
     }
 
-    .pulse-stage > :first-child {
+    .pulse-main-panel {
       background:
         radial-gradient(circle at top right, rgba(124,109,250,0.18), transparent 30%),
         rgba(17,17,24,0.94);
-      padding: 28px;
+      padding: 32px;
     }
 
-    .pulse-stage > :first-child .pulse-topline {
+    .pulse-main-panel .pulse-topline {
       margin-bottom: 22px;
     }
 
-    .pulse-stage > :first-child .pulse-hero-layout .pulse-topline {
+    .pulse-main-panel .pulse-hero-layout .pulse-topline {
       margin-bottom: 0;
     }
 
-    .pulse-stage > :first-child .pulse-copy {
-      max-width: 820px;
+    .pulse-main-panel .pulse-copy {
+      max-width: 880px;
     }
 
-    .pulse-stage > :first-child .pulse-metrics {
-      grid-template-columns: repeat(4, minmax(0, 1fr));
+    .pulse-main-panel .pulse-metrics {
+      grid-template-columns: repeat(5, minmax(0, 1fr));
     }
 
-    .pulse-stage > :first-child .pulse-metric:first-child,
-    .pulse-stage > :first-child .pulse-metric:nth-child(4) {
+    .pulse-main-panel .pulse-metric:first-child,
+    .pulse-main-panel .pulse-metric:nth-child(4) {
       background:
         linear-gradient(180deg, rgba(166,246,255,0.06), rgba(255,255,255,0.02)),
         rgba(255,255,255,0.02);
-    }
-
-    .pulse-stage > :first-child .pulse-metric:nth-child(5) {
-      grid-column: span 2;
     }
 
     .pulse-summary-grid {
@@ -2528,6 +2534,7 @@
     }
 
     .pulse-summary-grid-wide {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
       margin-top: 14px;
       padding-top: 2px;
     }
@@ -2571,23 +2578,31 @@
       line-height: 1.55;
     }
 
-    .pulse-stage > :nth-child(2) {
+    .pulse-grid-analytics {
       align-items: stretch;
-      grid-template-columns: minmax(0, 1.4fr) minmax(320px, 0.9fr);
+      grid-template-columns: minmax(0, 1.5fr) minmax(360px, 0.86fr);
     }
 
-    .pulse-stage > :nth-child(3) {
-      grid-template-columns: minmax(0, 1.1fr) minmax(320px, 1fr);
+    .pulse-grid-market {
+      grid-template-columns: minmax(340px, 0.9fr) minmax(0, 1.1fr);
     }
 
-    .pulse-stage > :nth-child(4) {
-      grid-template-columns: minmax(0, 1.24fr) minmax(340px, 0.92fr);
+    .pulse-grid-community {
+      grid-template-columns: minmax(0, 1.42fr) minmax(360px, 0.9fr);
     }
 
-    .pulse-stage > :last-child {
+    .pulse-next-panel {
       background:
         radial-gradient(circle at top right, rgba(89,199,255,0.08), transparent 28%),
         rgba(17,17,24,0.92);
+    }
+
+    .pulse-next-panel .pulse-summary-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .pulse-next-panel .pulse-note-list {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 
     .pulse-feed-compose {
@@ -2669,7 +2684,7 @@
     html[data-theme="light"] .toast,
     html[data-theme="light"] .ai-coming-soon-modal .feature-list,
     html[data-theme="light"] .pulse-panel,
-    html[data-theme="light"] .pulse-stage > :first-child,
+    html[data-theme="light"] .pulse-main-panel,
     html[data-theme="light"] .pulse-metric,
     html[data-theme="light"] .pulse-summary-card,
     html[data-theme="light"] .pulse-identity-card,
@@ -2853,6 +2868,111 @@
       border-color: rgba(19,32,51,0.08);
     }
 
+    html[data-theme="light"] .pulse-panel,
+    html[data-theme="light"] .pulse-main-panel {
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.94), rgba(242,248,253,0.9)),
+        rgba(244,248,253,0.92);
+      border-color: rgba(19,32,51,0.09);
+      box-shadow: 0 16px 34px rgba(39,64,94,0.08);
+    }
+
+    html[data-theme="light"] .pulse-metric,
+    html[data-theme="light"] .pulse-summary-card,
+    html[data-theme="light"] .pulse-identity-stat,
+    html[data-theme="light"] .pulse-identity-unlock,
+    html[data-theme="light"] .pulse-feed-compose,
+    html[data-theme="light"] .pulse-feed-card,
+    html[data-theme="light"] .pulse-checkin-stat,
+    html[data-theme="light"] .pulse-checkin-action,
+    html[data-theme="light"] .pulse-note-item,
+    html[data-theme="light"] .pulse-breakdown-row,
+    html[data-theme="light"] .pulse-block-row,
+    html[data-theme="light"] .pulse-ranking-row,
+    html[data-theme="light"] .pulse-ranking-stat,
+    html[data-theme="light"] .pulse-empty-box,
+    html[data-theme="light"] .pulse-leaderboard-row {
+      background:
+        linear-gradient(180deg, rgba(251,253,255,0.98), rgba(242,247,252,0.94)),
+        rgba(244,248,253,0.94);
+      border-color: rgba(19,32,51,0.08);
+      box-shadow: none;
+    }
+
+    html[data-theme="light"] .pulse-card-title,
+    html[data-theme="light"] .pulse-summary-value,
+    html[data-theme="light"] .pulse-metric-value,
+    html[data-theme="light"] .pulse-feed-title,
+    html[data-theme="light"] .pulse-breakdown-name,
+    html[data-theme="light"] .pulse-breakdown-value,
+    html[data-theme="light"] .pulse-ranking-name,
+    html[data-theme="light"] .pulse-ranking-stat-value,
+    html[data-theme="light"] .pulse-checkin-value,
+    html[data-theme="light"] .pulse-mini-title,
+    html[data-theme="light"] .pulse-subhead,
+    html[data-theme="light"] .pulse-leaderboard-value,
+    html[data-theme="light"] .pulse-identity-title,
+    html[data-theme="light"] .pulse-identity-rank strong,
+    html[data-theme="light"] .pulse-donut-center strong {
+      color: #132033;
+    }
+
+    html[data-theme="light"] .pulse-feed-body,
+    html[data-theme="light"] .pulse-chart-empty,
+    html[data-theme="light"] .pulse-empty-box,
+    html[data-theme="light"] .pulse-chart-axis,
+    html[data-theme="light"] .pulse-donut-center span,
+    html[data-theme="light"] .pulse-block-age,
+    html[data-theme="light"] .pulse-growth.flat,
+    html[data-theme="light"] .pulse-leaderboard-rank,
+    html[data-theme="light"] .pulse-segment-btn,
+    html[data-theme="light"] .pulse-vote-btn {
+      color: rgba(19,32,51,0.72);
+    }
+
+    html[data-theme="light"] .pulse-inline-link,
+    html[data-theme="light"] .pulse-block-number {
+      color: #1f86da;
+    }
+
+    html[data-theme="light"] .pulse-rank-badge,
+    html[data-theme="light"] .pulse-segment-btn.active,
+    html[data-theme="light"] .pulse-segment-btn:hover,
+    html[data-theme="light"] .pulse-vote-btn.active,
+    html[data-theme="light"] .pulse-vote-btn:hover {
+      background: rgba(31,134,218,0.1);
+      border-color: rgba(31,134,218,0.16);
+      color: #163e66;
+    }
+
+    html[data-theme="light"] .pulse-growth.flat {
+      background: rgba(19,32,51,0.04);
+      border-color: rgba(19,32,51,0.08);
+    }
+
+    html[data-theme="light"] .pulse-leaderboard-rank {
+      background: rgba(19,32,51,0.04);
+      border-color: rgba(19,32,51,0.08);
+    }
+
+    html[data-theme="light"] .pulse-feed-lane.build {
+      background: rgba(63,194,138,0.1);
+      border-color: rgba(63,194,138,0.18);
+      color: #1c7b54;
+    }
+
+    html[data-theme="light"] .pulse-feed-lane.thread {
+      background: rgba(92,77,216,0.12);
+      border-color: rgba(92,77,216,0.18);
+      color: #5c4dd8;
+    }
+
+    html[data-theme="light"] .pulse-feed-lane.art {
+      background: rgba(183,121,31,0.12);
+      border-color: rgba(183,121,31,0.18);
+      color: #8a5a15;
+    }
+
     html[data-theme="light"] .job-card:hover,
     html[data-theme="light"] .agent-card:hover {
       border-color: rgba(89,199,255,0.18);
@@ -2890,11 +3010,16 @@
       .pick-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .section-head, .dashboard-header { align-items: flex-start; flex-direction: column; gap: 12px; }
       .agents-grid { grid-template-columns: 1fr; }
+      #page-pulse .container { padding-left: 24px; padding-right: 24px; }
       .pulse-grid,
       .pulse-donut-layout,
       .pulse-hero-layout { grid-template-columns: 1fr; }
       .pulse-metrics,
-      .pulse-stage > :first-child .pulse-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .pulse-main-panel .pulse-metrics,
+      .pulse-summary-grid,
+      .pulse-summary-grid-wide,
+      .pulse-next-panel .pulse-summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .pulse-next-panel .pulse-note-list { grid-template-columns: 1fr; }
       .pulse-ranking-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .pulse-feed-form-grid,
       .pulse-checkin-grid { grid-template-columns: 1fr; }
@@ -2910,15 +3035,18 @@
       body { font-size: 14px; }
       .logo-sub { display: none; }
       .container, .hero { padding-left: 16px; padding-right: 16px; }
+      #page-pulse .container { padding-left: 16px; padding-right: 16px; }
       .hero { padding-top: 44px; }
       .hero-actions .btn { width: 100%; justify-content: center; }
       .stats-bar { grid-template-columns: repeat(2, 1fr); }
       .pulse-metrics,
-      .pulse-stage > :first-child .pulse-metrics,
+      .pulse-main-panel .pulse-metrics,
       .pulse-ranking-grid,
       .pulse-summary-grid,
       .pulse-identity-data { grid-template-columns: 1fr; }
-      .pulse-stage > :first-child .pulse-metric:nth-child(5) { grid-column: auto; }
+      .pulse-summary-grid-wide,
+      .pulse-next-panel .pulse-summary-grid,
+      .pulse-next-panel .pulse-note-list { grid-template-columns: 1fr; }
       .stat-cell { padding: 18px; }
       .form-row { grid-template-columns: 1fr; }
       .flow-progress { gap: 8px; }
@@ -3095,7 +3223,7 @@
 <!-- ── PAGE: POST A JOB ── -->
 <div class="page" id="page-pulse">
   <div class="container">
-    <div class="flow-page" style="max-width:none">
+    <div class="flow-page pulse-flow-page">
       <div class="flow-header pulse-hero-header">
         <div class="flow-kicker">ArcPulse beta</div>
         <h2 class="flow-title">Live Arc signal, with room to breathe.</h2>
@@ -3103,7 +3231,7 @@
       </div>
 
       <div class="pulse-stack pulse-stage">
-        <div class="pulse-panel">
+        <div class="pulse-panel pulse-main-panel">
           <div class="pulse-hero-layout">
             <div class="pulse-topline">
               <div>
@@ -3167,7 +3295,7 @@
           </div>
         </div>
 
-        <div class="pulse-grid">
+        <div class="pulse-grid pulse-grid-analytics">
           <div class="pulse-panel">
             <div class="pulse-card-head">
               <div>
@@ -3190,7 +3318,7 @@
           </div>
         </div>
 
-        <div class="pulse-grid">
+        <div class="pulse-grid pulse-grid-market">
           <div class="pulse-panel">
             <div class="pulse-card-head">
               <div>
@@ -3212,7 +3340,7 @@
           </div>
         </div>
 
-        <div class="pulse-grid">
+        <div class="pulse-grid pulse-grid-community">
           <div class="pulse-panel">
             <div class="pulse-card-head">
               <div>
@@ -3285,7 +3413,7 @@
           </div>
         </div>
 
-        <div class="pulse-panel">
+        <div class="pulse-panel pulse-next-panel">
           <div class="pulse-card-head">
             <div>
               <div class="pulse-card-title">What opens next</div>
@@ -3934,7 +4062,8 @@ const NAV_PAGE_LABELS = {
 const THEME_STORAGE_KEY = 'agentmarket-theme';
 const systemThemeQuery = window.matchMedia ? window.matchMedia('(prefers-color-scheme: light)') : null;
 
-const PULSE_COLORS = ['#7c6dfa', '#59c7ff', '#7affc8', '#f6c90e', '#f87272', '#a6f6ff'];
+const PULSE_COLORS_DARK = ['#7c6dfa', '#59c7ff', '#7affc8', '#f6c90e', '#f87272', '#a6f6ff'];
+const PULSE_COLORS_LIGHT = ['#5c4dd8', '#1f86da', '#1c7b54', '#b7791f', '#c24c4c', '#3c94c6'];
 const PULSE_FEED_LANES = [
   { id: 'all', label: 'All' },
   { id: 'build', label: 'Build' },
@@ -4021,6 +4150,14 @@ function syncThemeToggle() {
   button.setAttribute('title', `Switch to ${nextTheme} mode`);
 }
 
+function isLightTheme() {
+  return currentTheme === 'light';
+}
+
+function getPulseColors() {
+  return isLightTheme() ? PULSE_COLORS_LIGHT : PULSE_COLORS_DARK;
+}
+
 function applyTheme(theme, { persist = true } = {}) {
   currentTheme = theme === 'light' ? 'light' : 'dark';
   document.documentElement.setAttribute('data-theme', currentTheme);
@@ -4030,6 +4167,10 @@ function applyTheme(theme, { persist = true } = {}) {
     } catch {}
   }
   syncThemeToggle();
+  if (pulseState?.overview) {
+    renderPulseVolumeChart(pulseState.overview?.volume14d || []);
+    renderPulseCategoryBreakdown(pulseState.overview?.categoryBreakdown || []);
+  }
 }
 
 function toggleTheme() {
@@ -4616,6 +4757,15 @@ function renderPulseVolumeChart(points = []) {
   const area = `0,${height} ${coords.map(point => `${point.x},${point.y}`).join(' ')} ${width},${height}`;
   const firstLabel = formatPulseDateLabel(points[0].date);
   const lastLabel = formatPulseDateLabel(points[points.length - 1].date);
+  const lightTheme = isLightTheme();
+  const areaStart = lightTheme ? 'rgba(31,134,218,0.22)' : 'rgba(89,199,255,0.42)';
+  const areaEnd = lightTheme ? 'rgba(31,134,218,0.03)' : 'rgba(89,199,255,0.02)';
+  const lineStart = lightTheme ? '#1f86da' : '#59c7ff';
+  const lineEnd = lightTheme ? '#1c7b54' : '#7affc8';
+  const baselineStroke = lightTheme ? 'rgba(19,32,51,0.12)' : 'rgba(255,255,255,0.06)';
+  const midlineStroke = lightTheme ? 'rgba(19,32,51,0.08)' : 'rgba(255,255,255,0.04)';
+  const pointFill = lightTheme ? '#ffffff' : '#0a0a0f';
+  const pointStroke = lightTheme ? '#1f86da' : '#a6f6ff';
 
   mount.className = 'pulse-chart-shell';
   mount.innerHTML = `
@@ -4623,19 +4773,19 @@ function renderPulseVolumeChart(points = []) {
       <svg class="pulse-chart-svg" viewBox="0 0 ${width} ${height}" role="img" aria-label="Tracked volume over the last 14 days">
         <defs>
           <linearGradient id="pulseAreaFill" x1="0" x2="0" y1="0" y2="1">
-            <stop offset="0%" stop-color="rgba(89,199,255,0.42)"/>
-            <stop offset="100%" stop-color="rgba(89,199,255,0.02)"/>
+            <stop offset="0%" stop-color="${areaStart}"/>
+            <stop offset="100%" stop-color="${areaEnd}"/>
           </linearGradient>
           <linearGradient id="pulseLineStroke" x1="0" x2="1" y1="0" y2="0">
-            <stop offset="0%" stop-color="#59c7ff"/>
-            <stop offset="100%" stop-color="#7affc8"/>
+            <stop offset="0%" stop-color="${lineStart}"/>
+            <stop offset="100%" stop-color="${lineEnd}"/>
           </linearGradient>
         </defs>
-        <line x1="0" x2="${width}" y1="${height - 1}" y2="${height - 1}" stroke="rgba(255,255,255,0.06)" />
-        <line x1="0" x2="${width}" y1="${height / 2}" y2="${height / 2}" stroke="rgba(255,255,255,0.04)" stroke-dasharray="4 6" />
+        <line x1="0" x2="${width}" y1="${height - 1}" y2="${height - 1}" stroke="${baselineStroke}" />
+        <line x1="0" x2="${width}" y1="${height / 2}" y2="${height / 2}" stroke="${midlineStroke}" stroke-dasharray="4 6" />
         <polygon points="${area}" fill="url(#pulseAreaFill)"></polygon>
         <polyline points="${line}" fill="none" stroke="url(#pulseLineStroke)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"></polyline>
-        ${coords.map(point => `<circle cx="${point.x}" cy="${point.y}" r="4.5" fill="#0a0a0f" stroke="#a6f6ff" stroke-width="2"></circle>`).join('')}
+        ${coords.map(point => `<circle cx="${point.x}" cy="${point.y}" r="4.5" fill="${pointFill}" stroke="${pointStroke}" stroke-width="2"></circle>`).join('')}
       </svg>
       <div class="pulse-chart-axis">
         <span>${escapeHtml(firstLabel)}</span>
@@ -4655,6 +4805,7 @@ function renderPulseCategoryBreakdown(items = []) {
     return;
   }
 
+  const palette = getPulseColors();
   const total = items.reduce((sum, item) => sum + Number.parseFloat(item.volumeUsdc || 0), 0);
   let cursor = 0;
   const slices = items.map((item, index) => {
@@ -4662,7 +4813,7 @@ function renderPulseCategoryBreakdown(items = []) {
     const start = (cursor / total) * 360;
     cursor += amount;
     const end = (cursor / total) * 360;
-    return `${PULSE_COLORS[index % PULSE_COLORS.length]} ${start}deg ${end}deg`;
+    return `${palette[index % palette.length]} ${start}deg ${end}deg`;
   }).join(', ');
 
   mount.className = '';
@@ -4677,7 +4828,7 @@ function renderPulseCategoryBreakdown(items = []) {
       <div class="pulse-breakdown-list">
         ${items.map((item, index) => `
           <div class="pulse-breakdown-row">
-            <div class="pulse-color-dot" style="background:${PULSE_COLORS[index % PULSE_COLORS.length]}"></div>
+            <div class="pulse-color-dot" style="background:${palette[index % palette.length]}"></div>
             <div>
               <div class="pulse-breakdown-name">${escapeHtml(item.category)}</div>
               <div class="pulse-breakdown-meta">${escapeHtml(String(item.jobs))} jobs</div>

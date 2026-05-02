@@ -46,14 +46,14 @@
     }
 
     html[data-theme="light"] {
-      --bg: #f3f7fc;
-      --surface: #ffffff;
-      --surface2: #eef3f9;
-      --border: rgba(18,32,52,0.08);
-      --border-hover: rgba(18,32,52,0.16);
+      --bg: #e9eff5;
+      --surface: #f6f8fb;
+      --surface2: #e6edf4;
+      --border: rgba(18,32,52,0.1);
+      --border-hover: rgba(18,32,52,0.18);
       --text: #132033;
-      --muted: #6e7b90;
-      --brand-ink: #eef6ff;
+      --muted: #55657b;
+      --brand-ink: #e7eff7;
       color-scheme: light;
     }
 
@@ -1122,16 +1122,27 @@
       max-width: 820px;
     }
 
+    #page-bridge .container {
+      max-width: 1420px;
+    }
+
+    #page-bridge .bridge-form-grid {
+      grid-template-columns: 1fr;
+    }
+
     .fund-stack {
       margin: 0 auto;
-      max-width: 860px;
       display: grid;
       gap: 28px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      max-width: none;
+      align-items: start;
     }
 
     .fund-section {
       display: grid;
-      gap: 16px;
+      gap: 14px;
+      align-content: start;
     }
 
     .fund-section-head {
@@ -1157,17 +1168,18 @@
     }
 
     .fund-divider {
-      height: 1px;
-      background: linear-gradient(90deg, rgba(122,255,200,0), rgba(122,255,200,0.34), rgba(89,199,255,0.34), rgba(122,255,200,0));
-      opacity: 0.92;
+      display: none;
     }
 
     .bridge-card {
-      background: rgba(17,17,24,0.92);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 24px;
-      box-shadow: 0 18px 48px rgba(0,0,0,0.24);
-      padding: 22px;
+      background:
+        linear-gradient(180deg, rgba(18,20,29,0.98), rgba(12,14,22,0.96)),
+        rgba(12,14,22,0.96);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 28px;
+      box-shadow: 0 24px 56px rgba(0,0,0,0.26);
+      height: 100%;
+      padding: 18px;
     }
 
     .bridge-card::before {
@@ -1176,16 +1188,16 @@
 
     .bridge-shell {
       display: grid;
-      gap: 16px;
+      gap: 14px;
       grid-template-columns: 1fr;
     }
 
     .bridge-spotlight,
     .bridge-card-body {
-      background: rgba(255,255,255,0.02);
+      background: rgba(255,255,255,0.018);
       border: 1px solid rgba(255,255,255,0.06);
-      border-radius: 20px;
-      padding: 24px;
+      border-radius: 22px;
+      padding: 20px;
     }
 
     .bridge-spotlight {
@@ -1230,9 +1242,9 @@
     }
 
     .bridge-title {
-      font-size: clamp(32px, 5vw, 42px);
+      font-size: clamp(26px, 3vw, 34px);
       letter-spacing: -0.04em;
-      line-height: 1;
+      line-height: 1.02;
       margin: 0;
     }
 
@@ -1253,11 +1265,11 @@
     }
 
     .bridge-copy {
-      color: rgba(232,232,240,0.62);
-      font-size: 15px;
+      color: rgba(232,232,240,0.7);
+      font-size: 14px;
       line-height: 1.6;
       margin-top: 10px;
-      max-width: 520px;
+      max-width: none;
     }
 
     .bridge-kicker::before {
@@ -1271,7 +1283,7 @@
 
     .bridge-route {
       align-items: center;
-      background: transparent;
+      background: rgba(255,255,255,0.015);
       border: 1px solid rgba(255,255,255,0.06);
       border-radius: 18px;
       display: grid;
@@ -1321,7 +1333,7 @@
     .bridge-card-body {
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 14px;
     }
 
     .bridge-console-head {
@@ -1369,7 +1381,7 @@
 
     .bridge-card-body input,
     .bridge-card-body select {
-      background: rgba(255,255,255,0.02);
+      background: rgba(9,12,18,0.72);
       border: 1px solid rgba(255,255,255,0.08);
       border-radius: 14px;
       font-size: 14px;
@@ -1395,10 +1407,10 @@
     }
 
     .bridge-subsection {
-      background: rgba(255,255,255,0.02);
+      background: rgba(255,255,255,0.018);
       border: 1px solid rgba(255,255,255,0.06);
       border-radius: 16px;
-      padding: 14px;
+      padding: 16px;
     }
 
     .bridge-subsection-title {
@@ -1424,7 +1436,7 @@
     }
 
     .bridge-summary-item {
-      background: transparent;
+      background: rgba(255,255,255,0.015);
       border: 1px solid rgba(255,255,255,0.06);
       border-radius: 16px;
       padding: 14px;
@@ -1450,14 +1462,14 @@
     }
 
     .bridge-help {
-      color: rgba(232,232,240,0.44);
+      color: rgba(232,232,240,0.52);
       font-size: 12px;
       line-height: 1.6;
       margin-top: 2px;
     }
 
     .bridge-check-row {
-      background: rgba(255,255,255,0.02);
+      background: rgba(255,255,255,0.018);
       border: 1px solid rgba(255,255,255,0.06);
       border-radius: 16px;
       display: flex;
@@ -1472,7 +1484,7 @@
     .bridge-check-row input { width: auto; margin-top: 4px; }
 
     .bridge-status {
-      background: rgba(255,255,255,0.02);
+      background: rgba(255,255,255,0.018);
       border: 1px solid rgba(255,255,255,0.08);
       border-radius: 16px;
       color: rgba(232,232,240,0.66);
@@ -2631,9 +2643,9 @@
 
     html[data-theme="light"] body {
       background:
-        radial-gradient(circle at top, rgba(89,199,255,0.12), transparent 30%),
-        radial-gradient(circle at 84% 18%, rgba(122,255,200,0.08), transparent 18%),
-        linear-gradient(180deg, #f8fbff 0%, #edf4fb 100%);
+        radial-gradient(circle at top, rgba(89,199,255,0.09), transparent 32%),
+        radial-gradient(circle at 84% 18%, rgba(122,255,200,0.06), transparent 18%),
+        linear-gradient(180deg, #eef3f7 0%, #e3eaf2 100%);
     }
 
     html[data-theme="light"] body::before {
@@ -2644,14 +2656,14 @@
 
     html[data-theme="light"] body::after {
       background:
-        radial-gradient(circle at 10% 12%, rgba(89,199,255,0.12), transparent 22%),
-        radial-gradient(circle at 88% 20%, rgba(122,255,200,0.1), transparent 14%);
+        radial-gradient(circle at 10% 12%, rgba(89,199,255,0.09), transparent 22%),
+        radial-gradient(circle at 88% 20%, rgba(122,255,200,0.08), transparent 14%);
     }
 
     html[data-theme="light"] nav {
-      background: rgba(248,250,253,0.88);
-      border-bottom-color: rgba(19,32,51,0.08);
-      box-shadow: 0 12px 32px rgba(38,60,90,0.08);
+      background: rgba(241,245,250,0.94);
+      border-bottom-color: rgba(19,32,51,0.1);
+      box-shadow: 0 12px 32px rgba(38,60,90,0.1);
     }
 
     html[data-theme="light"] .logo-mark {
@@ -2799,6 +2811,111 @@
     html[data-theme="light"] .chat-note,
     html[data-theme="light"] .hero-badge {
       color: rgba(19,32,51,0.64);
+    }
+
+    html[data-theme="light"] .logo-sub,
+    html[data-theme="light"] .nav-menu-copy {
+      color: rgba(19,32,51,0.58);
+    }
+
+    html[data-theme="light"] .nav-menu {
+      background: rgba(244,247,250,0.96);
+      border-color: rgba(19,32,51,0.1);
+      box-shadow: 0 18px 40px rgba(39,64,94,0.12);
+    }
+
+    html[data-theme="light"] .nav-btn {
+      background: rgba(255,255,255,0.72);
+      border-color: rgba(19,32,51,0.08);
+      color: rgba(19,32,51,0.82);
+    }
+
+    html[data-theme="light"] .nav-toggle {
+      background: rgba(255,255,255,0.78);
+      border-color: rgba(19,32,51,0.1);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.75);
+    }
+
+    html[data-theme="light"] .nav-toggle-label,
+    html[data-theme="light"] .fund-section-title,
+    html[data-theme="light"] .bridge-chain-label,
+    html[data-theme="light"] .bridge-console-kicker,
+    html[data-theme="light"] .bridge-card-body label,
+    html[data-theme="light"] .bridge-summary-item span {
+      color: rgba(19,32,51,0.72);
+    }
+
+    html[data-theme="light"] .bridge-kicker,
+    html[data-theme="light"] .bridge-mode-pill {
+      background: rgba(19,32,51,0.04);
+      border-color: rgba(19,32,51,0.08);
+      color: rgba(19,32,51,0.78);
+    }
+
+    html[data-theme="light"] .bridge-copy,
+    html[data-theme="light"] .bridge-console-copy,
+    html[data-theme="light"] .bridge-subsection-copy,
+    html[data-theme="light"] .bridge-field-note,
+    html[data-theme="light"] .bridge-help,
+    html[data-theme="light"] .bridge-check-row,
+    html[data-theme="light"] .bridge-status,
+    html[data-theme="light"] .bridge-route-arrow,
+    html[data-theme="light"] .bridge-pre {
+      color: rgba(19,32,51,0.72);
+    }
+
+    html[data-theme="light"] .bridge-card {
+      background:
+        linear-gradient(180deg, rgba(243,246,250,0.98), rgba(232,238,245,0.94)),
+        rgba(241,245,249,0.96);
+      border-color: rgba(19,32,51,0.08);
+      box-shadow: 0 18px 42px rgba(39,64,94,0.1);
+    }
+
+    html[data-theme="light"] .bridge-spotlight,
+    html[data-theme="light"] .bridge-card-body,
+    html[data-theme="light"] .bridge-route,
+    html[data-theme="light"] .bridge-summary-item,
+    html[data-theme="light"] .bridge-subsection,
+    html[data-theme="light"] .bridge-check-row,
+    html[data-theme="light"] .bridge-status {
+      background: rgba(250,252,254,0.82);
+      border-color: rgba(19,32,51,0.08);
+      box-shadow: none;
+    }
+
+    html[data-theme="light"] .bridge-mark {
+      background: rgba(255,255,255,0.7);
+      border-color: rgba(89,199,255,0.18);
+    }
+
+    html[data-theme="light"] .bridge-card-body input,
+    html[data-theme="light"] .bridge-card-body select {
+      background: rgba(243,247,251,0.96);
+      border-color: rgba(19,32,51,0.1);
+      color: #132033;
+    }
+
+    html[data-theme="light"] .bridge-card-body input:focus,
+    html[data-theme="light"] .bridge-card-body select:focus {
+      border-color: rgba(31,134,218,0.24);
+      box-shadow: 0 0 0 4px rgba(89,199,255,0.12);
+    }
+
+    html[data-theme="light"] .bridge-status.info {
+      background: rgba(243,247,251,0.94);
+      border-color: rgba(19,32,51,0.08);
+    }
+
+    html[data-theme="light"] .bridge-pre {
+      background: rgba(236,242,248,0.9);
+      border-color: rgba(19,32,51,0.08);
+    }
+
+    html[data-theme="light"] .tx-link,
+    html[data-theme="light"] .bridge-status .tx-link,
+    html[data-theme="light"] .bridge-step .tx-link {
+      color: #1f86da;
     }
 
     html[data-theme="light"] input::placeholder,
@@ -3023,6 +3140,7 @@
       .pulse-ranking-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .pulse-feed-form-grid,
       .pulse-checkin-grid { grid-template-columns: 1fr; }
+      .fund-stack,
       .bridge-shell,
       .bridge-form-grid,
       .bridge-summary-grid,
@@ -3074,7 +3192,7 @@
         flex-direction: column;
         gap: 16px;
       }
-      .bridge-title { font-size: 38px; }
+      .bridge-title { font-size: 32px; }
       .bridge-mode-pill { white-space: normal; }
       .modal { padding: 22px; max-height: 92vh; }
       .detail-row { align-items: flex-start; flex-direction: column; gap: 4px; }

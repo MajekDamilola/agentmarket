@@ -2004,6 +2004,265 @@
       margin-bottom: 5px;
     }
 
+    #page-bridge .container {
+      align-items: center;
+      display: flex;
+      justify-content: center;
+      max-width: 100%;
+      min-height: calc(100vh - 120px);
+      padding: 64px 16px 80px;
+    }
+
+    #page-bridge .fund-stack {
+      display: block;
+      margin: 0 auto;
+      max-width: 420px;
+      width: 100%;
+    }
+
+    #page-bridge .fund-section-head,
+    #page-bridge .fund-divider,
+    #page-bridge .bridge-help {
+      display: none !important;
+    }
+
+    #page-bridge .fund-section {
+      margin: 0;
+    }
+
+    #page-bridge .fund-pane[hidden] {
+      display: none !important;
+    }
+
+    #page-bridge .fund-widget-card,
+    #page-bridge .bridge-card {
+      background:
+        linear-gradient(180deg, rgba(20,22,31,0.98), rgba(14,16,24,0.98)),
+        rgba(14,16,24,0.98);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px;
+      box-shadow: 0 24px 56px rgba(0,0,0,0.28);
+      margin: 0;
+      padding: 14px;
+      width: 100%;
+    }
+
+    #page-bridge .fund-pane,
+    #page-bridge .bridge-simple-shell {
+      display: grid;
+      gap: 14px;
+    }
+
+    #page-bridge .fund-pane-head {
+      align-items: center;
+      display: flex;
+      gap: 12px;
+      justify-content: space-between;
+    }
+
+    #page-bridge .fund-tabs {
+      align-items: center;
+      background: rgba(8,10,15,0.92);
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: 999px;
+      display: inline-flex;
+      gap: 4px;
+      padding: 5px;
+    }
+
+    #page-bridge .fund-tab {
+      background: transparent;
+      border: 0;
+      border-radius: 999px;
+      color: rgba(232,232,240,0.56);
+      cursor: pointer;
+      font-family: var(--font-body);
+      font-size: 15px;
+      font-weight: 700;
+      padding: 10px 18px;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    #page-bridge .fund-tab.active {
+      background: #2c3139;
+      color: #ffffff;
+    }
+
+    #page-bridge .fund-icon-row {
+      align-items: center;
+      display: flex;
+      gap: 10px;
+    }
+
+    #page-bridge .fund-token-caret {
+      color: rgba(232,232,240,0.46);
+      font-size: 12px;
+      line-height: 1;
+      margin-left: 4px;
+    }
+
+    #page-bridge .bridge-icon-btn,
+    #page-bridge .bridge-simple-arrow {
+      background: rgba(24,27,34,0.92);
+      border-color: rgba(255,255,255,0.06);
+      color: #91a6c9;
+    }
+
+    #page-bridge .bridge-simple-panel,
+    #page-bridge .bridge-advanced,
+    #page-bridge .fund-advanced-panel {
+      background: rgba(21,24,31,0.92);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 16px;
+      gap: 12px;
+      padding: 16px;
+    }
+
+    #page-bridge .bridge-simple-panel-label,
+    #page-bridge .bridge-simple-summary-row span {
+      color: #8aa2c8;
+    }
+
+    #page-bridge .bridge-simple-panel-note,
+    #page-bridge .bridge-token-sub,
+    #page-bridge .bridge-simple-usd,
+    #page-bridge .bridge-simple-mode-note,
+    #page-bridge .bridge-simple-select-note {
+      color: rgba(232,232,240,0.58);
+    }
+
+    #page-bridge .bridge-simple-panel-body {
+      align-items: flex-end;
+    }
+
+    #page-bridge .bridge-token-chip,
+    #page-bridge .bridge-simple-select,
+    #page-bridge .bridge-recipient-wrap input {
+      background: rgba(255,255,255,0.04);
+      border-color: rgba(255,255,255,0.06);
+      color: #ffffff;
+    }
+
+    #page-bridge .bridge-token-chip {
+      padding-right: 16px;
+    }
+
+    #page-bridge .bridge-simple-amount-box {
+      min-width: 0;
+      flex: 1 1 0;
+      text-align: right;
+    }
+
+    #page-bridge .bridge-simple-amount-input,
+    #page-bridge .bridge-simple-output,
+    #page-bridge .bridge-token-symbol,
+    #page-bridge .bridge-simple-summary-row strong {
+      color: #ffffff;
+    }
+
+    #page-bridge .fund-inline-select .bridge-simple-select {
+      max-width: none;
+      width: 100%;
+    }
+
+    #page-bridge .bridge-simple-recipient-toggle {
+      align-items: center;
+      background: transparent;
+      border: 0;
+      color: rgba(232,232,240,0.84);
+      cursor: pointer;
+      display: inline-flex;
+      font-size: 13px;
+      font-weight: 600;
+      gap: 8px;
+      justify-content: flex-start;
+      padding: 0;
+      text-align: left;
+      width: auto;
+    }
+
+    #page-bridge .bridge-simple-recipient-toggle:hover {
+      color: #ffffff;
+    }
+
+    #page-bridge .bridge-simple-plus {
+      color: rgba(232,232,240,0.72);
+      font-size: 16px;
+      line-height: 1;
+    }
+
+    #page-bridge .bridge-simple-action-row .btn {
+      flex: 1 1 0;
+    }
+
+    #page-bridge .bridge-simple-action-row .btn-outline {
+      background: rgba(255,255,255,0.03);
+      border-color: rgba(255,255,255,0.08);
+      color: #ffffff;
+    }
+
+    #page-bridge .bridge-simple-submit {
+      background: #f4f7fb;
+      border-color: rgba(255,255,255,0.06);
+      color: #11141b;
+      min-height: 58px;
+    }
+
+    #page-bridge .bridge-simple-submit:hover {
+      background: #ffffff;
+      color: #11141b;
+    }
+
+    #page-bridge .fund-shortcuts {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+    }
+
+    #page-bridge .fund-shortcut {
+      align-items: center;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 999px;
+      color: #ffffff;
+      cursor: pointer;
+      display: inline-flex;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      gap: 6px;
+      letter-spacing: 0.04em;
+      padding: 8px 12px;
+      text-transform: uppercase;
+      transition: background 0.2s, border-color 0.2s;
+    }
+
+    #page-bridge .fund-shortcut:hover {
+      background: rgba(255,255,255,0.06);
+      border-color: rgba(255,255,255,0.14);
+    }
+
+    #page-bridge .fund-shortcut-token {
+      align-items: center;
+      background: linear-gradient(135deg, #4b8ef7 0%, #2f6ed4 100%);
+      border-radius: 999px;
+      color: #ffffff;
+      display: inline-flex;
+      font-size: 10px;
+      font-weight: 700;
+      justify-content: center;
+      min-width: 32px;
+      padding: 3px 8px;
+    }
+
+    #page-bridge .bridge-simple-status[hidden] {
+      display: none !important;
+    }
+
+    #page-bridge .bridge-simple-status {
+      margin-top: 0;
+    }
+
     .checkout-topup-row {
       display: flex;
       gap: 12px;
@@ -4204,19 +4463,20 @@
 <div class="page" id="page-bridge">
   <div class="container">
     <div class="fund-stack">
-      <section class="fund-section" aria-labelledby="fundUnifiedBalanceHeading">
+      <section class="fund-section fund-pane" id="fundSwapPane" role="tabpanel" aria-label="Swap" hidden>
         <div class="fund-section-head">
-          <div class="fund-section-title">Unified Balance Kit</div>
-          <p class="fund-section-copy" id="fundUnifiedBalanceHeading">Primary multichain funding flow. Deposit USDC once, keep it chain-agnostic, then spend only the amount you need onto Arc before checkout.</p>
+          <div class="fund-section-title">Swap</div>
+          <p class="fund-section-copy" id="fundUnifiedBalanceHeading">Swap</p>
         </div>
-        <div class="bridge-card bridge-simple-card">
+        <div class="bridge-card bridge-simple-card fund-widget-card">
         <div class="bridge-simple-shell">
-          <div class="bridge-simple-head">
-            <div class="bridge-simple-tabs" aria-label="Unified Balance">
-              <button class="bridge-simple-tab active" type="button" aria-current="page">Unified Balance</button>
+          <div class="fund-pane-head">
+            <div class="fund-tabs" role="tablist" aria-label="Funding mode">
+              <button class="fund-tab" type="button" data-fund-tab="swap" aria-selected="false" onclick="setFundMode('swap')">Swap</button>
+              <button class="fund-tab" type="button" data-fund-tab="bridge" aria-selected="false" onclick="setFundMode('bridge')">Bridge</button>
             </div>
-            <div class="bridge-simple-head-actions">
-              <button class="bridge-icon-btn" type="button" onclick="refreshUnifiedBalance()" id="ubRefreshBtn" aria-label="Refresh unified balance" title="Refresh unified balance" disabled>
+            <div class="fund-icon-row">
+              <button class="bridge-icon-btn" type="button" onclick="refreshUnifiedBalance()" id="ubRefreshBtn" aria-label="Refresh unified balance" disabled>
                 <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
                   <path d="M20 6V10H16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
                   <path d="M4 18V14H8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
@@ -4225,14 +4485,21 @@
                 </svg>
                 <span class="sr-only">Refresh unified balance</span>
               </button>
+              <button class="bridge-icon-btn" type="button" onclick="toggleSwapAdvanced()" id="swapSettingsBtn" aria-label="Swap settings" aria-expanded="false">
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 8.75A3.25 3.25 0 1 0 12 15.25A3.25 3.25 0 1 0 12 8.75Z" stroke="currentColor" stroke-width="1.8"/>
+                  <path d="M19.4 13.5L20.2 12L19.4 10.5L17.6 10.2C17.4 9.7 17.1 9.2 16.8 8.8L17.4 7.1L15.9 5.6L14.2 6.2C13.8 5.9 13.3 5.6 12.8 5.4L12.5 3.6H11.5L11.2 5.4C10.7 5.6 10.2 5.9 9.8 6.2L8.1 5.6L6.6 7.1L7.2 8.8C6.9 9.2 6.6 9.7 6.4 10.2L4.6 10.5L3.8 12L4.6 13.5L6.4 13.8C6.6 14.3 6.9 14.8 7.2 15.2L6.6 16.9L8.1 18.4L9.8 17.8C10.2 18.1 10.7 18.4 11.2 18.6L11.5 20.4H12.5L12.8 18.6C13.3 18.4 13.8 18.1 14.2 17.8L15.9 18.4L17.4 16.9L16.8 15.2C17.1 14.8 17.4 14.3 17.6 13.8L19.4 13.5Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+                </svg>
+                <span class="sr-only">Swap settings</span>
+              </button>
             </div>
           </div>
 
           <div class="bridge-simple-panel">
             <div class="bridge-simple-panel-top">
-              <div class="bridge-simple-panel-label">Deposit from</div>
+              <div class="bridge-simple-panel-label">Swap from</div>
               <div class="bridge-simple-panel-meta">
-                <span class="bridge-mode-pill" id="ubModePill">Wallet adapter loading</span>
+                <span class="bridge-mode-pill" id="ubModePill">Loading</span>
                 <span class="bridge-simple-panel-note mono" id="ubWalletHint">Connect your EVM wallet</span>
               </div>
             </div>
@@ -4244,6 +4511,7 @@
                   <strong class="bridge-token-symbol">USDC</strong>
                   <span class="bridge-token-sub" id="ubSourceChainName">Source chain</span>
                 </div>
+                <span class="fund-token-caret" aria-hidden="true">v</span>
               </div>
               <div class="bridge-simple-amount-box">
                 <input class="bridge-simple-amount-input" type="number" id="ubDepositAmount" placeholder="0.00" min="0.01" step="0.01" disabled/>
@@ -4251,24 +4519,9 @@
               </div>
             </div>
 
-            <div class="bridge-simple-select-row">
-              <span class="bridge-simple-select-note">Choose the chain where your USDC starts.</span>
+            <div class="fund-inline-select">
+              <label class="sr-only" for="ubSourceChain">Source chain</label>
               <select class="bridge-simple-select" id="ubSourceChain" disabled></select>
-            </div>
-
-            <div class="bridge-simple-summary">
-              <div class="bridge-simple-summary-row">
-                <span>Confirmed:</span>
-                <strong id="ubConfirmedBalance">0.00 USDC</strong>
-              </div>
-              <div class="bridge-simple-summary-row">
-                <span>Pending:</span>
-                <strong id="ubPendingBalance">0.00 USDC</strong>
-              </div>
-            </div>
-
-            <div class="bridge-simple-action-row">
-              <button class="btn btn-primary" onclick="depositToUnifiedBalance()" id="ubDepositBtn" disabled>Deposit</button>
             </div>
           </div>
 
@@ -4283,10 +4536,10 @@
 
           <div class="bridge-simple-panel">
             <div class="bridge-simple-panel-top">
-              <div class="bridge-simple-panel-label">Fund Arc</div>
+              <div class="bridge-simple-panel-label">Swap to</div>
               <div class="bridge-simple-panel-meta">
-                <span class="bridge-simple-panel-note">Arc Testnet</span>
-                <span class="bridge-simple-panel-note">Use your confirmed balance to top up when you need it.</span>
+                <span class="bridge-simple-panel-note" id="ubBalanceMeta">0.00 confirmed / 0.00 pending</span>
+                <span class="bridge-simple-panel-note mono">Arc Testnet</span>
               </div>
             </div>
 
@@ -4297,6 +4550,7 @@
                   <strong class="bridge-token-symbol">USDC</strong>
                   <span class="bridge-token-sub">Arc Testnet</span>
                 </div>
+                <span class="fund-token-caret" aria-hidden="true">v</span>
               </div>
               <div class="bridge-simple-amount-box">
                 <input class="bridge-simple-amount-input" type="number" id="ubSpendAmount" placeholder="0.00" min="0.01" step="0.01" disabled/>
@@ -4312,40 +4566,61 @@
             <div class="bridge-recipient-wrap" id="ubRecipientWrap" hidden>
               <label class="sr-only" for="ubRecipient">Arc recipient</label>
               <input type="text" id="ubRecipient" placeholder="0x..." disabled/>
-              <p class="bridge-field-note">Defaults to your connected Arc wallet, but you can choose any Arc EVM address.</p>
             </div>
+          </div>
 
+          <div class="bridge-advanced fund-advanced-panel" id="ubAdvancedPanel" hidden>
             <div class="bridge-simple-action-row">
-              <button class="btn btn-outline" onclick="estimateUnifiedBalanceSpend()" id="ubEstimateBtn" disabled>Estimate Top-up</button>
-              <button class="btn btn-primary" onclick="spendUnifiedBalanceToArc()" id="ubSpendBtn" disabled>Fund Arc</button>
+              <button class="btn btn-outline" onclick="estimateUnifiedBalanceSpend()" id="ubEstimateBtn" disabled>Estimate</button>
+              <button class="btn btn-outline" onclick="depositToUnifiedBalance()" id="ubDepositBtn" disabled>Deposit</button>
             </div>
           </div>
 
-          <div class="bridge-status info bridge-simple-status" id="ubStatus">
-            <div class="bridge-status-title">Ready</div>
-            <div>Connect your wallet, refresh your balance, then deposit or spend to Arc.</div>
+          <div class="bridge-simple-summary">
+            <div class="bridge-simple-summary-row">
+              <span>Confirmed</span>
+              <strong id="ubConfirmedBalance">0.00 USDC</strong>
+            </div>
+            <div class="bridge-simple-summary-row">
+              <span>Pending</span>
+              <strong id="ubPendingBalance">0.00 USDC</strong>
+            </div>
           </div>
 
-          <p class="bridge-help">Phase 1 keeps your existing escrow contracts unchanged. Unified Balance only funds your Arc wallet before the normal approval and contract call.</p>
+          <button class="btn btn-primary bridge-simple-submit" onclick="spendUnifiedBalanceToArc()" id="ubSpendBtn" disabled>Fund Arc</button>
+
+          <div class="fund-shortcuts" aria-label="Quick amounts">
+            <button class="fund-shortcut" type="button" onclick="applyFundShortcut('1')">
+              <span class="fund-shortcut-token">USDC</span>
+              <span>$1</span>
+            </button>
+            <button class="fund-shortcut" type="button" onclick="applyFundShortcut('5')">
+              <span class="fund-shortcut-token">USDC</span>
+              <span>$5</span>
+            </button>
+          </div>
+
+          <div class="bridge-status info bridge-simple-status" id="ubStatus" hidden></div>
         </div>
         </div>
       </section>
 
       <div class="fund-divider" aria-hidden="true"></div>
 
-      <section class="fund-section" aria-labelledby="fundBridgeHeading">
+      <section class="fund-section fund-pane" id="fundBridgePane" role="tabpanel" aria-label="Bridge">
         <div class="fund-section-head">
-          <div class="fund-section-title">Direct Bridge Fallback</div>
-          <p class="fund-section-copy" id="fundBridgeHeading">One-off route for moving USDC straight onto Arc. Use this if Unified Balance is still loading, unavailable in your browser, or you prefer the direct bridge path.</p>
+          <div class="fund-section-title">Bridge</div>
+          <p class="fund-section-copy" id="fundBridgeHeading">Bridge</p>
         </div>
-        <div class="bridge-card bridge-simple-card">
+        <div class="bridge-card bridge-simple-card fund-widget-card">
         <div class="bridge-simple-shell">
-          <div class="bridge-simple-head">
-            <div class="bridge-simple-tabs" aria-label="Bridge">
-              <button class="bridge-simple-tab active" type="button" aria-current="page">Bridge</button>
+          <div class="fund-pane-head">
+            <div class="fund-tabs" role="tablist" aria-label="Funding mode">
+              <button class="fund-tab" type="button" data-fund-tab="swap" aria-selected="false" onclick="setFundMode('swap')">Swap</button>
+              <button class="fund-tab active" type="button" data-fund-tab="bridge" aria-selected="true" aria-current="page" onclick="setFundMode('bridge')">Bridge</button>
             </div>
-            <div class="bridge-simple-head-actions">
-              <button class="bridge-icon-btn" type="button" onclick="estimateArcBridge()" id="bridgeEstimateBtn" aria-label="Estimate bridge" title="Estimate bridge">
+            <div class="fund-icon-row">
+              <button class="bridge-icon-btn" type="button" onclick="estimateArcBridge()" id="bridgeEstimateBtn" aria-label="Estimate bridge">
                 <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
                   <path d="M20 6V10H16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
                   <path d="M4 18V14H8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
@@ -4354,7 +4629,7 @@
                 </svg>
                 <span class="sr-only">Estimate bridge</span>
               </button>
-              <button class="bridge-icon-btn" type="button" onclick="toggleBridgeAdvanced()" id="bridgeSettingsBtn" aria-label="Bridge settings" aria-expanded="false" title="Bridge settings">
+              <button class="bridge-icon-btn" type="button" onclick="toggleBridgeAdvanced()" id="bridgeSettingsBtn" aria-label="Bridge settings" aria-expanded="false">
                 <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
                   <path d="M12 8.75A3.25 3.25 0 1 0 12 15.25A3.25 3.25 0 1 0 12 8.75Z" stroke="currentColor" stroke-width="1.8"/>
                   <path d="M19.4 13.5L20.2 12L19.4 10.5L17.6 10.2C17.4 9.7 17.1 9.2 16.8 8.8L17.4 7.1L15.9 5.6L14.2 6.2C13.8 5.9 13.3 5.6 12.8 5.4L12.5 3.6H11.5L11.2 5.4C10.7 5.6 10.2 5.9 9.8 6.2L8.1 5.6L6.6 7.1L7.2 8.8C6.9 9.2 6.6 9.7 6.4 10.2L4.6 10.5L3.8 12L4.6 13.5L6.4 13.8C6.6 14.3 6.9 14.8 7.2 15.2L6.6 16.9L8.1 18.4L9.8 17.8C10.2 18.1 10.7 18.4 11.2 18.6L11.5 20.4H12.5L12.8 18.6C13.3 18.4 13.8 18.1 14.2 17.8L15.9 18.4L17.4 16.9L16.8 15.2C17.1 14.8 17.4 14.3 17.6 13.8L19.4 13.5Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
@@ -4380,6 +4655,7 @@
                   <strong class="bridge-token-symbol">USDC</strong>
                   <span class="bridge-token-sub" id="bridgeSourceName">Ethereum Sepolia</span>
                 </div>
+                <span class="fund-token-caret" aria-hidden="true">v</span>
               </div>
               <div class="bridge-simple-amount-box">
                 <input class="bridge-simple-amount-input" type="number" id="bridgeAmount" placeholder="0.00" min="0.01" step="0.01"/>
@@ -4387,8 +4663,8 @@
               </div>
             </div>
 
-            <div class="bridge-simple-select-row">
-              <span class="bridge-simple-select-note">Choose the chain where your USDC starts.</span>
+            <div class="fund-inline-select">
+              <label class="sr-only" for="bridgeSourceChain">Source chain</label>
               <select class="bridge-simple-select" id="bridgeSourceChain" onchange="handleBridgeSourceChange()">
                 <option value="Ethereum_Sepolia">Ethereum Sepolia</option>
                 <option value="Base_Sepolia">Base Sepolia</option>
@@ -4400,7 +4676,7 @@
           </div>
 
           <div class="bridge-simple-center">
-            <button class="bridge-simple-arrow" type="button" onclick="switchBridgeToArc()" id="bridgeSwitchBtn" aria-label="Switch wallet to Arc" title="Switch wallet to Arc">
+            <button class="bridge-simple-arrow" type="button" onclick="switchBridgeToArc()" id="bridgeSwitchBtn" aria-label="Switch wallet to Arc">
               <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
                 <path d="M12 5V19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
                 <path d="M7 14L12 19L17 14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
@@ -4413,7 +4689,7 @@
               <div class="bridge-simple-panel-label">Bridge to</div>
               <div class="bridge-simple-panel-meta">
                 <span class="bridge-simple-panel-note" id="bridgeRouteMode">CCTP v2 forwarding</span>
-                <span class="bridge-simple-panel-note">Arc Testnet</span>
+                <span class="bridge-simple-panel-note mono">Arc Testnet</span>
               </div>
             </div>
 
@@ -4424,6 +4700,7 @@
                   <strong class="bridge-token-symbol">USDC</strong>
                   <span class="bridge-token-sub">Arc Testnet</span>
                 </div>
+                <span class="fund-token-caret" aria-hidden="true">v</span>
               </div>
               <div class="bridge-simple-amount-box">
                 <div class="bridge-simple-output" id="bridgeReceiveAmount">0.00</div>
@@ -4431,7 +4708,7 @@
               </div>
             </div>
 
-            <button class="bridge-simple-recipient-toggle" type="button" id="bridgeRecipientToggle" onclick="toggleBridgeRecipientRow()">
+            <button class="bridge-simple-recipient-toggle" type="button" id="bridgeRecipientToggle" onclick="toggleBridgeRecipientRow()" aria-expanded="false">
               <span class="bridge-simple-plus" aria-hidden="true">+</span>
               <span id="bridgeRecipientToggleLabel">Add receiving wallet</span>
             </button>
@@ -4439,7 +4716,6 @@
             <div class="bridge-recipient-wrap" id="bridgeRecipientWrap" hidden>
               <label class="sr-only" for="bridgeRecipient">Arc recipient</label>
               <input type="text" id="bridgeRecipient" placeholder="0x..."/>
-              <p class="bridge-field-note">Defaults to your connected Arc wallet, but you can paste any Arc EVM address.</p>
             </div>
           </div>
 
@@ -4455,33 +4731,40 @@
 
               <label class="bridge-check-row">
                 <input type="checkbox" id="bridgeUseForwarder" checked/>
-                <span>Auto-complete the Arc mint when available.</span>
+                <span>Auto mint</span>
               </label>
             </div>
 
             <div class="bridge-simple-mode">
               <span class="bridge-mode-pill" id="bridgeModePill">Direct CCTP ready</span>
-              <span class="bridge-simple-mode-note">Use settings only when you want to change speed or manual mint behavior.</span>
             </div>
           </div>
 
           <div class="bridge-simple-summary">
             <div class="bridge-simple-summary-row">
-              <span>Estimated Fee:</span>
+              <span>Estimated Fee</span>
               <strong id="bridgeFeePreview">0.00 USDC</strong>
             </div>
             <div class="bridge-simple-summary-row">
-              <span>Estimated Time:</span>
+              <span>Estimated Time</span>
               <strong id="bridgeTimePreview">2-5 minutes</strong>
             </div>
           </div>
 
           <button class="btn btn-primary bridge-simple-submit" onclick="runArcBridge()" id="bridgeBtn">Bridge</button>
 
-          <div class="bridge-status info bridge-simple-status" id="bridgeStatus">
-            <div class="bridge-status-title">Ready</div>
-            <div>Connect your wallet, enter an amount, then estimate or bridge.</div>
+          <div class="fund-shortcuts" aria-label="Quick amounts">
+            <button class="fund-shortcut" type="button" onclick="applyFundShortcut('1')">
+              <span class="fund-shortcut-token">USDC</span>
+              <span>$1</span>
+            </button>
+            <button class="fund-shortcut" type="button" onclick="applyFundShortcut('5')">
+              <span class="fund-shortcut-token">USDC</span>
+              <span>$5</span>
+            </button>
           </div>
+
+          <div class="bridge-status info bridge-simple-status" id="bridgeStatus" hidden></div>
 
           <p class="bridge-help">You’ll need source-chain USDC and gas for approval and burn confirmation.</p>
         </div>
@@ -5032,6 +5315,12 @@ window.arcBridgeLoadError = '';
 function setBridgeUiStatus(title, body, type = 'info') {
   const status = document.getElementById('bridgeStatus');
   if (!status) return;
+  if (title === 'Ready') {
+    status.hidden = true;
+    status.innerHTML = '';
+    return;
+  }
+  status.hidden = false;
   status.className = `bridge-status ${type}`;
   status.innerHTML = `<div class="bridge-status-title">${escapeHtml(title)}</div><div>${body}</div>`;
 }
@@ -7488,6 +7777,12 @@ function stringifyBridgeValue(value) {
 function setBridgeStatus(title, body, type = 'info') {
   const status = getBridgeEl('bridgeStatus');
   if (!status) return;
+  if (title === 'Ready') {
+    status.hidden = true;
+    status.innerHTML = '';
+    return;
+  }
+  status.hidden = false;
   status.className = `bridge-status ${type}`;
   status.innerHTML = `<div class="bridge-status-title">${escapeHtml(title)}</div><div>${body}</div>`;
 }
@@ -7655,8 +7950,55 @@ function toggleBridgeAdvanced(forceOpen) {
   if (button) button.setAttribute('aria-expanded', shouldOpen ? 'true' : 'false');
 }
 
+let currentFundMode = 'bridge';
+
+function setFundMode(mode = 'bridge') {
+  currentFundMode = mode === 'swap' ? 'swap' : 'bridge';
+  const swapPane = getBridgeEl('fundSwapPane');
+  const bridgePane = getBridgeEl('fundBridgePane');
+  if (swapPane) swapPane.hidden = currentFundMode !== 'swap';
+  if (bridgePane) bridgePane.hidden = currentFundMode !== 'bridge';
+  document.querySelectorAll('[data-fund-tab]').forEach(tab => {
+    const active = tab.dataset.fundTab === currentFundMode;
+    tab.classList.toggle('active', active);
+    tab.setAttribute('aria-selected', active ? 'true' : 'false');
+    if (active) tab.setAttribute('aria-current', 'page');
+    else tab.removeAttribute('aria-current');
+  });
+  if (currentFundMode === 'bridge') toggleSwapAdvanced(false);
+  if (currentFundMode === 'swap') toggleBridgeAdvanced(false);
+}
+
+function toggleSwapAdvanced(forceOpen) {
+  const panel = getBridgeEl('ubAdvancedPanel');
+  const button = getBridgeEl('swapSettingsBtn');
+  if (!panel) return;
+  const shouldOpen = typeof forceOpen === 'boolean' ? forceOpen : panel.hidden;
+  panel.hidden = !shouldOpen;
+  if (button) button.setAttribute('aria-expanded', shouldOpen ? 'true' : 'false');
+}
+
+function applyFundShortcut(amount) {
+  const numeric = Number(amount);
+  if (!Number.isFinite(numeric) || numeric <= 0) return;
+  const value = numeric.toFixed(2);
+  if (currentFundMode === 'swap') {
+    const input = getBridgeEl('ubSpendAmount');
+    if (input) input.value = value;
+    syncUnifiedBalanceSimplePreview();
+    return;
+  }
+  const input = getBridgeEl('bridgeAmount');
+  if (input) input.value = value;
+  resetBridgeSimpleEstimate();
+  syncBridgeSimplePreview();
+}
+
 window.toggleBridgeRecipientRow = toggleBridgeRecipientRow;
 window.toggleBridgeAdvanced = toggleBridgeAdvanced;
+window.toggleSwapAdvanced = toggleSwapAdvanced;
+window.applyFundShortcut = applyFundShortcut;
+window.setFundMode = setFundMode;
 
 function syncUnifiedBalanceSourceLabel() {
   const select = getBridgeEl('ubSourceChain');
@@ -7680,6 +8022,9 @@ function syncUnifiedBalanceSimplePreview() {
   syncUnifiedBalanceSourceLabel();
   setBridgeSimpleText('ubDepositUsd', `$${bridgeSimpleAmountDisplay(getBridgeEl('ubDepositAmount')?.value || '')}`);
   setBridgeSimpleText('ubSpendUsd', `$${bridgeSimpleAmountDisplay(getBridgeEl('ubSpendAmount')?.value || '')}`);
+  const confirmed = getBridgeEl('ubConfirmedBalance')?.textContent?.replace(/\s*USDC$/, '') || '0.00';
+  const pending = getBridgeEl('ubPendingBalance')?.textContent?.replace(/\s*USDC$/, '') || '0.00';
+  setBridgeSimpleText('ubBalanceMeta', `${confirmed} confirmed / ${pending} pending`);
   syncUnifiedBalanceRecipientToggle();
 }
 
@@ -7750,6 +8095,12 @@ function setUnifiedBalanceMode(label) {
 function setUnifiedBalanceStatus(title, body, type = 'info') {
   const status = getBridgeEl('ubStatus');
   if (!status) return;
+  if (title === 'Ready' || title === 'Wallet required') {
+    status.hidden = true;
+    status.innerHTML = '';
+    return;
+  }
+  status.hidden = false;
   status.className = `bridge-status ${type}`;
   status.innerHTML = `<div class="bridge-status-title">${escapeHtml(title)}</div><div>${body}</div>`;
 }
@@ -7818,6 +8169,7 @@ function updateUnifiedBalanceSummary(balances) {
   const pendingEl = getBridgeEl('ubPendingBalance');
   if (confirmedEl) confirmedEl.textContent = `${formatUsdcDisplay(confirmed)} USDC`;
   if (pendingEl) pendingEl.textContent = `${formatUsdcDisplay(pending)} USDC`;
+  setBridgeSimpleText('ubBalanceMeta', `${formatUsdcDisplay(confirmed)} confirmed / ${formatUsdcDisplay(pending)} pending`);
 }
 
 function renderUnifiedBalanceBreakdown(balances) {
@@ -8808,6 +9160,7 @@ window.addEventListener('agentmarket:config-loaded', () => {
   window.arcUnifiedBalanceRefresh();
 });
 installCctpFallbackHandlers();
+setFundMode('bridge');
 resetBridgeSimpleEstimate();
 syncBridgeSimplePreview();
 syncUnifiedBalanceSimplePreview();

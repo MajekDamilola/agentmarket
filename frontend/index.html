@@ -1123,7 +1123,9 @@
     }
 
     #page-bridge .container {
-      max-width: 1420px;
+      max-width: 1640px;
+      padding-left: 40px;
+      padding-right: 40px;
     }
 
     #page-bridge .bridge-form-grid {
@@ -1133,7 +1135,7 @@
     .fund-stack {
       margin: 0 auto;
       display: grid;
-      gap: 28px;
+      gap: 36px;
       grid-template-columns: repeat(2, minmax(0, 1fr));
       max-width: none;
       align-items: start;
@@ -1164,7 +1166,7 @@
       font-size: 14px;
       line-height: 1.6;
       margin: 0;
-      max-width: 680px;
+      max-width: none;
     }
 
     .fund-divider {
@@ -1581,9 +1583,10 @@
     }
 
     .bridge-simple-card {
-      margin: 0 auto;
-      max-width: 560px;
-      padding: 14px;
+      margin: 0;
+      max-width: none;
+      padding: 18px;
+      width: 100%;
     }
 
     .bridge-simple-shell {
@@ -1623,6 +1626,10 @@
     .bridge-simple-tab.active {
       background: rgba(255,255,255,0.08);
       color: var(--text);
+    }
+
+    .bridge-simple-tab:only-child {
+      min-width: 144px;
     }
 
     .bridge-simple-head-actions {
@@ -1841,6 +1848,16 @@
       width: 18px;
     }
 
+    .bridge-simple-arrow-static {
+      cursor: default;
+    }
+
+    .bridge-simple-arrow-static:hover {
+      background: rgba(255,255,255,0.02);
+      color: rgba(232,232,240,0.7);
+      transform: none;
+    }
+
     .bridge-simple-recipient-toggle {
       align-items: center;
       background: transparent;
@@ -1887,6 +1904,18 @@
     .bridge-recipient-wrap input:focus {
       border-color: rgba(166,246,255,0.24);
       box-shadow: 0 0 0 4px rgba(89,199,255,0.08);
+    }
+
+    .bridge-simple-action-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .bridge-simple-action-row .btn {
+      flex: 1 1 0;
+      justify-content: center;
+      min-width: 160px;
     }
 
     .bridge-recipient-wrap[hidden],
@@ -3702,6 +3731,7 @@
       .bridge-simple-amount-input,
       .bridge-simple-output { font-size: 38px; }
       .bridge-simple-summary-row { align-items: flex-start; flex-direction: column; }
+      .bridge-simple-action-row .btn { flex: 1 1 100%; min-width: 0; }
       .bridge-mode-pill { white-space: normal; }
       .modal { padding: 22px; max-height: 92vh; }
       .detail-row { align-items: flex-start; flex-direction: column; gap: 4px; }
@@ -4179,102 +4209,124 @@
           <div class="fund-section-title">Unified Balance Kit</div>
           <p class="fund-section-copy" id="fundUnifiedBalanceHeading">Primary multichain funding flow. Deposit USDC once, keep it chain-agnostic, then spend only the amount you need onto Arc before checkout.</p>
         </div>
-        <div class="bridge-card">
-        <div class="bridge-shell">
-          <div class="bridge-spotlight">
-            <div class="bridge-topline">
-              <div class="bridge-kicker">Unified balance</div>
-              <div class="bridge-mode-pill" id="ubModePill">Wallet adapter loading</div>
+        <div class="bridge-card bridge-simple-card">
+        <div class="bridge-simple-shell">
+          <div class="bridge-simple-head">
+            <div class="bridge-simple-tabs" aria-label="Unified Balance">
+              <button class="bridge-simple-tab active" type="button" aria-current="page">Unified Balance</button>
             </div>
-
-            <div class="bridge-title-row">
-              <div class="bridge-mark" aria-hidden="true">
-                <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <defs>
-                    <linearGradient id="ubMarkGradient" x1="12" y1="14" x2="52" y2="50" gradientUnits="userSpaceOnUse">
-                      <stop stop-color="#7AFFC8"/>
-                      <stop offset="0.5" stop-color="#59C7FF"/>
-                      <stop offset="1" stop-color="#A6F6FF"/>
-                    </linearGradient>
-                  </defs>
-                  <rect x="12" y="16" width="16" height="16" rx="5" stroke="url(#ubMarkGradient)" stroke-width="4"/>
-                  <rect x="36" y="32" width="16" height="16" rx="5" stroke="url(#ubMarkGradient)" stroke-width="4"/>
-                  <path d="M28 24H36" stroke="#E8E8F0" stroke-width="4" stroke-linecap="round"/>
-                  <path d="M28 28C32 28 36 28 36 36" stroke="url(#ubMarkGradient)" stroke-width="3.4" stroke-linecap="round"/>
+            <div class="bridge-simple-head-actions">
+              <button class="bridge-icon-btn" type="button" onclick="refreshUnifiedBalance()" id="ubRefreshBtn" aria-label="Refresh unified balance" title="Refresh unified balance" disabled>
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M20 6V10H16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M4 18V14H8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M7 10C7.9 7.4 10.3 5.5 13.1 5.5C15 5.5 16.8 6.3 18 7.7L20 10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M17 14C16.1 16.6 13.7 18.5 10.9 18.5C9 18.5 7.2 17.7 6 16.3L4 14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
-              </div>
-              <div>
-                <h2 class="bridge-title">Fund Arc from one balance</h2>
-                <p class="bridge-copy">Deposit USDC from supported chains, then top up Arc only when you need to post or launch.</p>
+                <span class="sr-only">Refresh unified balance</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="bridge-simple-panel">
+            <div class="bridge-simple-panel-top">
+              <div class="bridge-simple-panel-label">Deposit from</div>
+              <div class="bridge-simple-panel-meta">
+                <span class="bridge-mode-pill" id="ubModePill">Wallet adapter loading</span>
+                <span class="bridge-simple-panel-note mono" id="ubWalletHint">Connect your EVM wallet</span>
               </div>
             </div>
 
-            <div class="bridge-summary-grid">
-              <div class="bridge-summary-item">
-                <span>Wallet</span>
-                <strong class="mono" id="ubWalletHint">Connect your EVM wallet</strong>
+            <div class="bridge-simple-panel-body">
+              <div class="bridge-token-chip">
+                <span class="bridge-token-icon" aria-hidden="true">$</span>
+                <div class="bridge-token-copy">
+                  <strong class="bridge-token-symbol">USDC</strong>
+                  <span class="bridge-token-sub" id="ubSourceChainName">Source chain</span>
+                </div>
               </div>
-              <div class="bridge-summary-item">
-                <span>Confirmed</span>
+              <div class="bridge-simple-amount-box">
+                <input class="bridge-simple-amount-input" type="number" id="ubDepositAmount" placeholder="0.00" min="0.01" step="0.01" disabled/>
+                <span class="bridge-simple-usd" id="ubDepositUsd">$0.00</span>
+              </div>
+            </div>
+
+            <div class="bridge-simple-select-row">
+              <span class="bridge-simple-select-note">Choose the chain where your USDC starts.</span>
+              <select class="bridge-simple-select" id="ubSourceChain" disabled></select>
+            </div>
+
+            <div class="bridge-simple-summary">
+              <div class="bridge-simple-summary-row">
+                <span>Confirmed:</span>
                 <strong id="ubConfirmedBalance">0.00 USDC</strong>
               </div>
-              <div class="bridge-summary-item">
-                <span>Pending</span>
+              <div class="bridge-simple-summary-row">
+                <span>Pending:</span>
                 <strong id="ubPendingBalance">0.00 USDC</strong>
               </div>
             </div>
+
+            <div class="bridge-simple-action-row">
+              <button class="btn btn-primary" onclick="depositToUnifiedBalance()" id="ubDepositBtn" disabled>Deposit</button>
+            </div>
           </div>
 
-          <div class="bridge-card-body">
-            <div class="bridge-stack">
-              <div class="bridge-subsection">
-                <div class="bridge-subsection-title">Deposit to Unified Balance</div>
-                <p class="bridge-subsection-copy">Choose a source chain and deposit USDC into the shared balance controlled by your connected wallet.</p>
-                <div class="bridge-form-grid">
-                  <div class="form-group span-full">
-                    <label>Source Chain</label>
-                    <select id="ubSourceChain" disabled></select>
-                  </div>
-                  <div class="form-group span-full">
-                    <label>Deposit Amount (USDC)</label>
-                    <input type="number" id="ubDepositAmount" placeholder="2.00" min="0.01" step="0.01" disabled/>
-                    <p class="bridge-field-note">This keeps funds chain-agnostic until you spend them to Arc.</p>
-                  </div>
-                </div>
-                <div class="bridge-actions">
-                  <button class="btn btn-outline" onclick="refreshUnifiedBalance()" id="ubRefreshBtn" disabled>Refresh Balance</button>
-                  <button class="btn btn-primary" onclick="depositToUnifiedBalance()" id="ubDepositBtn" disabled>Deposit</button>
-                </div>
-              </div>
+          <div class="bridge-simple-center" aria-hidden="true">
+            <div class="bridge-simple-arrow bridge-simple-arrow-static">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 5V19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                <path d="M7 14L12 19L17 14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+          </div>
 
-              <div class="bridge-subsection">
-                <div class="bridge-subsection-title">Spend to Arc</div>
-                <p class="bridge-subsection-copy">Top up your Arc wallet from the Unified Balance before job funding or campaign launch.</p>
-                <div class="bridge-form-grid">
-                  <div class="form-group">
-                    <label>Arc Top-up Amount (USDC)</label>
-                    <input type="number" id="ubSpendAmount" placeholder="5.00" min="0.01" step="0.01" disabled/>
-                  </div>
-                  <div class="form-group">
-                    <label>Destination</label>
-                    <input type="text" id="ubRecipient" placeholder="0x..." disabled/>
-                    <p class="bridge-field-note">Defaults to your connected Arc wallet.</p>
-                  </div>
-                </div>
-                <div class="bridge-actions">
-                  <button class="btn btn-outline" onclick="estimateUnifiedBalanceSpend()" id="ubEstimateBtn" disabled>Estimate Top-up</button>
-                  <button class="btn btn-primary" onclick="spendUnifiedBalanceToArc()" id="ubSpendBtn" disabled>Fund Arc</button>
-                </div>
+          <div class="bridge-simple-panel">
+            <div class="bridge-simple-panel-top">
+              <div class="bridge-simple-panel-label">Fund Arc</div>
+              <div class="bridge-simple-panel-meta">
+                <span class="bridge-simple-panel-note">Arc Testnet</span>
+                <span class="bridge-simple-panel-note">Use your confirmed balance to top up when you need it.</span>
               </div>
             </div>
 
-            <div class="bridge-status info" id="ubStatus">
-              <div class="bridge-status-title">Ready</div>
-              <div>Connect your wallet, refresh your balance, then deposit or spend to Arc.</div>
+            <div class="bridge-simple-panel-body">
+              <div class="bridge-token-chip">
+                <span class="bridge-token-icon" aria-hidden="true">$</span>
+                <div class="bridge-token-copy">
+                  <strong class="bridge-token-symbol">USDC</strong>
+                  <span class="bridge-token-sub">Arc Testnet</span>
+                </div>
+              </div>
+              <div class="bridge-simple-amount-box">
+                <input class="bridge-simple-amount-input" type="number" id="ubSpendAmount" placeholder="0.00" min="0.01" step="0.01" disabled/>
+                <span class="bridge-simple-usd" id="ubSpendUsd">$0.00</span>
+              </div>
             </div>
 
-            <p class="bridge-help">Phase 1 keeps your existing escrow contracts unchanged. Unified Balance only funds your Arc wallet before the normal approval and contract call.</p>
+            <button class="bridge-simple-recipient-toggle" type="button" id="ubRecipientToggle" onclick="toggleUnifiedRecipientRow()" aria-expanded="false">
+              <span class="bridge-simple-plus" aria-hidden="true">+</span>
+              <span id="ubRecipientToggleLabel">Add receiving wallet</span>
+            </button>
+
+            <div class="bridge-recipient-wrap" id="ubRecipientWrap" hidden>
+              <label class="sr-only" for="ubRecipient">Arc recipient</label>
+              <input type="text" id="ubRecipient" placeholder="0x..." disabled/>
+              <p class="bridge-field-note">Defaults to your connected Arc wallet, but you can choose any Arc EVM address.</p>
+            </div>
+
+            <div class="bridge-simple-action-row">
+              <button class="btn btn-outline" onclick="estimateUnifiedBalanceSpend()" id="ubEstimateBtn" disabled>Estimate Top-up</button>
+              <button class="btn btn-primary" onclick="spendUnifiedBalanceToArc()" id="ubSpendBtn" disabled>Fund Arc</button>
+            </div>
           </div>
+
+          <div class="bridge-status info bridge-simple-status" id="ubStatus">
+            <div class="bridge-status-title">Ready</div>
+            <div>Connect your wallet, refresh your balance, then deposit or spend to Arc.</div>
+          </div>
+
+          <p class="bridge-help">Phase 1 keeps your existing escrow contracts unchanged. Unified Balance only funds your Arc wallet before the normal approval and contract call.</p>
         </div>
         </div>
       </section>
@@ -4289,8 +4341,7 @@
         <div class="bridge-card bridge-simple-card">
         <div class="bridge-simple-shell">
           <div class="bridge-simple-head">
-            <div class="bridge-simple-tabs" aria-label="Bridge mode">
-              <button class="bridge-simple-tab" type="button" disabled aria-disabled="true">Swap</button>
+            <div class="bridge-simple-tabs" aria-label="Bridge">
               <button class="bridge-simple-tab active" type="button" aria-current="page">Bridge</button>
             </div>
             <div class="bridge-simple-head-actions">
@@ -7607,6 +7658,45 @@ function toggleBridgeAdvanced(forceOpen) {
 window.toggleBridgeRecipientRow = toggleBridgeRecipientRow;
 window.toggleBridgeAdvanced = toggleBridgeAdvanced;
 
+function syncUnifiedBalanceSourceLabel() {
+  const select = getBridgeEl('ubSourceChain');
+  const label = getBridgeEl('ubSourceChainName');
+  if (!label) return;
+  const selectedLabel = select?.selectedOptions?.[0]?.textContent?.trim();
+  label.textContent = selectedLabel || 'Source chain';
+}
+
+function syncUnifiedBalanceRecipientToggle() {
+  const label = getBridgeEl('ubRecipientToggleLabel');
+  const toggle = getBridgeEl('ubRecipientToggle');
+  const recipient = (getBridgeEl('ubRecipient')?.value || '').trim();
+  const wallet = window.getAgentMarketWallet?.();
+  const resolved = recipient || wallet || '';
+  if (label) label.textContent = resolved ? `Receiving wallet ${shortAddr(resolved)}` : 'Add receiving wallet';
+  if (toggle) toggle.setAttribute('aria-label', resolved ? `Receiving wallet ${resolved}` : 'Add receiving wallet');
+}
+
+function syncUnifiedBalanceSimplePreview() {
+  syncUnifiedBalanceSourceLabel();
+  setBridgeSimpleText('ubDepositUsd', `$${bridgeSimpleAmountDisplay(getBridgeEl('ubDepositAmount')?.value || '')}`);
+  setBridgeSimpleText('ubSpendUsd', `$${bridgeSimpleAmountDisplay(getBridgeEl('ubSpendAmount')?.value || '')}`);
+  syncUnifiedBalanceRecipientToggle();
+}
+
+function toggleUnifiedRecipientRow(forceOpen) {
+  const wrap = getBridgeEl('ubRecipientWrap');
+  const input = getBridgeEl('ubRecipient');
+  const toggle = getBridgeEl('ubRecipientToggle');
+  if (!wrap) return;
+  const shouldOpen = typeof forceOpen === 'boolean' ? forceOpen : wrap.hidden;
+  wrap.hidden = !shouldOpen;
+  if (toggle) toggle.setAttribute('aria-expanded', shouldOpen ? 'true' : 'false');
+  if (shouldOpen) input?.focus();
+  syncUnifiedBalanceRecipientToggle();
+}
+
+window.toggleUnifiedRecipientRow = toggleUnifiedRecipientRow;
+
 function normalizeUsdcString(value, label = 'amount') {
   const raw = String(value ?? '').trim();
   if (!raw || Number(raw) <= 0) throw new Error(`Enter a USDC ${label} greater than 0.`);
@@ -7691,6 +7781,7 @@ function syncUnifiedBalanceUiState() {
     ubRefreshBtn: !ready || !hasWallet,
     ubDepositBtn: sourceDisabled,
     ubEstimateBtn: spendDisabled,
+    ubRecipientToggle: spendDisabled,
     ubSpendBtn: spendDisabled,
   };
   Object.entries(buttonStates).forEach(([id, disabled]) => {
@@ -7709,7 +7800,7 @@ function syncUnifiedBalanceUiState() {
 }
 
 function setUnifiedBalanceButtonsDisabled(disabled) {
-  ['ubRefreshBtn', 'ubEstimateBtn', 'ubDepositBtn', 'ubSpendBtn', 'ubSourceChain', 'ubDepositAmount', 'ubSpendAmount', 'ubRecipient'].forEach(id => {
+  ['ubRefreshBtn', 'ubEstimateBtn', 'ubDepositBtn', 'ubRecipientToggle', 'ubSpendBtn', 'ubSourceChain', 'ubDepositAmount', 'ubSpendAmount', 'ubRecipient'].forEach(id => {
     const el = getBridgeEl(id);
     if (el) el.disabled = disabled;
   });
@@ -7784,6 +7875,7 @@ function populateUnifiedBalanceSourceChains() {
     select.value = selected;
   }
   syncUnifiedBalanceUiState();
+  syncUnifiedBalanceSimplePreview();
 }
 
 async function createUnifiedBalanceAdapter() {
@@ -7818,6 +7910,7 @@ async function refreshUnifiedBalance(options = {}) {
   const hint = getBridgeEl('ubWalletHint');
   if (recipient && wallet && !recipient.value) recipient.value = wallet;
   if (hint) hint.textContent = shortWallet(wallet);
+  syncUnifiedBalanceSimplePreview();
 
   if (!isUnifiedBalanceEnabled()) {
     updateUnifiedBalanceSummary(null);
@@ -8031,6 +8124,7 @@ async function maybeTopUpArcForSpend(options = {}) {
   if (spendInput) spendInput.value = shortageString;
   const recipientInput = getBridgeEl('ubRecipient');
   if (recipientInput && !recipientInput.value) recipientInput.value = wallet;
+  syncUnifiedBalanceSimplePreview();
 
   bridgeToast('Arc Top-up Needed', `Funding ${shortageString} USDC to Arc before continuing.`, 'info');
   await spendUnifiedBalanceToArc({
@@ -8059,6 +8153,7 @@ window.arcUnifiedBalanceRefresh = () => {
   const hint = getBridgeEl('ubWalletHint');
   if (recipient && wallet && !recipient.value) recipient.value = wallet;
   if (hint) hint.textContent = shortWallet(wallet);
+  syncUnifiedBalanceSimplePreview();
   if (!wallet) {
     updateUnifiedBalanceSummary(null);
     setUnifiedBalanceStatus('Wallet required', 'Connect your EVM wallet to view your Unified Balance and fund Arc.', 'info');
@@ -8704,6 +8799,10 @@ getBridgeEl('bridgeUseForwarder')?.addEventListener('change', () => {
   resetBridgeSimpleEstimate();
   refreshBridgeRouteMode();
 });
+getBridgeEl('ubSourceChain')?.addEventListener('change', syncUnifiedBalanceSimplePreview);
+getBridgeEl('ubDepositAmount')?.addEventListener('input', syncUnifiedBalanceSimplePreview);
+getBridgeEl('ubSpendAmount')?.addEventListener('input', syncUnifiedBalanceSimplePreview);
+getBridgeEl('ubRecipient')?.addEventListener('input', syncUnifiedBalanceRecipientToggle);
 window.addEventListener('agentmarket:config-loaded', () => {
   populateUnifiedBalanceSourceChains();
   window.arcUnifiedBalanceRefresh();
@@ -8711,6 +8810,7 @@ window.addEventListener('agentmarket:config-loaded', () => {
 installCctpFallbackHandlers();
 resetBridgeSimpleEstimate();
 syncBridgeSimplePreview();
+syncUnifiedBalanceSimplePreview();
 window.arcBridgeRefresh();
 initBridgeSdk();
 populateUnifiedBalanceSourceChains();

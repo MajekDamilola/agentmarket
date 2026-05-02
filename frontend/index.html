@@ -5179,6 +5179,7 @@ function handleBridgeSourceChange() {
   if (label) label.textContent = name;
   resetBridgeSimpleEstimate();
   syncBridgeSimplePreview();
+  refreshConnectedBridgeSourceBalance().catch(() => {});
 }
 
 function refreshBridgeDefaults() {
@@ -5187,7 +5188,7 @@ function refreshBridgeDefaults() {
   if (recipient && currentWallet && !recipient.value) recipient.value = currentWallet;
   const hint = document.getElementById('bridgeWalletHint');
   if (hint) hint.textContent = currentWallet ? shortAddr(currentWallet) : 'Connect your EVM wallet';
-  bridgeSimpleState.sourceBalance = currentWallet ? 'Tap estimate to preview route' : BRIDGE_SIMPLE_DEFAULTS.sourceBalance;
+  bridgeSimpleState.sourceBalance = currentWallet ? 'Checking wallet balance...' : BRIDGE_SIMPLE_DEFAULTS.sourceBalance;
   syncBridgeSimplePreview();
   window.arcBridgeRefresh?.();
 }
@@ -7731,6 +7732,7 @@ const bridgeSimpleState = {
   estimatedFee: BRIDGE_SIMPLE_DEFAULTS.fee,
   estimatedReceive: '',
   estimatedTime: BRIDGE_SIMPLE_DEFAULTS.time,
+  balanceRequestId: 0,
 };
 
 function bridgeSimpleTimeLabel(speed = 'FAST', useForwarder = true) {
@@ -7751,6 +7753,52 @@ function setBridgeSimpleText(id, text) {
 
 function bridgeSimpleInputAmount() {
   return bridgeSimpleAmountDisplay(getBridgeEl('bridgeAmount')?.value || '');
+}
+
+function getBridgePublicProvider(chainId) {
+  const rpcUrl = BRIDGE_CHAIN_PARAMS[chainId]?.rpcUrls?.[0];
+  if (!rpcUrl) throw new Error('No RPC configured for this chain.');
+  return new (requireEthers()).JsonRpcProvider(rpcUrl);
+}
+
+async function getSourceUsdcBalance(chainId, owner) {
+  const sourceMeta = CCTP_CHAIN_META[chainId];
+  if (!sourceMeta?.usdc) throw new Error('Unsupported source chain.');
+  const provider = getBridgePublicProvider(chainId);
+  const usdc = new (requireEthers()).Contract(sourceMeta.usdc, USDC_ERC20_ABI, provider);
+  return await usdc.balanceOf(owner);
+}
+
+async function refreshConnectedBridgeSourceBalance() {
+  const wallet = window.getAgentMarketWallet?.() || currentWallet;
+  const source = getBridgeEl('bridgeSourceChain')?.value;
+  const requestId = ++bridgeSimpleState.balanceRequestId;
+
+  if (!wallet) {
+    bridgeSimpleState.sourceBalance = BRIDGE_SIMPLE_DEFAULTS.sourceBalance;
+    syncBridgeSimplePreview({ preserveEstimate: Boolean(bridgeSimpleState.estimatedReceive) });
+    return;
+  }
+
+  if (!source || !CCTP_CHAIN_META[source]) {
+    bridgeSimpleState.sourceBalance = 'Source chain unavailable';
+    syncBridgeSimplePreview({ preserveEstimate: Boolean(bridgeSimpleState.estimatedReceive) });
+    return;
+  }
+
+  bridgeSimpleState.sourceBalance = 'Checking wallet balance...';
+  syncBridgeSimplePreview({ preserveEstimate: Boolean(bridgeSimpleState.estimatedReceive) });
+
+  try {
+    const balance = await getSourceUsdcBalance(source, wallet);
+    if (requestId !== bridgeSimpleState.balanceRequestId) return;
+    bridgeSimpleState.sourceBalance = `${formatUsdcMinor(balance)} USDC available`;
+  } catch {
+    if (requestId !== bridgeSimpleState.balanceRequestId) return;
+    bridgeSimpleState.sourceBalance = 'Balance unavailable';
+  }
+
+  syncBridgeSimplePreview({ preserveEstimate: Boolean(bridgeSimpleState.estimatedReceive) });
 }
 
 function syncBridgeRecipientToggle() {
@@ -8757,9 +8805,9 @@ window.arcBridgeRefresh = () => {
   const hint = getBridgeEl('bridgeWalletHint');
   if (hint) hint.textContent = wallet ? `${wallet.slice(0, 6)}...${wallet.slice(-4)}` : 'Connect your EVM wallet';
   if (!wallet) bridgeSimpleState.sourceBalance = BRIDGE_SIMPLE_DEFAULTS.sourceBalance;
-  else if (bridgeSimpleState.sourceBalance === BRIDGE_SIMPLE_DEFAULTS.sourceBalance) bridgeSimpleState.sourceBalance = 'Tap estimate to preview route';
   refreshBridgeRouteMode();
   syncBridgeSimplePreview({ preserveEstimate: Boolean(bridgeSimpleState.estimatedReceive) });
+  refreshConnectedBridgeSourceBalance().catch(() => {});
 };
 
 window.switchBridgeToArc = async () => {

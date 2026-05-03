@@ -2314,8 +2314,8 @@
     }
 
     .pulse-identity-card.locked .pulse-identity-data {
-      filter: blur(8px);
-      opacity: 0.56;
+      filter: none;
+      opacity: 1;
     }
 
     .pulse-identity-stat {
@@ -2405,6 +2405,60 @@
       display: flex;
       flex-wrap: wrap;
       gap: 12px;
+    }
+
+    .pulse-activity-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .pulse-activity-row {
+      background: rgba(255,255,255,0.025);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 16px;
+      display: grid;
+      gap: 8px;
+      padding: 12px;
+    }
+
+    .pulse-activity-row-top {
+      align-items: center;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: space-between;
+    }
+
+    .pulse-activity-row-title {
+      font-weight: 600;
+      line-height: 1.4;
+    }
+
+    .pulse-activity-row-meta {
+      color: rgba(232,232,240,0.56);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .pulse-activity-row-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .pulse-activity-pill {
+      align-items: center;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 999px;
+      color: rgba(232,232,240,0.78);
+      display: inline-flex;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      padding: 6px 9px;
+      text-transform: uppercase;
+      width: fit-content;
     }
 
     .pulse-kicker {
@@ -3358,6 +3412,7 @@
     html[data-theme="light"] .pulse-identity-card,
     html[data-theme="light"] .pulse-identity-stat,
     html[data-theme="light"] .pulse-identity-unlock,
+    html[data-theme="light"] .pulse-activity-row,
     html[data-theme="light"] .pulse-feed-compose,
     html[data-theme="light"] .pulse-feed-card,
     html[data-theme="light"] .pulse-checkin-stat,
@@ -3473,8 +3528,10 @@
     html[data-theme="light"] .pulse-identity-copy,
     html[data-theme="light"] .pulse-identity-rank span,
     html[data-theme="light"] .pulse-status-chip,
+    html[data-theme="light"] .pulse-activity-pill,
     html[data-theme="light"] .pulse-identity-stat-label,
     html[data-theme="light"] .pulse-identity-stat-sub,
+    html[data-theme="light"] .pulse-activity-row-meta,
     html[data-theme="light"] .pulse-metric-label,
     html[data-theme="light"] .pulse-metric-sub,
     html[data-theme="light"] .pulse-summary-label,
@@ -3736,6 +3793,11 @@
       border-color: rgba(19,32,51,0.08);
     }
 
+    html[data-theme="light"] .pulse-activity-pill {
+      background: rgba(255,255,255,0.76);
+      border-color: rgba(19,32,51,0.08);
+    }
+
     html[data-theme="light"] .pulse-status-chip.active {
       background: rgba(63,194,138,0.08);
       border-color: rgba(63,194,138,0.18);
@@ -3766,6 +3828,7 @@
     html[data-theme="light"] .pulse-summary-card,
     html[data-theme="light"] .pulse-identity-stat,
     html[data-theme="light"] .pulse-identity-unlock,
+    html[data-theme="light"] .pulse-activity-row,
     html[data-theme="light"] .pulse-feed-compose,
     html[data-theme="light"] .pulse-feed-card,
     html[data-theme="light"] .pulse-checkin-stat,
@@ -3939,7 +4002,8 @@
       .pulse-main-panel .pulse-metrics,
       .pulse-ranking-grid,
       .pulse-summary-grid,
-      .pulse-identity-data { grid-template-columns: 1fr; }
+      .pulse-identity-data,
+      .pulse-activity-list { grid-template-columns: 1fr; }
       .pulse-summary-grid-wide,
       .pulse-next-panel .pulse-summary-grid,
       .pulse-next-panel .pulse-note-list { grid-template-columns: 1fr; }
@@ -6102,6 +6166,195 @@ function buildPulseArcIdNftMetadata(payload = {}) {
   return `data:application/json;charset=UTF-8,${encodeURIComponent(JSON.stringify(metadata))}`;
 }
 
+function buildPulseArcActivitySummaryStats(activity = {}, hasWallet = false) {
+  const summary = activity?.summary || {};
+  if (!hasWallet) {
+    return [
+      { label: 'Signed txs', value: '0', sub: 'Connect a wallet to load Arc activity.' },
+      { label: 'Contracts deployed', value: '0', sub: 'See what this wallet has launched on Arc.' },
+      { label: 'Active days', value: '0', sub: 'Wallet activity streak across Arc testnet.' },
+      { label: 'Gas paid', value: '$0.00', sub: 'USDC fees spent on the network.' },
+    ];
+  }
+
+  return [
+    {
+      label: 'Signed txs',
+      value: formatCompactNumber(summary.totalSentTransactions || 0),
+      sub: `${formatCompactNumber(summary.totalWalletTouches || 0)} wallet touches seen on Arcscan`,
+    },
+    {
+      label: 'Contracts deployed',
+      value: formatCompactNumber(summary.contractsDeployed || 0),
+      sub: `${formatCompactNumber(summary.uniqueContractsInteracted || 0)} targets touched`,
+    },
+    {
+      label: 'Active days',
+      value: formatCompactNumber(summary.activeDays || 0),
+      sub: summary.firstActivityAt ? `Since ${formatPulseTimestamp(summary.firstActivityAt)}` : 'No signed Arc activity yet',
+    },
+    {
+      label: 'Gas paid',
+      value: formatPulseUsdc(summary.totalFeesPaidUsdc || 0),
+      sub: `Balance ${formatPulseUsdc(summary.currentBalanceUsdc || 0)}`,
+    },
+  ];
+}
+
+function buildPulseArcActivityPanel(activity = {}, {
+  hasWallet = false,
+  paidUnlocked = false,
+  unlockConfigured = false,
+  priceLabel = '$2.50',
+} = {}) {
+  const summary = activity?.summary || {};
+  const details = activity?.details || {};
+  const summaryStats = buildPulseArcActivitySummaryStats(activity, hasWallet);
+  const updatedLabel = activity?.updatedAt ? formatPulseTimestamp(activity.updatedAt) : '';
+  const sourceLabel = activity?.sourceLabel || 'Arcscan explorer API';
+
+  const summaryPanel = `
+    <div class="pulse-identity-unlock">
+      <div class="pulse-identity-unlock-row">
+        <div>
+          <div class="pulse-mini-title">Arc activity snapshot</div>
+          <div class="pulse-note">
+            Signed wallet actions, deployments, and live balance pulled from ${escapeHtml(sourceLabel)}.
+            ${updatedLabel ? ` Updated ${escapeHtml(updatedLabel)}.` : ''}
+            ${activity?.stale ? ' Showing the last good snapshot while the refresh catches up.' : ''}
+          </div>
+        </div>
+        <span class="pulse-activity-pill">${escapeHtml(hasWallet ? 'Wallet live' : 'Wallet preview')}</span>
+      </div>
+      <div class="pulse-identity-data">
+        ${summaryStats.map(item => `
+          <div class="pulse-identity-stat">
+            <div class="pulse-identity-stat-label">${escapeHtml(item.label)}</div>
+            <div class="pulse-identity-stat-value">${escapeHtml(String(item.value))}</div>
+            <div class="pulse-identity-stat-sub">${escapeHtml(item.sub)}</div>
+          </div>
+        `).join('')}
+      </div>
+      ${activity?.error ? `<div class="pulse-note">${escapeHtml(activity.error)}</div>` : ''}
+    </div>
+  `;
+
+  if (!hasWallet) return summaryPanel;
+
+  if (!paidUnlocked) {
+    return `
+      ${summaryPanel}
+      <div class="pulse-identity-unlock">
+        <div class="pulse-identity-unlock-row">
+          <div>
+            <div class="pulse-mini-title">Arc details locked</div>
+            <div class="pulse-note">
+              ${unlockConfigured
+                ? `Pay ${escapeHtml(priceLabel)} on Arc to reveal recent transactions, top destinations, deployment history, success rate, and the deeper wallet activity layer.`
+                : 'The paid Arc detail unlock is being configured on the server right now.'}
+            </div>
+          </div>
+          <span class="pulse-activity-pill">Details locked</span>
+        </div>
+      </div>
+    `;
+  }
+
+  const detailStats = [
+    {
+      label: 'Successful txs',
+      value: formatCompactNumber(summary.successfulTransactions || 0),
+      sub: `${formatCompactNumber(summary.failedTransactions || 0)} failed`,
+    },
+    {
+      label: 'Last active',
+      value: summary.lastActivityAt ? pulseAgeLabel(summary.lastActivityAt) : 'No activity',
+      sub: summary.lastActivityAt ? formatPulseTimestamp(summary.lastActivityAt) : 'No signed Arc tx yet',
+    },
+    {
+      label: 'Destinations touched',
+      value: formatCompactNumber(summary.uniqueContractsInteracted || 0),
+      sub: 'Contracts and wallets this address has sent txs to',
+    },
+    {
+      label: 'Explorer scope',
+      value: activity?.truncated ? 'Partial' : 'Full',
+      sub: activity?.truncated ? 'History capped to keep the view fast' : 'Full cached wallet history',
+    },
+  ];
+
+  const recentTransactions = Array.isArray(details?.recentTransactions) ? details.recentTransactions : [];
+  const topContracts = Array.isArray(details?.topContracts) ? details.topContracts : [];
+  const deployments = Array.isArray(details?.deployments) ? details.deployments : [];
+
+  return `
+    ${summaryPanel}
+    <div class="pulse-identity-unlock">
+      <div class="pulse-identity-unlock-row">
+        <div>
+          <div class="pulse-mini-title">Full Arc wallet detail</div>
+          <div class="pulse-note">This paid view opens the wallet-level Arc trail behind the summary stats.</div>
+        </div>
+        <span class="pulse-activity-pill">Paid unlock live</span>
+      </div>
+      <div class="pulse-identity-data">
+        ${detailStats.map(item => `
+          <div class="pulse-identity-stat">
+            <div class="pulse-identity-stat-label">${escapeHtml(item.label)}</div>
+            <div class="pulse-identity-stat-value">${escapeHtml(String(item.value))}</div>
+            <div class="pulse-identity-stat-sub">${escapeHtml(item.sub)}</div>
+          </div>
+        `).join('')}
+      </div>
+      <div>
+        <div class="pulse-mini-title" style="margin-bottom:10px">Recent Arc actions</div>
+        <div class="pulse-activity-list">
+          ${recentTransactions.length
+            ? recentTransactions.map(item => `
+                <div class="pulse-activity-row">
+                  <div class="pulse-activity-row-top">
+                    <div>
+                      <div class="pulse-activity-row-title">${escapeHtml(item.methodLabel || 'Wallet action')}</div>
+                      <div class="pulse-activity-row-meta">${escapeHtml(item.timestamp ? `${pulseAgeLabel(item.timestamp)} / ${formatPulseTimestamp(item.timestamp)}` : 'Unknown time')}</div>
+                    </div>
+                    <span class="pulse-activity-pill">${escapeHtml(item.success ? 'Success' : 'Failed')}</span>
+                  </div>
+                  <div class="pulse-activity-row-meta">
+                    ${escapeHtml(`Fee ${formatPulseUsdc(item.feeUsdc || 0)} / ${item.targetLabel || 'Unknown target'}`)}
+                    ${item.createdContractLabel ? ` / ${escapeHtml(`Deployed ${item.createdContractLabel}`)}` : ''}
+                  </div>
+                  <div class="pulse-activity-row-links">
+                    ${item.txUrl ? `<a class="pulse-inline-link mono" href="${escapeHtml(item.txUrl)}" target="_blank" rel="noreferrer">View tx</a>` : ''}
+                    ${item.targetUrl ? `<a class="pulse-inline-link mono" href="${escapeHtml(item.targetUrl)}" target="_blank" rel="noreferrer">View target</a>` : ''}
+                    ${item.createdContractUrl ? `<a class="pulse-inline-link mono" href="${escapeHtml(item.createdContractUrl)}" target="_blank" rel="noreferrer">View deployment</a>` : ''}
+                  </div>
+                </div>
+              `).join('')
+            : '<div class="pulse-activity-row"><div class="pulse-note">No recent signed Arc activity found for this wallet.</div></div>'}
+        </div>
+      </div>
+      <div class="pulse-identity-data">
+        <div class="pulse-identity-stat">
+          <div class="pulse-identity-stat-label">Top destinations</div>
+          <div class="pulse-identity-stat-sub">
+            ${topContracts.length
+              ? topContracts.map(item => `${item.label} (${formatCompactNumber(item.txCount || 0)})`).join(' / ')
+              : 'No destinations recorded yet.'}
+          </div>
+        </div>
+        <div class="pulse-identity-stat">
+          <div class="pulse-identity-stat-label">Recent deployments</div>
+          <div class="pulse-identity-stat-sub">
+            ${deployments.length
+              ? deployments.map(item => `${item.label} ${item.timestamp ? `(${formatPulseTimestamp(item.timestamp)})` : ''}`).join(' / ')
+              : 'No contract deployments found for this wallet yet.'}
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
 function renderPulseFeedFilters(counts = {}) {
   const mount = document.getElementById('pulseFeedFilters');
   if (!mount) return;
@@ -6269,6 +6522,7 @@ function renderPulseArcId(payload = null) {
   const rankLabel = payload?.rank?.label || (indexedArcId ? 'Indexed live' : 'Tracked beta');
   const walletLabel = payload?.walletLabel || (hasWallet ? shortAddr(currentWallet) : 'Connect wallet');
   const sourceLabel = payload?.sourceLabel || (indexedArcId ? 'Arc RPC event indexer' : 'Tracked contract reads');
+  const arcActivity = payload?.arcActivity && typeof payload.arcActivity === 'object' ? payload.arcActivity : {};
   const paymentTxLink = paidUnlocked && payment.txUrl
     ? `<a class="pulse-inline-link mono" href="${escapeHtml(payment.txUrl)}" target="_blank" rel="noreferrer">View payment tx</a>`
     : '';
@@ -6337,6 +6591,13 @@ function renderPulseArcId(payload = null) {
         : `<span class="pulse-status-chip">Mint after paid unlock</span>`,
   ].join('');
 
+  const activityPanel = buildPulseArcActivityPanel(arcActivity, {
+    hasWallet,
+    paidUnlocked,
+    unlockConfigured,
+    priceLabel,
+  });
+
   const unlockPanel = !hasWallet
     ? `
       <div class="pulse-identity-unlock">
@@ -6345,7 +6606,7 @@ function renderPulseArcId(payload = null) {
             <div class="pulse-mini-title">Connect to preview</div>
             <div class="pulse-note">
               ${unlockConfigured
-                ? `Arc ID turns your ${indexedArcId ? 'indexed wallet activity' : 'tracked marketplace activity'}, Pulse streaks, and community posts into one wallet-facing card. Pay ${escapeHtml(priceLabel)} on Arc when you are ready to unlock it.`
+                ? `Arc ID turns your ${indexedArcId ? 'indexed wallet activity' : 'tracked marketplace activity'}, Pulse streaks, and community posts into one wallet-facing card. Pay ${escapeHtml(priceLabel)} on Arc when you are ready to unlock the deeper Arc wallet detail view too.`
                 : `Arc ID turns your ${indexedArcId ? 'indexed wallet activity' : 'tracked marketplace activity'}, Pulse streaks, and community posts into one wallet-facing card.`}
             </div>
           </div>
@@ -6365,7 +6626,7 @@ function renderPulseArcId(payload = null) {
                 Saved ${escapeHtml(formatPulseTimestamp(payload?.unlockedAt || 0))}.
                 ${nftMinted
                   ? ` Your soulbound Arc ID collectible is now attached to this wallet.${nft.metadataUri && String(nft.metadataUri).startsWith('data:') ? ' Metadata is stored directly in the token URI.' : ''}`
-                  : ` This card can now mint the Season 1 collectible for ${escapeHtml(mintPriceLabel)} USDC.`}
+                  : ` This card can now mint the Season 1 collectible for ${escapeHtml(mintPriceLabel)} USDC and reveal the full Arc wallet detail layer.`}
               </div>
             </div>
             ${nftMinted
@@ -6397,7 +6658,7 @@ function renderPulseArcId(payload = null) {
                 <div class="pulse-mini-title">Beta access is already live</div>
                 <div class="pulse-note">
                   You unlocked Arc ID during beta. ${unlockConfigured
-                    ? `Pay ${escapeHtml(priceLabel)} on Arc to attach the permanent onchain receipt to this wallet.`
+                    ? `Pay ${escapeHtml(priceLabel)} on Arc to attach the permanent onchain receipt to this wallet and open the deeper Arc wallet details.`
                     : 'The paid Arc unlock recipient still needs to be configured on the server.'}
                 </div>
               </div>
@@ -6412,7 +6673,7 @@ function renderPulseArcId(payload = null) {
               <div class="pulse-mini-title">Preview ready for ${escapeHtml(walletLabel)}</div>
               <div class="pulse-note">
                 ${unlockConfigured
-                  ? `Send ${escapeHtml(priceLabel)} USDC on Arc to ${escapeHtml(recipientLabel)} and this card will unlock as a verified paid identity surface.`
+                  ? `Send ${escapeHtml(priceLabel)} USDC on Arc to ${escapeHtml(recipientLabel)} and this card will unlock as a verified paid identity surface with full Arc wallet details.`
                   : 'The onchain unlock path is being configured on the server right now.'}
               </div>
             </div>
@@ -6452,6 +6713,7 @@ function renderPulseArcId(payload = null) {
         </div>
       `).join('')}
     </div>
+    ${activityPanel}
     ${unlockPanel}
   `;
 }

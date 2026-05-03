@@ -80,6 +80,9 @@ const USDC_ADDRESS = "0x3600000000000000000000000000000000000000";
 const IDENTITY_REGISTRY = "0x8004A818BFB912233c491871b3d84c89A494BD9e";
 const REPUTATION_REGISTRY = "0x8004B663056A597Dffe9eCcC1965A193B7388713";
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
+const ARC_EXPLORER_URL = "https://testnet.arcscan.app";
+const ARC_EXPLORER_API_URL = `${ARC_EXPLORER_URL}/api`;
+const ARC_EXPLORER_API_V2_URL = `${ARC_EXPLORER_URL}/api/v2`;
 const DAY_MS = 24 * 60 * 60 * 1000;
 const PULSE_RECENT_BLOCK_LIMIT = 6;
 const PULSE_SERIES_DAYS = 14;
@@ -109,6 +112,13 @@ const PULSE_INDEXER_SNAPSHOT_PATH = resolvePulseIndexerSnapshotPath(
 const PULSE_INDEXER_SNAPSHOT_URL = String(process.env.PULSE_INDEXER_SNAPSHOT_URL || "").trim();
 const PULSE_INDEXER_CACHE_MS = Math.max(0, parseEnvInt(process.env.PULSE_INDEXER_CACHE_MS, 30_000));
 const PULSE_INDEXER_JOB_BOARD_START_BLOCK = Math.max(0, parseEnvInt(process.env.PULSE_INDEXER_JOB_BOARD_START_BLOCK, 0));
+const ARC_WALLET_ACTIVITY_CACHE_MS = Math.max(0, parseEnvInt(process.env.ARC_WALLET_ACTIVITY_CACHE_MS, 10 * 60 * 1000));
+const ARC_WALLET_ACTIVITY_TX_PAGE_SIZE = Math.min(1000, Math.max(100, parseEnvInt(process.env.ARC_WALLET_ACTIVITY_TX_PAGE_SIZE, 500)));
+const ARC_WALLET_ACTIVITY_MAX_PAGES = Math.max(1, parseEnvInt(process.env.ARC_WALLET_ACTIVITY_MAX_PAGES, 30));
+const ARC_WALLET_ACTIVITY_RECENT_LIMIT = Math.max(3, parseEnvInt(process.env.ARC_WALLET_ACTIVITY_RECENT_LIMIT, 8));
+const ARC_WALLET_ACTIVITY_TOP_CONTRACT_LIMIT = Math.max(3, parseEnvInt(process.env.ARC_WALLET_ACTIVITY_TOP_CONTRACT_LIMIT, 6));
+const ARC_WALLET_ACTIVITY_DEPLOYMENT_LIMIT = Math.max(3, parseEnvInt(process.env.ARC_WALLET_ACTIVITY_DEPLOYMENT_LIMIT, 6));
+const ARC_EXPLORER_FETCH_TIMEOUT_MS = Math.max(3_000, parseEnvInt(process.env.ARC_EXPLORER_FETCH_TIMEOUT_MS, 12_000));
 
 // ─── ABIs ─────────────────────────────────────────────────────────
 const JOB_BOARD_ABI = [
@@ -1713,6 +1723,12 @@ async function ensurePulseDatabase() {
           updated_at INTEGER NOT NULL
         );
 
+        CREATE TABLE IF NOT EXISTS pulse_arc_wallet_activity_cache (
+          wallet TEXT PRIMARY KEY,
+          payload_json TEXT NOT NULL DEFAULT '{}',
+          updated_at INTEGER NOT NULL
+        );
+
         CREATE TABLE IF NOT EXISTS pulse_indexed_contract_events (
           contract_address TEXT NOT NULL,
           event_key TEXT NOT NULL,
@@ -1740,6 +1756,7 @@ async function ensurePulseDatabase() {
         CREATE UNIQUE INDEX IF NOT EXISTS idx_pulse_arc_id_unlocks_tx_hash ON pulse_arc_id_unlocks(tx_hash) WHERE tx_hash <> '';
         CREATE INDEX IF NOT EXISTS idx_pulse_arc_id_nft_mints_updated_at ON pulse_arc_id_nft_mints(updated_at DESC);
         CREATE UNIQUE INDEX IF NOT EXISTS idx_pulse_arc_id_nft_mints_tx_hash ON pulse_arc_id_nft_mints(tx_hash) WHERE tx_hash <> '';
+        CREATE INDEX IF NOT EXISTS idx_pulse_arc_wallet_activity_cache_updated_at ON pulse_arc_wallet_activity_cache(updated_at DESC);
         CREATE INDEX IF NOT EXISTS idx_pulse_indexed_contract_events_block ON pulse_indexed_contract_events(block_number DESC);
         CREATE INDEX IF NOT EXISTS idx_pulse_indexed_contract_events_event_key ON pulse_indexed_contract_events(event_key, block_timestamp DESC);
         CREATE INDEX IF NOT EXISTS idx_pulse_indexed_contract_events_wallet_primary ON pulse_indexed_contract_events(wallet_primary);
@@ -2613,6 +2630,373 @@ function savePulseArcIdNftMint(db, wallet, verifiedMint = {}) {
   return persistMint(wallet, verifiedMint);
 }
 
+function createArcWalletActivityPayload(wallet, overrides = {}) {
+  const canonicalWallet = String(wallet || "").toLowerCase();
+  return {
+    wallet: canonicalWallet,
+    sourceLabel: "Arcscan explorer API",
+    updatedAt: 0,
+    stale: false,
+    truncated: false,
+    error: "",
+    summary: {
+      totalSentTransactions: 0,
+      totalWalletTouches: 0,
+      contractsDeployed: 0,
+      uniqueContractsInteracted: 0,
+      activeDays: 0,
+      successfulTransactions: 0,
+      failedTransactions: 0,
+      totalFeesPaidUsdc: "0.00",
+      currentBalanceUsdc: "0.00",
+      firstActivityAt: 0,
+      lastActivityAt: 0,
+    },
+    details: {
+      recentTransactions: [],
+      topContracts: [],
+      deployments: [],
+    },
+    ...overrides,
+  };
+}
+
+function getPulseArcWalletActivityCacheRecord(db, wallet) {
+  return db.prepare("SELECT * FROM pulse_arc_wallet_activity_cache WHERE wallet = ?").get(String(wallet || "").toLowerCase()) || null;
+}
+
+function getPulseArcWalletActivityCache(db, wallet) {
+  const record = getPulseArcWalletActivityCacheRecord(db, wallet);
+  if (!record?.payload_json) return null;
+
+  try {
+    const payload = JSON.parse(String(record.payload_json || "{}"));
+    return createArcWalletActivityPayload(wallet, {
+      ...payload,
+      updatedAt: Number(record.updated_at || payload?.updatedAt || 0),
+    });
+  } catch {
+    return null;
+  }
+}
+
+function savePulseArcWalletActivityCache(db, wallet, payload = {}) {
+  const canonicalWallet = String(wallet || "").toLowerCase();
+  const updatedAt = Number(payload.updatedAt || Date.now());
+  const serialized = JSON.stringify({
+    ...payload,
+    wallet: canonicalWallet,
+    updatedAt,
+  });
+
+  db.prepare(`
+    INSERT INTO pulse_arc_wallet_activity_cache (wallet, payload_json, updated_at)
+    VALUES (?, ?, ?)
+    ON CONFLICT(wallet) DO UPDATE SET
+      payload_json = excluded.payload_json,
+      updated_at = excluded.updated_at
+  `).run(canonicalWallet, serialized, updatedAt);
+
+  return createArcWalletActivityPayload(canonicalWallet, {
+    ...payload,
+    updatedAt,
+  });
+}
+
+function normalizeArcExplorerTimestamp(value) {
+  const seconds = Number.parseInt(String(value ?? "").trim(), 10);
+  return Number.isFinite(seconds) && seconds > 0 ? seconds * 1000 : 0;
+}
+
+function formatArcExplorerUsdcBaseUnits(value, decimals = 18) {
+  try {
+    return formatUsdc(formatUnits(BigInt(value || 0n), decimals));
+  } catch {
+    return "0.00";
+  }
+}
+
+function isArcExplorerTransactionSuccessful(row = {}) {
+  const status = String(row.txreceipt_status || "").trim();
+  const isError = String(row.isError || "").trim();
+  if (status) return status === "1";
+  return isError !== "1";
+}
+
+const KNOWN_ARC_METHOD_LABELS = new Map([
+  ["0x095ea7b3", "Approve"],
+  ["0xa9059cbb", "Transfer"],
+  ["0x23b872dd", "Transfer From"],
+]);
+
+function humanizeArcMethodLabel(value = "") {
+  const raw = String(value || "").trim().replace(/\(.*/, "").replace(/[_-]+/g, " ");
+  if (!raw) return "";
+  return raw
+    .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+    .split(/\s+/)
+    .filter(Boolean)
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
+
+function getArcWalletMethodLabel(row = {}, recentMethodMap = null) {
+  const recent = recentMethodMap?.get(String(row.hash || "").toLowerCase());
+  if (recent) return recent;
+
+  const known = KNOWN_ARC_METHOD_LABELS.get(String(row.methodId || "").toLowerCase());
+  if (known) return known;
+
+  const humanized = humanizeArcMethodLabel(row.functionName || "");
+  if (humanized) return humanized;
+
+  const methodId = String(row.methodId || "").trim();
+  return methodId ? `Method ${methodId.slice(0, 10)}` : "Wallet action";
+}
+
+async function fetchArcExplorerJson(url, fallbackMessage) {
+  let lastError = null;
+
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    try {
+      const response = await fetch(url, {
+        headers: { Accept: "application/json" },
+        signal: AbortSignal.timeout(ARC_EXPLORER_FETCH_TIMEOUT_MS),
+      });
+      if (!response.ok) {
+        throw new Error(`${fallbackMessage} (${response.status})`);
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (err) {
+      lastError = err;
+      if (attempt === 0) {
+        await new Promise(resolve => setTimeout(resolve, 200));
+      }
+    }
+  }
+
+  throw new Error(lastError?.message || fallbackMessage);
+}
+
+async function fetchArcExplorerRecentTransactions(wallet) {
+  const url = `${ARC_EXPLORER_API_V2_URL}/addresses/${encodeURIComponent(wallet)}/transactions`;
+  const data = await fetchArcExplorerJson(url, "Could not load recent Arc wallet activity");
+  return Array.isArray(data?.items) ? data.items : [];
+}
+
+async function fetchArcExplorerTransactionHistory(wallet) {
+  const rows = [];
+  let truncated = false;
+
+  for (let page = 1; page <= ARC_WALLET_ACTIVITY_MAX_PAGES; page += 1) {
+    const url = new URL(ARC_EXPLORER_API_URL);
+    url.searchParams.set("module", "account");
+    url.searchParams.set("action", "txlist");
+    url.searchParams.set("address", wallet);
+    url.searchParams.set("page", String(page));
+    url.searchParams.set("offset", String(ARC_WALLET_ACTIVITY_TX_PAGE_SIZE));
+    url.searchParams.set("sort", "desc");
+
+    const data = await fetchArcExplorerJson(url, "Could not load Arc wallet transactions");
+    if (Array.isArray(data?.result)) {
+      rows.push(...data.result);
+      if (data.result.length < ARC_WALLET_ACTIVITY_TX_PAGE_SIZE) break;
+      if (page === ARC_WALLET_ACTIVITY_MAX_PAGES) truncated = true;
+      continue;
+    }
+
+    const resultText = String(data?.result || "").trim();
+    if (!resultText || /no transactions found/i.test(resultText)) break;
+    throw new Error(resultText || data?.message || "Could not load Arc wallet transactions");
+  }
+
+  return { rows, truncated };
+}
+
+function buildArcWalletActivity(wallet, txRows = [], recentRows = [], balanceBaseUnits = 0n, truncated = false, sentTransactionCount = 0) {
+  const canonicalWallet = String(wallet || "").toLowerCase();
+  const normalizedRows = Array.isArray(txRows) ? txRows : [];
+  const recentMethodMap = new Map(
+    (Array.isArray(recentRows) ? recentRows : []).map(item => [
+      String(item?.hash || "").toLowerCase(),
+      humanizeArcMethodLabel(item?.method || ""),
+    ]),
+  );
+
+  const sentRows = normalizedRows.filter(row => sameAddress(row.from, canonicalWallet));
+  const activeDays = new Set();
+  const contractUsage = new Map();
+  let firstActivityAt = 0;
+  let lastActivityAt = 0;
+  let successfulTransactions = 0;
+  let failedTransactions = 0;
+  let totalFeesBaseUnits = 0n;
+
+  for (const row of sentRows) {
+    const timestamp = normalizeArcExplorerTimestamp(row.timeStamp);
+    if (timestamp > 0) {
+      activeDays.add(utcDayKey(timestamp));
+      if (!firstActivityAt || timestamp < firstActivityAt) firstActivityAt = timestamp;
+      if (!lastActivityAt || timestamp > lastActivityAt) lastActivityAt = timestamp;
+    }
+
+    if (isArcExplorerTransactionSuccessful(row)) successfulTransactions += 1;
+    else failedTransactions += 1;
+
+    try {
+      totalFeesBaseUnits += BigInt(row.gasPrice || 0) * BigInt(row.gasUsed || 0);
+    } catch {}
+
+    const target = String(row.to || "").toLowerCase();
+    if (isHexAddress(target) && !sameAddress(target, ZERO_ADDRESS)) {
+      const current = contractUsage.get(target) || { address: target, transactions: 0, lastActivityAt: 0 };
+      current.transactions += 1;
+      if (timestamp > current.lastActivityAt) current.lastActivityAt = timestamp;
+      contractUsage.set(target, current);
+    }
+  }
+
+  const deployments = sentRows
+    .filter(row => isHexAddress(row.contractAddress))
+    .map(row => ({
+      address: String(row.contractAddress || "").toLowerCase(),
+      label: shortWallet(String(row.contractAddress || "").toLowerCase()),
+      txHash: String(row.hash || ""),
+      txUrl: row.hash ? `${ARC_EXPLORER_URL}/tx/${row.hash}` : "",
+      addressUrl: row.contractAddress ? `${ARC_EXPLORER_URL}/address/${row.contractAddress}` : "",
+      timestamp: normalizeArcExplorerTimestamp(row.timeStamp),
+    }))
+    .slice(0, ARC_WALLET_ACTIVITY_DEPLOYMENT_LIMIT);
+
+  const topContracts = [...contractUsage.values()]
+    .sort((a, b) => b.transactions - a.transactions || b.lastActivityAt - a.lastActivityAt || a.address.localeCompare(b.address))
+    .slice(0, ARC_WALLET_ACTIVITY_TOP_CONTRACT_LIMIT)
+    .map(item => ({
+      address: item.address,
+      label: shortWallet(item.address),
+      txCount: item.transactions,
+      lastActivityAt: item.lastActivityAt,
+      addressUrl: `${ARC_EXPLORER_URL}/address/${item.address}`,
+    }));
+
+  const recentTransactions = sentRows.slice(0, ARC_WALLET_ACTIVITY_RECENT_LIMIT).map(row => {
+    const createdContract = isHexAddress(row.contractAddress) ? String(row.contractAddress).toLowerCase() : "";
+    const targetAddress = isHexAddress(row.to) ? String(row.to).toLowerCase() : "";
+    let feeUsdc = "0.00";
+    try {
+      feeUsdc = formatArcExplorerUsdcBaseUnits(BigInt(row.gasPrice || 0) * BigInt(row.gasUsed || 0));
+    } catch {}
+
+    return {
+      hash: String(row.hash || ""),
+      txUrl: row.hash ? `${ARC_EXPLORER_URL}/tx/${row.hash}` : "",
+      timestamp: normalizeArcExplorerTimestamp(row.timeStamp),
+      methodLabel: getArcWalletMethodLabel(row, recentMethodMap),
+      success: isArcExplorerTransactionSuccessful(row),
+      feeUsdc,
+      targetAddress,
+      targetLabel: createdContract ? "Contract deployment" : (targetAddress ? shortWallet(targetAddress) : "Unknown target"),
+      targetUrl: targetAddress ? `${ARC_EXPLORER_URL}/address/${targetAddress}` : "",
+      createdContract,
+      createdContractLabel: createdContract ? shortWallet(createdContract) : "",
+      createdContractUrl: createdContract ? `${ARC_EXPLORER_URL}/address/${createdContract}` : "",
+    };
+  });
+
+  return createArcWalletActivityPayload(canonicalWallet, {
+    updatedAt: Date.now(),
+    truncated,
+    summary: {
+      totalSentTransactions: Math.max(sentRows.length, Number(sentTransactionCount || 0)),
+      totalWalletTouches: normalizedRows.length,
+      contractsDeployed: deployments.length
+        + Math.max(0, sentRows.filter(row => isHexAddress(row.contractAddress)).length - deployments.length),
+      uniqueContractsInteracted: contractUsage.size,
+      activeDays: activeDays.size,
+      successfulTransactions,
+      failedTransactions,
+      totalFeesPaidUsdc: formatArcExplorerUsdcBaseUnits(totalFeesBaseUnits),
+      currentBalanceUsdc: formatArcExplorerUsdcBaseUnits(balanceBaseUnits),
+      firstActivityAt,
+      lastActivityAt,
+    },
+    details: {
+      recentTransactions,
+      topContracts,
+      deployments,
+    },
+  });
+}
+
+async function fetchFreshArcWalletActivity(db, wallet) {
+  const canonicalWallet = String(wallet || "").toLowerCase();
+  const [history, recentRows, balanceBaseUnits, sentTransactionCount] = await Promise.all([
+    fetchArcExplorerTransactionHistory(canonicalWallet),
+    fetchArcExplorerRecentTransactions(canonicalWallet).catch(() => []),
+    publicClient.getBalance({ address: canonicalWallet }),
+    publicClient.getTransactionCount({ address: canonicalWallet }),
+  ]);
+
+  const payload = buildArcWalletActivity(
+    canonicalWallet,
+    history.rows,
+    recentRows,
+    balanceBaseUnits,
+    history.truncated,
+    Number(sentTransactionCount || 0),
+  );
+
+  return savePulseArcWalletActivityCache(db, canonicalWallet, payload);
+}
+
+async function getArcWalletActivity(db, wallet) {
+  const canonicalWallet = String(wallet || "").toLowerCase();
+  const cached = getPulseArcWalletActivityCache(db, canonicalWallet);
+  const now = Date.now();
+
+  if (cached && ARC_WALLET_ACTIVITY_CACHE_MS > 0 && (now - Number(cached.updatedAt || 0)) < ARC_WALLET_ACTIVITY_CACHE_MS) {
+    return cached;
+  }
+
+  try {
+    return await fetchFreshArcWalletActivity(db, canonicalWallet);
+  } catch (err) {
+    if (cached) {
+      return createArcWalletActivityPayload(canonicalWallet, {
+        ...cached,
+        stale: true,
+        error: err.message || "Could not refresh Arc wallet activity",
+      });
+    }
+
+    let currentBalanceUsdc = "0.00";
+    try {
+      const balance = await publicClient.getBalance({ address: canonicalWallet });
+      currentBalanceUsdc = formatArcExplorerUsdcBaseUnits(balance);
+    } catch {}
+
+    return createArcWalletActivityPayload(canonicalWallet, {
+      stale: true,
+      error: err.message || "Could not load Arc wallet activity",
+      summary: {
+        totalSentTransactions: 0,
+        totalWalletTouches: 0,
+        contractsDeployed: 0,
+        uniqueContractsInteracted: 0,
+        activeDays: 0,
+        successfulTransactions: 0,
+        failedTransactions: 0,
+        totalFeesPaidUsdc: "0.00",
+        currentBalanceUsdc,
+        firstActivityAt: 0,
+        lastActivityAt: 0,
+      },
+    });
+  }
+}
+
 async function buildPulseArcIdProfile(db, wallet, jobs = [], campaigns = []) {
   const canonicalWallet = String(wallet || "").toLowerCase();
   const walletAnalytics = buildPulseWalletAnalytics(db, jobs, campaigns);
@@ -2627,6 +3011,8 @@ async function buildPulseArcIdProfile(db, wallet, jobs = [], campaigns = []) {
   const nftMintRecord = getPulseArcIdNftMintRecord(db, canonicalWallet);
   const onchainNftState = await getArcIdNftOnchainState(canonicalWallet);
   const unlockMode = unlockRecord?.tx_hash ? "paid-usdc" : (unlockRecord ? "beta-free" : "locked");
+  const arcWalletActivity = await getArcWalletActivity(db, canonicalWallet);
+  const activityDetailsUnlocked = unlockMode === "paid-usdc";
   const indexedArcId = Boolean(walletAnalytics.usedIndexedContractRows);
   const arcIdScope = indexedArcId ? "indexed-live" : "tracked-beta";
   const arcIdSourceLabel = walletAnalytics.sourceLabel || (indexedArcId ? "Arc RPC event indexer" : "Tracked contract reads");
@@ -2672,7 +3058,7 @@ async function buildPulseArcIdProfile(db, wallet, jobs = [], campaigns = []) {
     payment: {
       ...unlockConfig,
       txHash: unlockRecord?.tx_hash || "",
-      txUrl: unlockRecord?.tx_hash ? `https://testnet.arcscan.app/tx/${unlockRecord.tx_hash}` : "",
+      txUrl: unlockRecord?.tx_hash ? `${ARC_EXPLORER_URL}/tx/${unlockRecord.tx_hash}` : "",
       paidAmountUsdc: unlockRecord?.payment_amount_usdc || "",
       recipient: unlockRecord?.recipient || unlockConfig.recipient,
       recipientLabel: (unlockRecord?.recipient || unlockConfig.recipient) ? shortWallet(unlockRecord?.recipient || unlockConfig.recipient) : unlockConfig.recipientLabel,
@@ -2686,13 +3072,18 @@ async function buildPulseArcIdProfile(db, wallet, jobs = [], campaigns = []) {
       tokenId: nftTokenId,
       metadataUri: nftMetadataUri,
       txHash: nftTxHash,
-      txUrl: nftTxHash ? `https://testnet.arcscan.app/tx/${nftTxHash}` : "",
+      txUrl: nftTxHash ? `${ARC_EXPLORER_URL}/tx/${nftTxHash}` : "",
       mintedAt: nftMintedAt,
-      contractUrl: nftConfig.contractAddress ? `https://testnet.arcscan.app/address/${nftConfig.contractAddress}` : "",
+      contractUrl: nftConfig.contractAddress ? `${ARC_EXPLORER_URL}/address/${nftConfig.contractAddress}` : "",
       error: onchainNftState?.error || "",
     },
-    identityRegistryUrl: `https://testnet.arcscan.app/address/${IDENTITY_REGISTRY}`,
-    reputationRegistryUrl: `https://testnet.arcscan.app/address/${REPUTATION_REGISTRY}`,
+    arcActivity: {
+      ...arcWalletActivity,
+      detailsUnlocked: activityDetailsUnlocked,
+      details: activityDetailsUnlocked ? arcWalletActivity.details : null,
+    },
+    identityRegistryUrl: `${ARC_EXPLORER_URL}/address/${IDENTITY_REGISTRY}`,
+    reputationRegistryUrl: `${ARC_EXPLORER_URL}/address/${REPUTATION_REGISTRY}`,
     badge,
     rank: {
       position: rankPosition,
@@ -2715,7 +3106,7 @@ async function buildPulseArcIdProfile(db, wallet, jobs = [], campaigns = []) {
         ? `Arc ID now ranks this wallet from indexed AgentMarket activity through ${arcIdSourceLabel}.`
         : "Arc ID beta is based on tracked AgentMarket and ArcPulse activity right now.",
       unlockConfig.enabled
-        ? `A ${ARC_ID_UNLOCK_PRICE_USDC} USDC transfer on Arc now unlocks and verifies this card.`
+        ? `A ${ARC_ID_UNLOCK_PRICE_USDC} USDC transfer on Arc now unlocks and verifies this card, plus the deeper Arc wallet activity details.`
         : "Configure an Arc ID unlock recipient on the server to turn the paid unlock live.",
       nftConfig.enabled
         ? `Season 1 Arc ID NFT minting is live at ${ARC_ID_NFT_MINT_PRICE_USDC} USDC after a paid unlock.`
@@ -2723,6 +3114,9 @@ async function buildPulseArcIdProfile(db, wallet, jobs = [], campaigns = []) {
       indexedArcId
         ? "Wallet ranking now blends indexed jobs, claims, completions, settlement volume, Pulse streaks, and community activity."
         : "Arc ID still uses tracked AgentMarket and Pulse activity until indexed wallet-level stats are attached.",
+      arcWalletActivity.error
+        ? `Arc wallet activity is currently serving a limited view: ${arcWalletActivity.error}`
+        : `Arc wallet activity summary is powered by ${arcWalletActivity.sourceLabel}.`,
     ],
   };
 }

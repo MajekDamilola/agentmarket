@@ -2188,15 +2188,15 @@
 
     .pulse-stack {
       display: grid;
-      gap: 18px;
+      gap: 22px;
     }
 
     .pulse-panel {
       background: rgba(17,17,24,0.92);
       border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 24px;
+      border-radius: 28px;
       box-shadow: 0 18px 48px rgba(0,0,0,0.22);
-      padding: 24px;
+      padding: 28px;
       position: relative;
       overflow: hidden;
     }
@@ -2222,9 +2222,9 @@
 
     .pulse-hero-layout {
       display: grid;
-      gap: 18px;
-      grid-template-columns: minmax(0, 1.55fr) minmax(360px, 0.95fr);
-      margin-bottom: 22px;
+      gap: 22px;
+      grid-template-columns: minmax(0, 1.8fr) minmax(420px, 1fr);
+      margin-bottom: 26px;
       position: relative;
       z-index: 1;
     }
@@ -2418,15 +2418,61 @@
 
     .pulse-copy {
       color: rgba(232,232,240,0.62);
-      font-size: 14px;
-      line-height: 1.6;
-      max-width: 720px;
+      font-size: 15px;
+      line-height: 1.68;
+      max-width: 880px;
     }
 
     .pulse-note {
       color: rgba(232,232,240,0.46);
-      font-size: 12px;
+      font-size: 13px;
       line-height: 1.55;
+    }
+
+    .pulse-source-strip {
+      align-items: center;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .pulse-source-pill {
+      align-items: center;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 999px;
+      color: rgba(232,232,240,0.82);
+      display: inline-flex;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      min-height: 32px;
+      padding: 0 12px;
+      text-transform: uppercase;
+    }
+
+    .pulse-source-pill.live {
+      background: rgba(122,255,200,0.14);
+      border-color: rgba(122,255,200,0.22);
+      color: #c9ffeb;
+    }
+
+    .pulse-source-pill.warning {
+      background: rgba(255,196,87,0.14);
+      border-color: rgba(255,196,87,0.24);
+      color: #ffd98d;
+    }
+
+    .pulse-source-pill.idle {
+      background: rgba(255,255,255,0.03);
+      border-color: rgba(255,255,255,0.08);
+      color: rgba(232,232,240,0.72);
+    }
+
+    .pulse-source-meta {
+      color: rgba(232,232,240,0.58);
+      font-size: 13px;
+      line-height: 1.5;
     }
 
     .pulse-note-list {
@@ -2447,8 +2493,8 @@
 
     .pulse-metrics {
       display: grid;
-      gap: 12px;
-      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 14px;
+      grid-template-columns: repeat(auto-fit, minmax(228px, 1fr));
       position: relative;
       z-index: 1;
     }
@@ -2457,10 +2503,10 @@
       background: rgba(255,255,255,0.025);
       border: 1px solid rgba(255,255,255,0.08);
       border-radius: 18px;
-      min-height: 112px;
+      min-height: 126px;
       min-width: 0;
       overflow: hidden;
-      padding: 18px;
+      padding: 20px;
     }
 
     .pulse-metric-value {
@@ -2485,14 +2531,14 @@
 
     .pulse-metric-sub {
       color: rgba(232,232,240,0.54);
-      font-size: 12px;
+      font-size: 13px;
       line-height: 1.5;
     }
 
     .pulse-grid {
       display: grid;
-      gap: 18px;
-      grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+      gap: 22px;
+      grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
     }
 
     .pulse-card-head {
@@ -2505,7 +2551,7 @@
 
     .pulse-card-title {
       font-family: var(--font-head);
-      font-size: 22px;
+      font-size: 24px;
       font-weight: 700;
       letter-spacing: -0.02em;
       margin-bottom: 4px;
@@ -3065,8 +3111,9 @@
     }
 
     #page-pulse .container {
-      max-width: 1560px;
-      padding: 44px 40px 80px;
+      max-width: none;
+      padding: 52px 56px 100px;
+      width: min(100%, 1920px);
     }
 
     .pulse-hero-header {
@@ -3077,9 +3124,9 @@
       border: 1px solid rgba(255,255,255,0.08);
       border-radius: 30px;
       box-shadow: 0 20px 56px rgba(0,0,0,0.24);
-      margin-bottom: 18px;
+      margin-bottom: 22px;
       overflow: hidden;
-      padding: 34px;
+      padding: 40px;
       position: relative;
     }
 
@@ -3102,20 +3149,20 @@
 
     .pulse-hero-header .flow-copy {
       color: rgba(232,232,240,0.7);
-      font-size: 15px;
+      font-size: 16px;
       line-height: 1.7;
       margin-top: 14px;
     }
 
     .pulse-stage {
-      gap: 22px;
+      gap: 24px;
     }
 
     .pulse-main-panel {
       background:
         radial-gradient(circle at top right, rgba(124,109,250,0.18), transparent 30%),
         rgba(17,17,24,0.94);
-      padding: 32px;
+      padding: 36px;
     }
 
     .pulse-main-panel .pulse-topline {
@@ -3143,9 +3190,9 @@
 
     .pulse-summary-grid {
       display: grid;
-      gap: 12px;
+      gap: 14px;
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      margin-top: 16px;
+      margin-top: 18px;
     }
 
     .pulse-summary-grid-wide {
@@ -3161,7 +3208,7 @@
       border: 1px solid rgba(255,255,255,0.06);
       border-radius: 18px;
       min-width: 0;
-      padding: 16px;
+      padding: 18px;
     }
 
     .pulse-summary-card.compact {
@@ -3195,15 +3242,15 @@
 
     .pulse-grid-analytics {
       align-items: stretch;
-      grid-template-columns: minmax(0, 1.5fr) minmax(360px, 0.86fr);
+      grid-template-columns: minmax(0, 1.85fr) minmax(420px, 1fr);
     }
 
     .pulse-grid-market {
-      grid-template-columns: minmax(340px, 0.9fr) minmax(0, 1.1fr);
+      grid-template-columns: minmax(420px, 0.98fr) minmax(0, 1.28fr);
     }
 
     .pulse-grid-community {
-      grid-template-columns: minmax(0, 1.42fr) minmax(360px, 0.9fr);
+      grid-template-columns: minmax(0, 1.7fr) minmax(420px, 1fr);
     }
 
     .pulse-next-panel {
@@ -3217,7 +3264,7 @@
     }
 
     .pulse-next-panel .pulse-note-list {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(4, minmax(0, 1fr));
     }
 
     .pulse-feed-compose {
@@ -3334,6 +3381,28 @@
       background: rgba(255,255,255,0.76);
       border-color: rgba(19,32,51,0.12);
       color: var(--text);
+    }
+
+    html[data-theme="light"] .pulse-source-pill.idle {
+      background: rgba(19,32,51,0.05);
+      border-color: rgba(19,32,51,0.1);
+      color: rgba(19,32,51,0.76);
+    }
+
+    html[data-theme="light"] .pulse-source-pill.live {
+      background: rgba(74,186,138,0.14);
+      border-color: rgba(74,186,138,0.22);
+      color: #0f5a3c;
+    }
+
+    html[data-theme="light"] .pulse-source-pill.warning {
+      background: rgba(214,143,36,0.14);
+      border-color: rgba(214,143,36,0.22);
+      color: #8b5a14;
+    }
+
+    html[data-theme="light"] .pulse-source-meta {
+      color: rgba(19,32,51,0.58);
     }
 
     html[data-theme="light"] .btn-outline:hover,
@@ -4051,7 +4120,7 @@
       <div class="flow-header pulse-hero-header">
         <div class="flow-kicker">ArcPulse beta</div>
         <h2 class="flow-title">Live Arc signal, with room to breathe.</h2>
-        <p class="flow-copy" style="max-width:760px">ArcPulse now blends live Arc RPC block data, tracked AgentMarket activity, and a persistent community loop so the dashboard feels alive now while full-network indexing comes next.</p>
+        <p class="flow-copy" style="max-width:920px">ArcPulse now blends live Arc RPC block data, a real indexed AgentMarket event stream, and a persistent community loop, with room to swap in a hosted Goldsky or Envio source later without reshaping the page again.</p>
       </div>
 
       <div class="pulse-stack pulse-stage">
@@ -4060,7 +4129,11 @@
             <div class="pulse-topline">
               <div>
                 <div class="pulse-kicker">Hybrid source mode</div>
-                <div class="pulse-copy">Latest blocks come straight from Arc RPC. Volume, categories, and rankings below are tracked from this live marketplace contract set until Goldsky or Envio indexing is attached. Community posts, votes, and streaks now persist in the backend Pulse store.</div>
+                <div class="pulse-copy">Latest blocks come straight from Arc RPC. Volume, categories, and app rankings now widen through the live AgentMarket contract indexer by default, and can switch to a hosted Goldsky or Envio-style source when you configure one. Community posts, votes, and streaks persist in the backend Pulse store.</div>
+                <div class="pulse-source-strip">
+                  <span id="pulseIndexerStatus" class="pulse-source-pill idle">Indexer loading...</span>
+                  <span id="pulseIndexerMeta" class="pulse-source-meta">Checking the live Pulse source...</span>
+                </div>
               </div>
               <span class="badge badge-verified">Live Beta</span>
             </div>
@@ -4086,13 +4159,13 @@
             </div>
             <div class="pulse-metric">
               <div class="pulse-metric-value" id="pulseTrackedVolume">—</div>
-              <div class="pulse-metric-label">Tracked USDC volume</div>
-              <div class="pulse-metric-sub">Jobs plus campaign prize pools on this app.</div>
+              <div class="pulse-metric-label">Visible USDC volume</div>
+              <div class="pulse-metric-sub">Jobs plus campaign prize pools in the current Pulse view.</div>
             </div>
             <div class="pulse-metric">
               <div class="pulse-metric-value" id="pulseTrackedWallets">—</div>
-              <div class="pulse-metric-label">Tracked wallets</div>
-              <div class="pulse-metric-sub">Unique client, worker, and creator addresses.</div>
+              <div class="pulse-metric-label">Visible wallets</div>
+              <div class="pulse-metric-sub">Unique client, worker, and creator addresses in the current Pulse view.</div>
             </div>
           </div>
           <div class="pulse-summary-grid pulse-summary-grid-wide">
@@ -4108,7 +4181,7 @@
             </div>
             <div class="pulse-summary-card">
               <div class="pulse-summary-value" id="pulseTotalJobs">â€”</div>
-              <div class="pulse-summary-label">Tracked jobs</div>
+              <div class="pulse-summary-label">Jobs in view</div>
               <div class="pulse-summary-sub">All jobs currently represented in this view.</div>
             </div>
             <div class="pulse-summary-card">
@@ -4123,19 +4196,19 @@
           <div class="pulse-panel">
             <div class="pulse-card-head">
               <div>
-                <div class="pulse-card-title">14-day tracked volume</div>
-                <div class="pulse-note">Daily job funding volume from the tracked AgentMarket contracts.</div>
+                <div class="pulse-card-title">14-day volume</div>
+                <div class="pulse-note">Daily job funding volume from the current Pulse view.</div>
               </div>
               <span class="badge badge-funded" id="pulseSettledBadge">Settled —</span>
             </div>
-            <div id="pulseVolumeChart" class="pulse-chart-empty">Loading tracked volume...</div>
+            <div id="pulseVolumeChart" class="pulse-chart-empty">Loading volume...</div>
           </div>
 
           <div class="pulse-panel">
             <div class="pulse-card-head">
               <div>
                 <div class="pulse-card-title">Category breakdown</div>
-                <div class="pulse-note">Current volume split from tracked marketplace categories.</div>
+                <div class="pulse-note">Current volume split from the categories visible in Pulse.</div>
               </div>
             </div>
             <div id="pulseCategoryBreakdown" class="pulse-chart-empty">Loading category mix...</div>
@@ -4156,8 +4229,8 @@
           <div class="pulse-panel">
             <div class="pulse-card-head">
               <div>
-                <div class="pulse-card-title">App rankings beta</div>
-                <div class="pulse-note">Tracked-app leaderboard now, full-network rankings after indexer hookup.</div>
+                <div class="pulse-card-title">App rankings</div>
+                <div class="pulse-note">Tracked contract leaderboard by default. If an indexer snapshot is configured, these rankings widen automatically.</div>
               </div>
             </div>
             <div id="pulseRankings" class="pulse-chart-empty">Loading tracked app rankings...</div>
@@ -4237,13 +4310,13 @@
           </div>
         </div>
 
-        <div class="pulse-panel pulse-next-panel">
-          <div class="pulse-card-head">
-            <div>
-              <div class="pulse-card-title">What opens next</div>
-              <div class="pulse-note">ArcPulse now has Arc ID, feed, streaks, and rankings in beta. The next layer is paid unlocks, minting, and full-network indexing.</div>
+          <div class="pulse-panel pulse-next-panel">
+            <div class="pulse-card-head">
+              <div>
+                <div class="pulse-card-title">What opens next</div>
+              <div class="pulse-note">ArcPulse now has a live event indexer, feed, streaks, rankings, and Arc ID beta. The next layer is widening from one indexed app contract to a hosted multi-app network feed and broader Arc ID wallet scoring.</div>
+              </div>
             </div>
-          </div>
           <div class="pulse-summary-grid">
             <div class="pulse-summary-card compact">
               <div class="pulse-summary-value" id="pulseOpenJobs">â€”</div>
@@ -5806,6 +5879,35 @@ function renderPulseNotes(notes = []) {
   mount.innerHTML = notes.map(note => `<div class="pulse-note-item">${escapeHtml(note)}</div>`).join('');
 }
 
+function renderPulseIndexerStatus(indexer = null) {
+  const badge = document.getElementById('pulseIndexerStatus');
+  const meta = document.getElementById('pulseIndexerMeta');
+  if (!badge || !meta) return;
+
+  const connected = Boolean(indexer?.connected);
+  const configured = Boolean(indexer?.configured);
+  const sourceLabel = String(indexer?.sourceLabel || '').trim();
+  const generatedAt = Number(indexer?.generatedAt || 0);
+
+  if (connected) {
+    badge.className = 'pulse-source-pill live';
+    badge.textContent = sourceLabel || 'Live indexer';
+    meta.textContent = `${sourceLabel || 'Pulse indexer'}${generatedAt ? ` · synced ${formatPulseTimestamp(generatedAt)}` : ''}`;
+    return;
+  }
+
+  if (configured) {
+    badge.className = 'pulse-source-pill warning';
+    badge.textContent = 'Indexer issue';
+    meta.textContent = indexer?.error || 'Pulse could not reach the indexed source.';
+    return;
+  }
+
+  badge.className = 'pulse-source-pill idle';
+  badge.textContent = 'Tracked view';
+  meta.textContent = 'Running on tracked contracts plus live Arc RPC block sampling.';
+}
+
 function formatPulseTimestamp(timestamp) {
   if (!timestamp) return 'Unknown time';
   try {
@@ -6626,6 +6728,7 @@ async function loadPulse(force = false) {
     const settledBadge = document.getElementById('pulseSettledBadge');
     if (settledBadge) settledBadge.textContent = `Settled ${formatPulseUsdc(overview?.overview?.settledVolumeUsdc || 0)}`;
 
+    renderPulseIndexerStatus(overview?.indexer || null);
     renderPulseVolumeChart(overview?.volume14d || []);
     renderPulseCategoryBreakdown(overview?.categoryBreakdown || []);
     renderPulseBlocks(overview?.recentBlocks || []);
@@ -6658,6 +6761,7 @@ async function loadPulse(force = false) {
       const el = document.getElementById(id);
       if (el) el.textContent = '--';
     });
+    renderPulseIndexerStatus({ configured: true, connected: false, error: message });
     renderPulseArcId(currentWallet ? { error: message } : null);
     renderPulseNotes([message]);
   } finally {

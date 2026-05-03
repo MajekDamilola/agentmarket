@@ -190,6 +190,28 @@ You need source-chain USDC plus native gas on the selected source chain. After f
 
 ---
 
+## Pulse indexing
+
+Pulse now ships with a built-in live contract indexer for the active AgentMarket job board on Arc. It incrementally syncs contract events through RPC and powers the Pulse app rankings, category mix, 14-day volume, and top-line marketplace counts.
+
+In `backend/.env`, the default live indexer settings are:
+
+- `PULSE_INTERNAL_INDEXER_ENABLED=true`
+- `PULSE_INDEXER_JOB_BOARD_START_BLOCK=37381028`
+
+You can also override that built-in source with a hosted snapshot feed.
+
+1. Copy `backend/pulse-indexer.snapshot.example.json` and replace it with data from your indexer.
+2. In `backend/.env`, set one of these:
+   - `PULSE_INDEXER_SNAPSHOT_PATH=./pulse-indexer.snapshot.example.json`
+   - `PULSE_INDEXER_SNAPSHOT_URL=https://your-indexer.example/pulse.json`
+   - `PULSE_INDEXER_SNAPSHOT_JSON={"source":"Inline snapshot","appRankings":[]}`
+3. Restart the backend.
+
+Pulse will keep using live Arc RPC block sampling plus the local community store. The hosted overlay only replaces the analytics side of the page.
+
+---
+
 ## PHASE 5 — Test the full flow
 
 Here's how to test a complete job from start to finish:

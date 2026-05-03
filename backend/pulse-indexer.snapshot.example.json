@@ -1,0 +1,69 @@
+{
+  "source": "Example Goldsky export",
+  "scope": "full-network",
+  "generatedAt": "2026-05-03T00:00:00Z",
+  "overview": {
+    "trackedEscrowVolumeUsdc": "18420.50",
+    "settledVolumeUsdc": "9075.00",
+    "trackedWallets": 142,
+    "totalJobs": 88,
+    "completedJobs": 41,
+    "openJobs": 19,
+    "activeCampaigns": 6
+  },
+  "volume14d": [
+    { "date": "2026-04-20", "jobs": 3, "volumeUsdc": "180.00" },
+    { "date": "2026-04-21", "jobs": 4, "volumeUsdc": "260.00" },
+    { "date": "2026-04-22", "jobs": 5, "volumeUsdc": "310.00" },
+    { "date": "2026-04-23", "jobs": 4, "volumeUsdc": "295.00" },
+    { "date": "2026-04-24", "jobs": 6, "volumeUsdc": "420.00" },
+    { "date": "2026-04-25", "jobs": 7, "volumeUsdc": "510.00" },
+    { "date": "2026-04-26", "jobs": 5, "volumeUsdc": "365.00" },
+    { "date": "2026-04-27", "jobs": 8, "volumeUsdc": "620.00" },
+    { "date": "2026-04-28", "jobs": 9, "volumeUsdc": "710.00" },
+    { "date": "2026-04-29", "jobs": 7, "volumeUsdc": "540.00" },
+    { "date": "2026-04-30", "jobs": 10, "volumeUsdc": "860.00" },
+    { "date": "2026-05-01", "jobs": 11, "volumeUsdc": "910.00" },
+    { "date": "2026-05-02", "jobs": 12, "volumeUsdc": "1040.00" },
+    { "date": "2026-05-03", "jobs": 8, "volumeUsdc": "735.00" }
+  ],
+  "categoryBreakdown": [
+    { "category": "Research", "jobs": 18, "volumeUsdc": "4200.00" },
+    { "category": "Design", "jobs": 16, "volumeUsdc": "3610.50" },
+    { "category": "Automation", "jobs": 22, "volumeUsdc": "5150.00" },
+    { "category": "Writing", "jobs": 14, "volumeUsdc": "2860.00" }
+  ],
+  "appRankings": [
+    {
+      "id": "agentmarket",
+      "name": "AgentMarket",
+      "category": "AI / Work",
+      "description": "Indexed AgentMarket activity pulled from a wider Arc snapshot.",
+      "volumeUsdc": "18420.50",
+      "weeklyVolumeUsdc": "3220.00",
+      "previousWeekVolumeUsdc": "2750.00",
+      "activeWallets": 142,
+      "jobs": 88,
+      "campaigns": 6,
+      "liveContracts": ["0x70586f1A7936190a6b325F98eB3F2e27eF81d628"],
+      "status": "Full-network indexed"
+    },
+    {
+      "id": "threadforge",
+      "name": "ThreadForge",
+      "category": "Social / Creator",
+      "description": "Example second app included to show how multi-app Pulse rankings render.",
+      "volumeUsdc": "11380.00",
+      "weeklyVolumeUsdc": "2485.00",
+      "previousWeekVolumeUsdc": "1960.00",
+      "activeWallets": 108,
+      "jobs": 61,
+      "campaigns": 4,
+      "status": "Full-network indexed"
+    }
+  ],
+  "notes": [
+    "This file is example data only. Replace it with a real Goldsky or Envio snapshot.",
+    "Pulse will keep its live Arc block sampler and local community store even when an indexed overlay is attached."
+  ]
+}

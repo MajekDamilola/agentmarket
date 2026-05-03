@@ -2457,6 +2457,12 @@
       color: #c9ffeb;
     }
 
+    .pulse-source-pill.syncing {
+      background: rgba(89,199,255,0.14);
+      border-color: rgba(89,199,255,0.24);
+      color: #b8ecff;
+    }
+
     .pulse-source-pill.warning {
       background: rgba(255,196,87,0.14);
       border-color: rgba(255,196,87,0.24);
@@ -3395,6 +3401,12 @@
       color: #0f5a3c;
     }
 
+    html[data-theme="light"] .pulse-source-pill.syncing {
+      background: rgba(31,134,218,0.12);
+      border-color: rgba(31,134,218,0.2);
+      color: #155f99;
+    }
+
     html[data-theme="light"] .pulse-source-pill.warning {
       background: rgba(214,143,36,0.14);
       border-color: rgba(214,143,36,0.22);
@@ -4230,10 +4242,10 @@
             <div class="pulse-card-head">
               <div>
                 <div class="pulse-card-title">App rankings</div>
-                <div class="pulse-note">Tracked contract leaderboard by default. If an indexer snapshot is configured, these rankings widen automatically.</div>
+                <div class="pulse-note">Live indexed leaderboard by default. If a hosted indexer snapshot is configured, these rankings can widen automatically.</div>
               </div>
             </div>
-            <div id="pulseRankings" class="pulse-chart-empty">Loading tracked app rankings...</div>
+            <div id="pulseRankings" class="pulse-chart-empty">Loading app rankings...</div>
           </div>
         </div>
 
@@ -5879,15 +5891,18 @@ function renderPulseNotes(notes = []) {
   mount.innerHTML = notes.map(note => `<div class="pulse-note-item">${escapeHtml(note)}</div>`).join('');
 }
 
-function renderPulseIndexerStatus(indexer = null) {
+function legacyRenderPulseIndexerStatus(indexer = null) {
   const badge = document.getElementById('pulseIndexerStatus');
   const meta = document.getElementById('pulseIndexerMeta');
   if (!badge || !meta) return;
 
   const connected = Boolean(indexer?.connected);
   const configured = Boolean(indexer?.configured);
+  const syncing = Boolean(indexer?.syncing);
   const sourceLabel = String(indexer?.sourceLabel || '').trim();
   const generatedAt = Number(indexer?.generatedAt || 0);
+  const syncDurationLabel = formatPulseSyncDuration(indexer?.syncDurationMs || 0);
+  const blockProgressLabel = formatPulseSyncBlockProgress(indexer?.syncedBlock || 0, indexer?.targetBlock || 0);
 
   if (connected) {
     badge.className = 'pulse-source-pill live';
@@ -5922,6 +5937,79 @@ function formatPulseTimestamp(timestamp) {
   }
 }
 
+function formatPulseSyncDuration(durationMs) {
+  const totalSeconds = Math.max(0, Math.round(Number(durationMs || 0) / 1000));
+  if (!totalSeconds) return '';
+  if (totalSeconds < 60) return `${totalSeconds}s`;
+
+  const totalMinutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  if (totalMinutes < 60) return seconds ? `${totalMinutes}m ${seconds}s` : `${totalMinutes}m`;
+
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  return minutes ? `${hours}h ${minutes}m` : `${hours}h`;
+}
+
+function formatPulseSyncBlockProgress(syncedBlock, targetBlock) {
+  const synced = Number(syncedBlock || 0);
+  const target = Number(targetBlock || 0);
+  if (synced > 0 && target > 0 && target >= synced) {
+    return `block ${formatCompactNumber(synced)} of ${formatCompactNumber(target)}`;
+  }
+  if (synced > 0) return `block ${formatCompactNumber(synced)}`;
+  if (target > 0) return `target block ${formatCompactNumber(target)}`;
+  return '';
+}
+
+function renderPulseIndexerStatus(indexer = null) {
+  const badge = document.getElementById('pulseIndexerStatus');
+  const meta = document.getElementById('pulseIndexerMeta');
+  if (!badge || !meta) return;
+
+  const connected = Boolean(indexer?.connected);
+  const configured = Boolean(indexer?.configured);
+  const syncing = Boolean(indexer?.syncing);
+  const sourceLabel = String(indexer?.sourceLabel || '').trim();
+  const generatedAt = Number(indexer?.generatedAt || 0);
+  const syncDurationLabel = formatPulseSyncDuration(indexer?.syncDurationMs || 0);
+  const blockProgressLabel = formatPulseSyncBlockProgress(indexer?.syncedBlock || 0, indexer?.targetBlock || 0);
+
+  if (syncing && !connected) {
+    badge.className = 'pulse-source-pill syncing';
+    badge.textContent = 'Indexer warming';
+    meta.textContent = [
+      sourceLabel || 'Pulse indexer',
+      'backfilling live activity',
+      blockProgressLabel,
+    ].filter(Boolean).join(' | ');
+    return;
+  }
+
+  if (connected) {
+    badge.className = `pulse-source-pill ${syncing ? 'syncing' : 'live'}`;
+    badge.textContent = syncing ? 'Syncing live' : (sourceLabel || 'Live indexer');
+    meta.textContent = [
+      sourceLabel || 'Pulse indexer',
+      syncing ? 'live refresh in progress' : (generatedAt ? `synced ${formatPulseTimestamp(generatedAt)}` : ''),
+      blockProgressLabel,
+      !syncing && syncDurationLabel ? `last sync ${syncDurationLabel}` : '',
+    ].filter(Boolean).join(' | ');
+    return;
+  }
+
+  if (configured) {
+    badge.className = indexer?.error ? 'pulse-source-pill warning' : 'pulse-source-pill syncing';
+    badge.textContent = indexer?.error ? 'Indexer issue' : 'Indexer standby';
+    meta.textContent = indexer?.error || 'Pulse is waiting for the next live indexer sync.';
+    return;
+  }
+
+  badge.className = 'pulse-source-pill idle';
+  badge.textContent = 'Tracked view';
+  meta.textContent = 'Running on tracked contracts plus live Arc RPC block sampling.';
+}
+
 async function fetchPulseJson(path, options = {}) {
   const headers = { ...(options.headers || {}) };
   if (options.body && !headers['Content-Type']) headers['Content-Type'] = 'application/json';
@@ -5939,7 +6027,8 @@ function buildPulseArcIdNftMetadata(payload = {}) {
   const walletLabel = payload?.walletLabel || (wallet ? shortAddr(wallet) : 'Arc wallet');
   const displayName = profile.displayName || walletLabel;
   const badge = payload?.badge || 'Arc ID beta';
-  const rankLabel = payload?.rank?.label || 'Tracked beta';
+  const indexedArcId = String(payload?.scope || '').includes('indexed');
+  const rankLabel = payload?.rank?.label || (indexedArcId ? 'Indexed live' : 'Tracked beta');
   const trackedActions = formatCompactNumber(profile.totalTrackedActions || payload?.teaser?.trackedActions || 0);
   const volume = formatPulseUsdc(profile.trackedVolumeUsdc || payload?.teaser?.trackedVolumeUsdc || 0);
   const points = formatCompactNumber(profile.points || payload?.teaser?.points || 0);
@@ -6145,7 +6234,7 @@ function renderPulseArcId(payload = null) {
       </div>
       <div class="pulse-identity-unlock">
         <div class="pulse-mini-title">Try again in a moment</div>
-        <div class="pulse-note">Arc ID reads from the same Pulse backend and tracked marketplace signal as the rest of this page.</div>
+        <div class="pulse-note">Arc ID reads from the same Pulse backend and wallet activity signal as the rest of this page.</div>
       </div>
     `;
     return;
@@ -6158,6 +6247,7 @@ function renderPulseArcId(payload = null) {
   const hasAccess = Boolean(payload?.accessUnlocked ?? payload?.unlocked);
   const paidUnlocked = unlockMode === 'paid-usdc';
   const betaUnlocked = unlockMode === 'beta-free';
+  const indexedArcId = String(payload?.scope || '').includes('indexed');
   const payment = {
     ...runtimePayment,
     ...(payload?.payment && typeof payload.payment === 'object' ? payload.payment : {}),
@@ -6176,8 +6266,9 @@ function renderPulseArcId(payload = null) {
   const recipientLabel = payment.recipientLabel || (payment.recipient ? shortAddr(payment.recipient) : 'Arc recipient');
   const displayName = profile.displayName || (hasWallet ? shortAddr(currentWallet) : 'Your wallet');
   const badge = payload?.badge || 'Arc ID beta';
-  const rankLabel = payload?.rank?.label || 'Tracked beta';
+  const rankLabel = payload?.rank?.label || (indexedArcId ? 'Indexed live' : 'Tracked beta');
   const walletLabel = payload?.walletLabel || (hasWallet ? shortAddr(currentWallet) : 'Connect wallet');
+  const sourceLabel = payload?.sourceLabel || (indexedArcId ? 'Arc RPC event indexer' : 'Tracked contract reads');
   const paymentTxLink = paidUnlocked && payment.txUrl
     ? `<a class="pulse-inline-link mono" href="${escapeHtml(payment.txUrl)}" target="_blank" rel="noreferrer">View payment tx</a>`
     : '';
@@ -6194,14 +6285,14 @@ function renderPulseArcId(payload = null) {
   const previewStats = hasWallet && payload
     ? [
         {
-          label: 'Tracked actions',
+          label: indexedArcId ? 'Indexed actions' : 'Tracked actions',
           value: formatCompactNumber(profile.totalTrackedActions || teaser.trackedActions || 0),
-          sub: `${profile.jobsAsClient || 0} client / ${profile.jobsAsWorker || 0} worker`,
+          sub: `${profile.jobsAsClient || 0} client / ${profile.jobsAsWorker || 0} worker / ${profile.jobsCompleted || 0} completed`,
         },
         {
-          label: 'USDC activity',
+          label: indexedArcId ? 'Indexed USDC' : 'USDC activity',
           value: formatPulseUsdc(profile.trackedVolumeUsdc || teaser.trackedVolumeUsdc || 0),
-          sub: `${profile.campaignsCreated || 0} campaigns created`,
+          sub: `${profile.campaignsCreated || 0} campaigns created / ${formatPulseUsdc(profile.settledVolumeUsdc || teaser.settledVolumeUsdc || 0)} settled`,
         },
         {
           label: 'Pulse points',
@@ -6221,16 +6312,16 @@ function renderPulseArcId(payload = null) {
         {
           label: 'Member since',
           value: profile.memberSinceLabel || 'No activity yet',
-          sub: walletLabel,
+          sub: indexedArcId ? sourceLabel : walletLabel,
         },
       ]
     : [
-        { label: 'Tracked actions', value: '12', sub: 'Jobs, posts, check-ins' },
-        { label: 'USDC activity', value: '$42.00', sub: 'Marketplace volume preview' },
+        { label: indexedArcId ? 'Indexed actions' : 'Tracked actions', value: '12', sub: 'Jobs, posts, check-ins' },
+        { label: indexedArcId ? 'Indexed USDC' : 'USDC activity', value: '$42.00', sub: 'Marketplace volume preview' },
         { label: 'Pulse points', value: '92', sub: 'Streak and contribution score' },
         { label: 'Streak state', value: '7d', sub: 'Longest 12d' },
         { label: 'Most used lane', value: 'Build', sub: 'Pulse lane preview' },
-        { label: 'Member since', value: 'Apr 2026', sub: 'Wallet card teaser' },
+        { label: 'Member since', value: 'Apr 2026', sub: indexedArcId ? sourceLabel : 'Wallet card teaser' },
       ];
 
   const statusChips = [
@@ -6254,8 +6345,8 @@ function renderPulseArcId(payload = null) {
             <div class="pulse-mini-title">Connect to preview</div>
             <div class="pulse-note">
               ${unlockConfigured
-                ? `Arc ID turns your tracked marketplace activity, Pulse streaks, and community posts into one wallet-facing card. Pay ${escapeHtml(priceLabel)} on Arc when you are ready to unlock it.`
-                : 'Arc ID turns your tracked marketplace activity, Pulse streaks, and community posts into one wallet-facing card.'}
+                ? `Arc ID turns your ${indexedArcId ? 'indexed wallet activity' : 'tracked marketplace activity'}, Pulse streaks, and community posts into one wallet-facing card. Pay ${escapeHtml(priceLabel)} on Arc when you are ready to unlock it.`
+                : `Arc ID turns your ${indexedArcId ? 'indexed wallet activity' : 'tracked marketplace activity'}, Pulse streaks, and community posts into one wallet-facing card.`}
             </div>
           </div>
           <button class="btn btn-primary" type="button" onclick="connectWallet()">Connect wallet</button>
@@ -6339,10 +6430,10 @@ function renderPulseArcId(payload = null) {
         <div class="pulse-identity-copy">
           ${hasWallet
             ? (paidUnlocked
-              ? 'Your Arc ID now carries a verified Arc USDC unlock receipt on top of the tracked marketplace, streak, and community signals already shaping the card.'
+              ? `Your Arc ID now carries a verified Arc USDC unlock receipt on top of the ${indexedArcId ? 'indexed wallet, streak, and community signals' : 'tracked marketplace, streak, and community signals'} already shaping the card.`
               : betaUnlocked
                 ? 'Your beta Arc ID access is still valid. Complete the paid Arc unlock whenever you want the permanent onchain receipt attached to this same identity card.'
-                : 'Your tracked ArcPulse profile is ready. Pay on Arc to turn this preview into a verified identity card without changing the rest of the model.')
+                : `Your ${indexedArcId ? 'indexed' : 'tracked'} ArcPulse profile is ready. Pay on Arc to turn this preview into a verified identity card without changing the rest of the model.`)
             : 'A persistent identity surface for the people actually moving through AgentMarket and ArcPulse.'}
         </div>
       </div>

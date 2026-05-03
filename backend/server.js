@@ -14,6 +14,12 @@ dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const IS_SERVERLESS_RUNTIME = Boolean(
+  process.env.VERCEL
+  || process.env.AWS_EXECUTION_ENV
+  || process.env.LAMBDA_TASK_ROOT
+  || process.env.NETLIFY
+);
 
 function resolvePulseStorageBaseDir() {
   const configured = String(process.env.PULSE_STORAGE_DIR || "").trim();
@@ -21,14 +27,7 @@ function resolvePulseStorageBaseDir() {
     return path.resolve(configured);
   }
 
-  const isServerlessRuntime = Boolean(
-    process.env.VERCEL
-    || process.env.AWS_EXECUTION_ENV
-    || process.env.LAMBDA_TASK_ROOT
-    || process.env.NETLIFY
-  );
-
-  if (isServerlessRuntime) {
+  if (IS_SERVERLESS_RUNTIME) {
     return path.join(tmpdir(), "agentmarket-pulse");
   }
 
@@ -90,6 +89,7 @@ const PULSE_LANES = new Set(["build", "thread", "art"]);
 const PULSE_INDEXER_EVENT_CHUNK_SIZE = 10_000n;
 const PULSE_INDEXER_SYNC_INTERVAL_MS = 30_000;
 const PULSE_INDEXER_CONFIRMATION_BLOCKS = 2n;
+const PULSE_INDEXER_SCHEMA_VERSION = "2";
 const PULSE_INTERNAL_INDEXER_ENABLED = String(process.env.PULSE_INTERNAL_INDEXER_ENABLED || "true").trim().toLowerCase() !== "false";
 const ARC_ID_UNLOCK_PRICE_USDC = "2.50";
 const ARC_ID_UNLOCK_PRICE_BASE_UNITS = 2_500_000n;
@@ -135,12 +135,14 @@ const IDENTITY_ABI = [
 const ERC20_TRANSFER_EVENT = parseAbiItem("event Transfer(address indexed from, address indexed to, uint256 value)");
 const JOB_POSTED_EVENT = parseAbiItem("event JobPosted(uint256 indexed jobId, address indexed client, address indexed agent, string title, string category, uint256 budget, uint8 workerType)");
 const JOB_COMPLETED_EVENT = parseAbiItem("event JobCompleted(uint256 indexed jobId, address agent, uint256 agentPayout, uint256 platformFee)");
+const JOB_CLAIMED_EVENT = parseAbiItem("event JobClaimed(uint256 indexed jobId, address indexed agent)");
 const JOB_REJECTED_EVENT = parseAbiItem("event JobRejected(uint256 indexed jobId, address client, uint256 refund)");
 const CAMPAIGN_CREATED_EVENT = parseAbiItem("event CampaignCreated(uint256 indexed campaignId, address indexed creator, string title, uint256 prizePool)");
 const CAMPAIGN_EXPIRED_EVENT = parseAbiItem("event CampaignExpired(uint256 indexed campaignId, address creator, uint256 refund)");
 const PULSE_INDEXER_EVENT_ABI = [
   JOB_POSTED_EVENT,
   JOB_COMPLETED_EVENT,
+  JOB_CLAIMED_EVENT,
   JOB_REJECTED_EVENT,
   CAMPAIGN_CREATED_EVENT,
   CAMPAIGN_EXPIRED_EVENT,
@@ -283,6 +285,17 @@ let pulseIndexerSnapshotLoadedAt = 0;
 let pulseIndexerSnapshotPromise = null;
 let pulseContractIndexerSyncPromise = null;
 let pulseContractIndexerLastSyncAt = 0;
+let pulseContractIndexerLoopTimer = null;
+const pulseContractIndexerRuntime = {
+  syncing: false,
+  bootstrapped: false,
+  startedAt: 0,
+  completedAt: 0,
+  durationMs: 0,
+  targetBlock: 0,
+  syncedBlock: 0,
+  lastError: "",
+};
 
 function isArchivedCompletedJob(job, now = Date.now()) {
   return Number(job?.status) === 3 && Number(job?.completedAt) > 0 && (now - Number(job.completedAt)) > COMPLETED_JOB_RETENTION_MS;
@@ -680,10 +693,17 @@ function buildPulseContractIndexerState(db, baseOverview = {}) {
 
   return createPulseIndexerState({
     configured: true,
-    connected: true,
+    connected: Boolean(lastSyncedAt > 0 || rows.length > 0),
+    syncing: pulseContractIndexerRuntime.syncing,
+    bootstrapped: pulseContractIndexerRuntime.bootstrapped || lastSyncedAt > 0,
     sourceLabel: "Arc RPC event indexer",
     scope: "live-contract-indexed",
     generatedAt: lastSyncedAt || Date.now(),
+    syncStartedAt: pulseContractIndexerRuntime.startedAt,
+    syncCompletedAt: pulseContractIndexerRuntime.completedAt || lastSyncedAt,
+    syncDurationMs: pulseContractIndexerRuntime.durationMs,
+    syncedBlock: pulseContractIndexerRuntime.syncedBlock || syncedToBlock,
+    targetBlock: pulseContractIndexerRuntime.targetBlock,
     overview,
     volume14d: createPulseIndexedSeries(rows),
     categoryBreakdown: createPulseIndexedCategoryBreakdown(rows),
@@ -715,6 +735,7 @@ function buildPulseContractIndexerState(db, baseOverview = {}) {
         ? `Indexer backfill starts from block #${startBlock.toLocaleString("en-US")}.`
         : "Indexer start block is using the automatic fallback window.",
     ],
+    error: pulseContractIndexerRuntime.lastError || "",
   });
 }
 
@@ -723,22 +744,31 @@ async function syncPulseContractIndexer(db) {
     return createPulseIndexerState();
   }
 
+  const syncStartedAt = Date.now();
+  pulseContractIndexerRuntime.syncing = true;
+  pulseContractIndexerRuntime.startedAt = syncStartedAt;
+  pulseContractIndexerRuntime.lastError = "";
+
   const latestBlock = await publicClient.getBlockNumber();
   const targetBlock = latestBlock > PULSE_INDEXER_CONFIRMATION_BLOCKS
     ? latestBlock - PULSE_INDEXER_CONFIRMATION_BLOCKS
     : latestBlock;
+  pulseContractIndexerRuntime.targetBlock = Number(targetBlock);
 
   const configuredStartBlock = getPulseIndexerJobBoardStartBlock(targetBlock);
+  ensurePulseContractIndexerSchema(db, configuredStartBlock);
   const storedLastBlockValue = pulseMetaGet(db, "pulse-indexer:last-synced-block");
   const storedLastBlock = storedLastBlockValue ? BigInt(storedLastBlockValue) : (configuredStartBlock > 0n ? configuredStartBlock - 1n : -1n);
 
-  if (!pulseMetaGet(db, "pulse-indexer:start-block")) {
-    pulseMetaSet(db, "pulse-indexer:start-block", configuredStartBlock.toString());
-  }
-
   if (storedLastBlock >= targetBlock) {
     pulseMetaSet(db, "pulse-indexer:last-synced-at", Date.now());
-    return buildPulseContractIndexerState(db);
+    const state = buildPulseContractIndexerState(db);
+    pulseContractIndexerRuntime.syncing = false;
+    pulseContractIndexerRuntime.bootstrapped = true;
+    pulseContractIndexerRuntime.completedAt = Date.now();
+    pulseContractIndexerRuntime.durationMs = pulseContractIndexerRuntime.completedAt - syncStartedAt;
+    pulseContractIndexerRuntime.syncedBlock = Number(storedLastBlock);
+    return state;
   }
 
   const insertEvent = db.prepare(`
@@ -829,6 +859,23 @@ async function syncPulseContractIndexer(db) {
           }),
           createdAt: blockTimestamp,
         });
+      } else if (eventName === "JobClaimed") {
+        normalizedRows.push({
+          contractAddress: JOB_BOARD_ADDRESS.toLowerCase(),
+          eventKey: "job_claimed",
+          entityId: String(args.jobId || ""),
+          walletPrimary: String(args.agent || "").toLowerCase(),
+          walletSecondary: "",
+          category: "",
+          title: "",
+          amountUsdc: "0.00",
+          txHash,
+          logIndex,
+          blockNumber,
+          blockTimestamp,
+          payloadJson: "{}",
+          createdAt: blockTimestamp,
+        });
       } else if (eventName === "JobCompleted") {
         normalizedRows.push({
           contractAddress: JOB_BOARD_ADDRESS.toLowerCase(),
@@ -909,19 +956,27 @@ async function syncPulseContractIndexer(db) {
 
     pulseMetaSet(db, "pulse-indexer:last-synced-block", chunkEnd.toString());
     pulseMetaSet(db, "pulse-indexer:last-synced-at", Date.now());
+    pulseContractIndexerRuntime.syncedBlock = Number(chunkEnd);
     chunkStart = chunkEnd + 1n;
   }
 
-  return buildPulseContractIndexerState(db, {});
+  const state = buildPulseContractIndexerState(db, {});
+  pulseContractIndexerRuntime.syncing = false;
+  pulseContractIndexerRuntime.bootstrapped = true;
+  pulseContractIndexerRuntime.completedAt = Date.now();
+  pulseContractIndexerRuntime.durationMs = pulseContractIndexerRuntime.completedAt - syncStartedAt;
+  pulseContractIndexerRuntime.lastError = "";
+  return state;
 }
 
-async function ensurePulseContractIndexer(db) {
+async function ensurePulseContractIndexer(db, { force = false } = {}) {
   if (!PULSE_INTERNAL_INDEXER_ENABLED) {
     return createPulseIndexerState();
   }
 
   if (
-    !pulseContractIndexerSyncPromise
+    !force
+    && !pulseContractIndexerSyncPromise
     && (Date.now() - pulseContractIndexerLastSyncAt) < PULSE_INDEXER_SYNC_INTERVAL_MS
   ) {
     return buildPulseContractIndexerState(db);
@@ -931,16 +986,70 @@ async function ensurePulseContractIndexer(db) {
     pulseContractIndexerSyncPromise = (async () => {
       try {
         return await syncPulseContractIndexer(db);
+      } catch (err) {
+        pulseContractIndexerRuntime.syncing = false;
+        pulseContractIndexerRuntime.completedAt = Date.now();
+        pulseContractIndexerRuntime.durationMs = pulseContractIndexerRuntime.startedAt
+          ? pulseContractIndexerRuntime.completedAt - pulseContractIndexerRuntime.startedAt
+          : 0;
+        pulseContractIndexerRuntime.lastError = err.message || "Could not sync the live Pulse contract indexer";
+        throw err;
       } finally {
         pulseContractIndexerLastSyncAt = Date.now();
       }
     })();
   }
 
+  if (!force && pulseContractIndexerRuntime.bootstrapped) {
+    return buildPulseContractIndexerState(db);
+  }
+
   try {
     return await pulseContractIndexerSyncPromise;
   } finally {
     pulseContractIndexerSyncPromise = null;
+  }
+}
+
+async function runPulseContractIndexerCycle({ force = false, reason = "manual" } = {}) {
+  if (!PULSE_INTERNAL_INDEXER_ENABLED) return createPulseIndexerState();
+
+  try {
+    const db = await ensurePulseDatabase();
+    return await ensurePulseContractIndexer(db, { force });
+  } catch (err) {
+    pulseContractIndexerRuntime.syncing = false;
+    pulseContractIndexerRuntime.completedAt = Date.now();
+    pulseContractIndexerRuntime.lastError = err.message || `Pulse indexer ${reason} sync failed`;
+    console.warn(`Pulse indexer ${reason} sync failed:`, err.message || err);
+    return createPulseIndexerState({
+      configured: true,
+      connected: pulseContractIndexerRuntime.bootstrapped,
+      syncing: false,
+      bootstrapped: pulseContractIndexerRuntime.bootstrapped,
+      sourceLabel: "Arc RPC event indexer",
+      scope: "live-contract-indexed",
+      generatedAt: pulseContractIndexerRuntime.completedAt,
+      syncStartedAt: pulseContractIndexerRuntime.startedAt,
+      syncCompletedAt: pulseContractIndexerRuntime.completedAt,
+      syncDurationMs: pulseContractIndexerRuntime.durationMs,
+      syncedBlock: pulseContractIndexerRuntime.syncedBlock,
+      targetBlock: pulseContractIndexerRuntime.targetBlock,
+      error: pulseContractIndexerRuntime.lastError,
+    });
+  }
+}
+
+function startPulseContractIndexerLoop() {
+  if (!PULSE_INTERNAL_INDEXER_ENABLED || IS_SERVERLESS_RUNTIME || pulseContractIndexerLoopTimer) return;
+
+  runPulseContractIndexerCycle({ force: true, reason: "startup" }).catch(() => {});
+  pulseContractIndexerLoopTimer = setInterval(() => {
+    runPulseContractIndexerCycle({ force: true, reason: "background" }).catch(() => {});
+  }, PULSE_INDEXER_SYNC_INTERVAL_MS);
+
+  if (typeof pulseContractIndexerLoopTimer?.unref === "function") {
+    pulseContractIndexerLoopTimer.unref();
   }
 }
 
@@ -1003,9 +1112,16 @@ function createPulseIndexerState(overrides = {}) {
   return {
     configured: false,
     connected: false,
+    syncing: false,
+    bootstrapped: false,
     sourceLabel: "",
     scope: "",
     generatedAt: 0,
+    syncStartedAt: 0,
+    syncCompletedAt: 0,
+    syncDurationMs: 0,
+    syncedBlock: 0,
+    targetBlock: 0,
     overview: {},
     volume14d: [],
     categoryBreakdown: [],
@@ -1254,9 +1370,17 @@ async function getPulseIndexerSnapshot(db, baseOverview = {}) {
   } catch (err) {
     return createPulseIndexerState({
       configured: PULSE_INTERNAL_INDEXER_ENABLED,
-      connected: false,
+      connected: pulseContractIndexerRuntime.bootstrapped,
+      syncing: pulseContractIndexerRuntime.syncing,
+      bootstrapped: pulseContractIndexerRuntime.bootstrapped,
       sourceLabel: "Arc RPC event indexer",
       scope: "live-contract-indexed",
+      generatedAt: pulseContractIndexerRuntime.completedAt,
+      syncStartedAt: pulseContractIndexerRuntime.startedAt,
+      syncCompletedAt: pulseContractIndexerRuntime.completedAt,
+      syncDurationMs: pulseContractIndexerRuntime.durationMs,
+      syncedBlock: pulseContractIndexerRuntime.syncedBlock,
+      targetBlock: pulseContractIndexerRuntime.targetBlock,
       error: err.message || "Could not sync the live Pulse contract indexer",
     });
   }
@@ -1318,12 +1442,21 @@ function buildPulseOverviewNotes(indexerState) {
     "Community feed, votes, and streaks persist in the SQLite-backed Pulse store.",
   ];
 
+  if (indexerState?.configured && indexerState?.syncing && !indexerState?.connected) {
+    notes.push("Pulse is warming the live contract indexer in the background. A fresh cache can take longer on its first historical backfill.");
+    notes.push("Pulse is serving the tracked AgentMarket contract view until the indexed pass finishes.");
+    return notes;
+  }
+
   if (indexerState?.connected) {
     const freshness = indexerState.generatedAt
       ? ` Sync timestamp ${formatPulseCalendarLabel(indexerState.generatedAt)}.`
       : "";
     notes.push(`Volume, categories, and app rankings now widen through ${indexerState.sourceLabel || "the active Pulse indexer"}.${freshness}`.trim());
-    notes.push("Arc ID wallet scoring is still based on tracked AgentMarket plus Pulse activity until indexed wallet-level stats are attached.");
+    notes.push("Arc ID wallet scoring now uses indexed AgentMarket wallet activity whenever live contract rows are available.");
+    if (indexerState.syncing) {
+      notes.push("A background refresh is running now, so indexed totals may keep moving upward until the current sync finishes.");
+    }
     for (const note of indexerState.notes || []) notes.push(note);
     return notes;
   }
@@ -1337,6 +1470,21 @@ function buildPulseOverviewNotes(indexerState) {
   notes.push("Volume, categories, and rankings are currently tracked from the AgentMarket contracts only.");
   notes.push("Set PULSE_INDEXER_SNAPSHOT_PATH, PULSE_INDEXER_SNAPSHOT_URL, or PULSE_INDEXER_SNAPSHOT_JSON to override the built-in live contract indexer with a hosted indexed source.");
   return notes;
+}
+
+function ensurePulseContractIndexerSchema(db, configuredStartBlock) {
+  const currentVersion = pulseMetaGet(db, "pulse-indexer:schema-version");
+  if (currentVersion === PULSE_INDEXER_SCHEMA_VERSION) return;
+
+  db.exec("DELETE FROM pulse_indexed_contract_events;");
+  pulseMetaSet(db, "pulse-indexer:schema-version", PULSE_INDEXER_SCHEMA_VERSION);
+  pulseMetaSet(db, "pulse-indexer:start-block", configuredStartBlock.toString());
+  pulseMetaSet(
+    db,
+    "pulse-indexer:last-synced-block",
+    (configuredStartBlock > 0n ? configuredStartBlock - 1n : -1n).toString(),
+  );
+  pulseMetaSet(db, "pulse-indexer:last-synced-at", "0");
 }
 
 function pulseMetaGet(db, key) {
@@ -1817,11 +1965,16 @@ function createPulseWalletActivity(wallet) {
     totalCheckIns: 0,
     jobsAsClient: 0,
     jobsAsWorker: 0,
+    jobsCompleted: 0,
+    jobsSettled: 0,
     campaignsCreated: 0,
     postsShared: 0,
     postUpvotesEarned: 0,
     trackedVolumeUsdc: 0,
+    settledVolumeUsdc: 0,
     memberSince: 0,
+    sourceScope: "",
+    sourceLabel: "",
     laneCounts: {
       build: 0,
       thread: 0,
@@ -1867,15 +2020,19 @@ function resolvePulseLaneLabel(laneCounts = {}, fallback = "") {
 
 function formatPulseWalletActivity(entry) {
   const trackedVolumeUsdcRaw = Number((Number(entry.trackedVolumeUsdc || 0)).toFixed(2));
+  const settledVolumeUsdcRaw = Number((Number(entry.settledVolumeUsdc || 0)).toFixed(2));
   const totalTrackedActions = Number(entry.jobsAsClient || 0)
     + Number(entry.jobsAsWorker || 0)
     + Number(entry.campaignsCreated || 0)
     + Number(entry.postsShared || 0)
     + Number(entry.totalCheckIns || 0);
+  const lifecycleActions = Number(entry.jobsCompleted || 0) + Number(entry.jobsSettled || 0);
 
   const activityScore = Math.round(
     (totalTrackedActions * 14)
+    + (lifecycleActions * 18)
     + trackedVolumeUsdcRaw
+    + settledVolumeUsdcRaw
     + Number(entry.points || 0)
     + (Number(entry.longestStreak || 0) * 4)
     + (Number(entry.postUpvotesEarned || 0) * 3)
@@ -1890,26 +2047,136 @@ function formatPulseWalletActivity(entry) {
     totalCheckIns: Number(entry.totalCheckIns || 0),
     jobsAsClient: Number(entry.jobsAsClient || 0),
     jobsAsWorker: Number(entry.jobsAsWorker || 0),
+    jobsCompleted: Number(entry.jobsCompleted || 0),
+    jobsSettled: Number(entry.jobsSettled || 0),
     campaignsCreated: Number(entry.campaignsCreated || 0),
     postsShared: Number(entry.postsShared || 0),
     postUpvotesEarned: Number(entry.postUpvotesEarned || 0),
     trackedVolumeUsdc: formatUsdc(trackedVolumeUsdcRaw),
     trackedVolumeUsdcRaw,
+    settledVolumeUsdc: formatUsdc(settledVolumeUsdcRaw),
+    settledVolumeUsdcRaw,
     memberSince: Number(entry.memberSince || 0),
     memberSinceLabel: formatPulseCalendarLabel(entry.memberSince),
     totalTrackedActions,
+    lifecycleActions,
     mostUsedLane: resolvePulseLaneLabel(entry.laneCounts, totalTrackedActions > 0 ? "build" : ""),
-    mostUsedApp: totalTrackedActions > 0 ? "AgentMarket" : "Awaiting first signal",
+    mostUsedApp: totalTrackedActions > 0
+      ? (entry.sourceScope === "live-contract-indexed" ? "AgentMarket indexed" : "AgentMarket")
+      : "Awaiting first signal",
+    sourceScope: String(entry.sourceScope || ""),
+    sourceLabel: String(entry.sourceLabel || ""),
     activityScore,
   };
 }
 
 function describePulseArcIdBadge(summary, topPercent) {
   if (!summary.totalTrackedActions && !summary.points) return "Network Arrival";
-  if (topPercent <= 10 || summary.activityScore >= 220) return "Arc Vanguard";
-  if (topPercent <= 30 || summary.activityScore >= 120) return "Pulse Builder";
+  if (topPercent <= 10 || summary.activityScore >= 260) return "Arc Vanguard";
+  if (summary.jobsCompleted > 0 && summary.jobsSettled > 0) return "Market Closer";
+  if (topPercent <= 30 || summary.activityScore >= 140) return "Pulse Builder";
   if (summary.postsShared > 0 || summary.totalCheckIns > 0) return "Signal Starter";
   return "Fresh Builder";
+}
+
+function applyIndexedPulseWalletAnalytics(db, analytics) {
+  const rows = getPulseIndexedContractRows(db);
+  if (!rows.length) {
+    return {
+      usedIndexedContractRows: false,
+      sourceScope: "tracked-beta",
+      sourceLabel: "",
+    };
+  }
+
+  const jobPostsById = new Map();
+  for (const row of rows) {
+    if (String(row.event_key || "") === "job_posted") {
+      jobPostsById.set(String(row.entity_id || ""), row);
+    }
+  }
+
+  for (const row of rows) {
+    const eventKey = String(row.event_key || "");
+    const eventTimestamp = Number(row.block_timestamp || row.created_at || 0);
+    const amountUsdc = toUsdcNumber(row.amount_usdc);
+
+    if (eventKey === "job_posted") {
+      const clientEntry = ensurePulseWalletActivity(analytics, row.wallet_primary);
+      if (clientEntry) {
+        clientEntry.jobsAsClient += 1;
+        clientEntry.trackedVolumeUsdc += amountUsdc;
+        clientEntry.sourceScope = "live-contract-indexed";
+        clientEntry.sourceLabel = "Arc RPC event indexer";
+        notePulseWalletTimestamp(clientEntry, eventTimestamp);
+      }
+
+      if (row.wallet_secondary && !sameAddress(row.wallet_secondary, ZERO_ADDRESS)) {
+        const workerEntry = ensurePulseWalletActivity(analytics, row.wallet_secondary);
+        if (workerEntry) {
+          workerEntry.jobsAsWorker += 1;
+          workerEntry.trackedVolumeUsdc += amountUsdc;
+          workerEntry.sourceScope = "live-contract-indexed";
+          workerEntry.sourceLabel = "Arc RPC event indexer";
+          notePulseWalletTimestamp(workerEntry, eventTimestamp);
+        }
+      }
+
+      continue;
+    }
+
+    if (eventKey === "job_claimed") {
+      const workerEntry = ensurePulseWalletActivity(analytics, row.wallet_primary);
+      if (!workerEntry) continue;
+      const postedRow = jobPostsById.get(String(row.entity_id || ""));
+      if (postedRow?.wallet_secondary && !sameAddress(postedRow.wallet_secondary, ZERO_ADDRESS)) continue;
+      workerEntry.jobsAsWorker += 1;
+      workerEntry.trackedVolumeUsdc += toUsdcNumber(postedRow?.amount_usdc || 0);
+      workerEntry.sourceScope = "live-contract-indexed";
+      workerEntry.sourceLabel = "Arc RPC event indexer";
+      notePulseWalletTimestamp(workerEntry, eventTimestamp);
+      continue;
+    }
+
+    if (eventKey === "job_completed") {
+      const workerEntry = ensurePulseWalletActivity(analytics, row.wallet_primary);
+      if (workerEntry) {
+        workerEntry.jobsCompleted += 1;
+        workerEntry.settledVolumeUsdc += amountUsdc;
+        workerEntry.sourceScope = "live-contract-indexed";
+        workerEntry.sourceLabel = "Arc RPC event indexer";
+        notePulseWalletTimestamp(workerEntry, eventTimestamp);
+      }
+
+      const postedRow = jobPostsById.get(String(row.entity_id || ""));
+      const clientEntry = ensurePulseWalletActivity(analytics, postedRow?.wallet_primary || "");
+      if (clientEntry) {
+        clientEntry.jobsSettled += 1;
+        clientEntry.settledVolumeUsdc += amountUsdc;
+        clientEntry.sourceScope = "live-contract-indexed";
+        clientEntry.sourceLabel = "Arc RPC event indexer";
+        notePulseWalletTimestamp(clientEntry, eventTimestamp);
+      }
+
+      continue;
+    }
+
+    if (eventKey === "campaign_created") {
+      const creatorEntry = ensurePulseWalletActivity(analytics, row.wallet_primary);
+      if (!creatorEntry) continue;
+      creatorEntry.campaignsCreated += 1;
+      creatorEntry.trackedVolumeUsdc += amountUsdc;
+      creatorEntry.sourceScope = "live-contract-indexed";
+      creatorEntry.sourceLabel = "Arc RPC event indexer";
+      notePulseWalletTimestamp(creatorEntry, eventTimestamp);
+    }
+  }
+
+  return {
+    usedIndexedContractRows: true,
+    sourceScope: "live-contract-indexed",
+    sourceLabel: "Arc RPC event indexer",
+  };
 }
 
 function buildPulseWalletAnalytics(db, jobs = [], campaigns = []) {
@@ -1951,39 +2218,63 @@ function buildPulseWalletAnalytics(db, jobs = [], campaigns = []) {
     notePulseWalletTimestamp(entry, post.created_at);
   }
 
-  for (const job of jobs) {
-    const budget = toUsdcNumber(job.budget);
-    const createdAt = Number(job.createdAt || 0);
+  const indexedState = applyIndexedPulseWalletAnalytics(db, analytics);
+  if (!indexedState.usedIndexedContractRows) {
+    for (const job of jobs) {
+      const budget = toUsdcNumber(job.budget);
+      const createdAt = Number(job.createdAt || 0);
 
-    if (job.client && !sameAddress(job.client, ZERO_ADDRESS)) {
-      const clientEntry = ensurePulseWalletActivity(analytics, job.client);
-      if (clientEntry) {
-        clientEntry.jobsAsClient += 1;
-        clientEntry.trackedVolumeUsdc += budget;
-        notePulseWalletTimestamp(clientEntry, createdAt);
+      if (job.client && !sameAddress(job.client, ZERO_ADDRESS)) {
+        const clientEntry = ensurePulseWalletActivity(analytics, job.client);
+        if (clientEntry) {
+          clientEntry.jobsAsClient += 1;
+          clientEntry.trackedVolumeUsdc += budget;
+          notePulseWalletTimestamp(clientEntry, createdAt);
+        }
+      }
+
+      if (job.agent && !sameAddress(job.agent, ZERO_ADDRESS)) {
+        const workerEntry = ensurePulseWalletActivity(analytics, job.agent);
+        if (workerEntry) {
+          workerEntry.jobsAsWorker += 1;
+          workerEntry.trackedVolumeUsdc += budget;
+          notePulseWalletTimestamp(workerEntry, createdAt);
+        }
+      }
+
+      if (Number(job.status) === 3 && job.agent && !sameAddress(job.agent, ZERO_ADDRESS)) {
+        const workerEntry = ensurePulseWalletActivity(analytics, job.agent);
+        if (workerEntry) {
+          workerEntry.jobsCompleted += 1;
+          workerEntry.settledVolumeUsdc += budget;
+        }
+      }
+
+      if (Number(job.status) === 3 && job.client && !sameAddress(job.client, ZERO_ADDRESS)) {
+        const clientEntry = ensurePulseWalletActivity(analytics, job.client);
+        if (clientEntry) {
+          clientEntry.jobsSettled += 1;
+          clientEntry.settledVolumeUsdc += budget;
+        }
       }
     }
 
-    if (job.agent && !sameAddress(job.agent, ZERO_ADDRESS)) {
-      const workerEntry = ensurePulseWalletActivity(analytics, job.agent);
-      if (workerEntry) {
-        workerEntry.jobsAsWorker += 1;
-        workerEntry.trackedVolumeUsdc += budget;
-        notePulseWalletTimestamp(workerEntry, createdAt);
-      }
+    for (const campaign of campaigns) {
+      if (!campaign.creator || sameAddress(campaign.creator, ZERO_ADDRESS)) continue;
+      const creatorEntry = ensurePulseWalletActivity(analytics, campaign.creator);
+      if (!creatorEntry) continue;
+      creatorEntry.campaignsCreated += 1;
+      creatorEntry.trackedVolumeUsdc += toUsdcNumber(campaign.prizePool);
+      notePulseWalletTimestamp(creatorEntry, Number(campaign.createdAt || 0));
     }
   }
 
-  for (const campaign of campaigns) {
-    if (!campaign.creator || sameAddress(campaign.creator, ZERO_ADDRESS)) continue;
-    const creatorEntry = ensurePulseWalletActivity(analytics, campaign.creator);
-    if (!creatorEntry) continue;
-    creatorEntry.campaignsCreated += 1;
-    creatorEntry.trackedVolumeUsdc += toUsdcNumber(campaign.prizePool);
-    notePulseWalletTimestamp(creatorEntry, Number(campaign.createdAt || 0));
-  }
-
-  return analytics;
+  return {
+    analytics,
+    usedIndexedContractRows: indexedState.usedIndexedContractRows,
+    sourceScope: indexedState.sourceScope,
+    sourceLabel: indexedState.sourceLabel,
+  };
 }
 
 function getPulseArcIdUnlockRecord(db, wallet) {
@@ -2324,8 +2615,11 @@ function savePulseArcIdNftMint(db, wallet, verifiedMint = {}) {
 
 async function buildPulseArcIdProfile(db, wallet, jobs = [], campaigns = []) {
   const canonicalWallet = String(wallet || "").toLowerCase();
-  const analyticsMap = buildPulseWalletAnalytics(db, jobs, campaigns);
+  const walletAnalytics = buildPulseWalletAnalytics(db, jobs, campaigns);
+  const analyticsMap = walletAnalytics.analytics;
   const entry = analyticsMap.get(canonicalWallet) || createPulseWalletActivity(canonicalWallet);
+  if (walletAnalytics.sourceScope) entry.sourceScope = walletAnalytics.sourceScope;
+  if (walletAnalytics.sourceLabel) entry.sourceLabel = walletAnalytics.sourceLabel;
   const summary = formatPulseWalletActivity(entry);
   const unlockRecord = getPulseArcIdUnlockRecord(db, canonicalWallet);
   const unlockConfig = getArcIdUnlockConfig();
@@ -2333,6 +2627,9 @@ async function buildPulseArcIdProfile(db, wallet, jobs = [], campaigns = []) {
   const nftMintRecord = getPulseArcIdNftMintRecord(db, canonicalWallet);
   const onchainNftState = await getArcIdNftOnchainState(canonicalWallet);
   const unlockMode = unlockRecord?.tx_hash ? "paid-usdc" : (unlockRecord ? "beta-free" : "locked");
+  const indexedArcId = Boolean(walletAnalytics.usedIndexedContractRows);
+  const arcIdScope = indexedArcId ? "indexed-live" : "tracked-beta";
+  const arcIdSourceLabel = walletAnalytics.sourceLabel || (indexedArcId ? "Arc RPC event indexer" : "Tracked contract reads");
 
   const rankedWallets = [...analyticsMap.values()]
     .map(formatPulseWalletActivity)
@@ -2363,7 +2660,8 @@ async function buildPulseArcIdProfile(db, wallet, jobs = [], campaigns = []) {
   const nftCanMint = Boolean(nftEligible && nftConfig.ready && !nftMinted);
 
   return {
-    scope: "tracked-beta",
+    scope: arcIdScope,
+    sourceLabel: arcIdSourceLabel,
     wallet: canonicalWallet,
     walletLabel: shortWallet(canonicalWallet),
     unlocked: Boolean(unlockRecord),
@@ -2400,24 +2698,31 @@ async function buildPulseArcIdProfile(db, wallet, jobs = [], campaigns = []) {
       position: rankPosition,
       total: totalRanked,
       topPercent,
-      label: totalRanked > 1 ? `Top ${topPercent}% builder` : "Founding builder",
+      label: totalRanked > 1
+        ? `Top ${topPercent}% ${indexedArcId ? "indexed builder" : "builder"}`
+        : (indexedArcId ? "Indexed founding builder" : "Founding builder"),
     },
     teaser: {
       points: summary.points,
       trackedActions: summary.totalTrackedActions,
       trackedVolumeUsdc: summary.trackedVolumeUsdc,
+      settledVolumeUsdc: summary.settledVolumeUsdc,
       currentStreak: summary.currentStreak,
     },
     profile: summary,
     notes: [
-      "Arc ID beta is based on tracked AgentMarket and ArcPulse activity right now.",
+      indexedArcId
+        ? `Arc ID now ranks this wallet from indexed AgentMarket activity through ${arcIdSourceLabel}.`
+        : "Arc ID beta is based on tracked AgentMarket and ArcPulse activity right now.",
       unlockConfig.enabled
         ? `A ${ARC_ID_UNLOCK_PRICE_USDC} USDC transfer on Arc now unlocks and verifies this card.`
         : "Configure an Arc ID unlock recipient on the server to turn the paid unlock live.",
       nftConfig.enabled
         ? `Season 1 Arc ID NFT minting is live at ${ARC_ID_NFT_MINT_PRICE_USDC} USDC after a paid unlock.`
         : "Deploy and configure the Arc ID NFT contract to turn the collectible mint live.",
-      "Arc ID still uses tracked AgentMarket and Pulse activity until indexed wallet-level stats are attached.",
+      indexedArcId
+        ? "Wallet ranking now blends indexed jobs, claims, completions, settlement volume, Pulse streaks, and community activity."
+        : "Arc ID still uses tracked AgentMarket and Pulse activity until indexed wallet-level stats are attached.",
     ],
   };
 }
@@ -2666,13 +2971,20 @@ async function getPulseSnapshot() {
 
   return {
     generatedAt: Date.now(),
-    mode: pulseIndexer.connected ? "hybrid-indexed" : "hybrid-beta",
+    mode: pulseIndexer.connected ? "hybrid-indexed" : pulseIndexer.syncing ? "hybrid-warming" : "hybrid-beta",
     indexer: {
       configured: pulseIndexer.configured,
       connected: pulseIndexer.connected,
+      syncing: pulseIndexer.syncing,
+      bootstrapped: pulseIndexer.bootstrapped,
       sourceLabel: pulseIndexer.sourceLabel,
       scope: pulseIndexer.scope,
       generatedAt: pulseIndexer.generatedAt,
+      syncStartedAt: pulseIndexer.syncStartedAt,
+      syncCompletedAt: pulseIndexer.syncCompletedAt,
+      syncDurationMs: pulseIndexer.syncDurationMs,
+      syncedBlock: pulseIndexer.syncedBlock,
+      targetBlock: pulseIndexer.targetBlock,
       error: pulseIndexer.error,
     },
     overview: pulseIndexer.overview,
@@ -3172,6 +3484,7 @@ if (isDirectRun) {
     console.log(`AgentMarket API running on port ${PORT}`);
     console.log(`Network: Arc Testnet`);
     console.log(`Contract: ${JOB_BOARD_ADDRESS}`);
+    startPulseContractIndexerLoop();
   });
 }
 

@@ -1,10 +1,12 @@
 import express from "express";
 import cors from "cors";
 import { createPublicClient, http, formatUnits, parseAbiItem, parseEventLogs, keccak256, toBytes } from "viem";
+import { initiateDeveloperControlledWalletsClient } from "@circle-fin/developer-controlled-wallets";
 import { privateKeyToAccount } from "viem/accounts";
 import { arcTestnet } from "viem/chains";
 import dotenv from "dotenv";
 import { promises as fs } from "fs";
+import { randomUUID } from "node:crypto";
 import { DatabaseSync } from "node:sqlite";
 import { tmpdir } from "os";
 import path from "path";
@@ -44,6 +46,14 @@ function parseEnvInt(value, fallback) {
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
+function parseEnvBool(value, fallback = false) {
+  const normalized = String(value ?? "").trim().toLowerCase();
+  if (!normalized) return fallback;
+  if (["1", "true", "yes", "on"].includes(normalized)) return true;
+  if (["0", "false", "no", "off"].includes(normalized)) return false;
+  return fallback;
+}
+
 function resolvePulseIndexerSnapshotPath(value) {
   const configured = String(value || "").trim();
   if (!configured) return "";
@@ -79,10 +89,12 @@ const JOB_BOARD_ADDRESS = resolveJobBoardAddress(process.env.JOB_BOARD_ADDRESS);
 const USDC_ADDRESS = "0x3600000000000000000000000000000000000000";
 const IDENTITY_REGISTRY = "0x8004A818BFB912233c491871b3d84c89A494BD9e";
 const REPUTATION_REGISTRY = "0x8004B663056A597Dffe9eCcC1965A193B7388713";
+const VALIDATION_REGISTRY = "0x8004Cb1BF31DAf7788923b405b754f57acEB4272";
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
 const ARC_EXPLORER_URL = "https://testnet.arcscan.app";
 const ARC_EXPLORER_API_URL = `${ARC_EXPLORER_URL}/api`;
 const ARC_EXPLORER_API_V2_URL = `${ARC_EXPLORER_URL}/api/v2`;
+const ARC_BLOCKCHAIN_ID = "ARC-TESTNET";
 const DAY_MS = 24 * 60 * 60 * 1000;
 const PULSE_RECENT_BLOCK_LIMIT = 6;
 const PULSE_SERIES_DAYS = 14;
@@ -113,6 +125,29 @@ const PULSE_INDEXER_SNAPSHOT_URL = String(process.env.PULSE_INDEXER_SNAPSHOT_URL
 const PULSE_INDEXER_CACHE_MS = Math.max(0, parseEnvInt(process.env.PULSE_INDEXER_CACHE_MS, 30_000));
 const PULSE_INDEXER_JOB_BOARD_START_BLOCK = Math.max(0, parseEnvInt(process.env.PULSE_INDEXER_JOB_BOARD_START_BLOCK, 0));
 const PULSE_INDEXER_EXTRA_CONTRACTS_JSON = String(process.env.PULSE_INDEXER_EXTRA_CONTRACTS_JSON || "").trim();
+const CIRCLE_API_KEY = String(process.env.CIRCLE_API_KEY || "").trim();
+const CIRCLE_ENTITY_SECRET = String(process.env.CIRCLE_ENTITY_SECRET || "").trim();
+const CIRCLE_BASE_URL = String(process.env.CIRCLE_BASE_URL || "").trim();
+const SUMMARY_AGENT_ENABLED = parseEnvBool(process.env.SUMMARY_AGENT_ENABLED, true);
+const SUMMARY_AGENT_MODEL = String(process.env.SUMMARY_AGENT_MODEL || "gpt-5.2").trim();
+const SUMMARY_AGENT_OPENAI_API_KEY = String(
+  process.env.OPENAI_API_KEY
+  || process.env.SUMMARY_AGENT_OPENAI_API_KEY
+  || "",
+).trim();
+const SUMMARY_AGENT_OPENAI_BASE_URL = String(process.env.OPENAI_BASE_URL || "https://api.openai.com/v1").trim();
+const SUMMARY_AGENT_LOOP_MS = Math.max(10_000, parseEnvInt(process.env.SUMMARY_AGENT_LOOP_MS, 20_000));
+const SUMMARY_AGENT_MAX_BUDGET_USDC = Math.max(0.5, Number.parseFloat(String(process.env.SUMMARY_AGENT_MAX_BUDGET_USDC || "10").trim()) || 10);
+const SUMMARY_AGENT_MAX_CONCURRENT_JOBS = Math.max(1, parseEnvInt(process.env.SUMMARY_AGENT_MAX_CONCURRENT_JOBS, 2));
+const SUMMARY_AGENT_MAX_SOURCE_URLS = Math.max(0, parseEnvInt(process.env.SUMMARY_AGENT_MAX_SOURCE_URLS, 2));
+const SUMMARY_AGENT_AUTO_BOOTSTRAP = parseEnvBool(process.env.SUMMARY_AGENT_AUTO_BOOTSTRAP, true);
+const SUMMARY_AGENT_AUTO_VALIDATE = parseEnvBool(process.env.SUMMARY_AGENT_AUTO_VALIDATE, true);
+const SUMMARY_AGENT_ALLOW_OPEN_CLAIMS = parseEnvBool(process.env.SUMMARY_AGENT_ALLOW_OPEN_CLAIMS, true);
+const AGENTMARKET_PUBLIC_API_BASE_URL = String(
+  process.env.AGENTMARKET_PUBLIC_API_BASE_URL
+  || process.env.PUBLIC_API_BASE_URL
+  || "",
+).trim();
 const ARC_WALLET_ACTIVITY_CACHE_MS = Math.max(0, parseEnvInt(process.env.ARC_WALLET_ACTIVITY_CACHE_MS, 10 * 60 * 1000));
 const ARC_WALLET_ACTIVITY_TX_PAGE_SIZE = Math.min(1000, Math.max(100, parseEnvInt(process.env.ARC_WALLET_ACTIVITY_TX_PAGE_SIZE, 500)));
 const ARC_WALLET_ACTIVITY_MAX_PAGES = Math.max(1, parseEnvInt(process.env.ARC_WALLET_ACTIVITY_MAX_PAGES, 30));
@@ -208,6 +243,72 @@ function toUsdcNumber(value) {
 
 function formatUsdc(value) {
   return toUsdcNumber(value).toFixed(2);
+}
+
+function withTrailingSlashRemoved(value = "") {
+  return String(value || "").trim().replace(/\/+$/, "");
+}
+
+function resolvePublicApiBaseUrl() {
+  if (AGENTMARKET_PUBLIC_API_BASE_URL) return withTrailingSlashRemoved(AGENTMARKET_PUBLIC_API_BASE_URL);
+  if (process.env.VERCEL_URL) return `https://${String(process.env.VERCEL_URL).trim().replace(/^https?:\/\//, "").replace(/\/+$/, "")}`;
+  return "";
+}
+
+function getCircleDeveloperWalletClient() {
+  if (!CIRCLE_API_KEY || !CIRCLE_ENTITY_SECRET) return null;
+  if (!circleDeveloperWalletClient) {
+    const config = {
+      apiKey: CIRCLE_API_KEY,
+      entitySecret: CIRCLE_ENTITY_SECRET,
+    };
+    if (CIRCLE_BASE_URL) config.baseUrl = CIRCLE_BASE_URL;
+    circleDeveloperWalletClient = initiateDeveloperControlledWalletsClient(config);
+  }
+  return circleDeveloperWalletClient;
+}
+
+function isCircleDeveloperWalletReady() {
+  return Boolean(getCircleDeveloperWalletClient());
+}
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function truncateAgentText(text = "", maxLength = 16000) {
+  const normalized = String(text || "").replace(/\0/g, "").trim();
+  if (normalized.length <= maxLength) return normalized;
+  return `${normalized.slice(0, maxLength - 20).trim()}\n\n[Truncated]`;
+}
+
+function escapeAgentHtml(value = "") {
+  return String(value || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function stripHtmlToText(value = "") {
+  return String(value || "")
+    .replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
+    .replace(/&#39;/gi, "'")
+    .replace(/&quot;/gi, "\"")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function extractUrlsFromText(value = "") {
+  const matches = String(value || "").match(/https?:\/\/[^\s)]+/gi) || [];
+  return [...new Set(matches.map(item => item.replace(/[.,;!?]+$/, "")))];
 }
 
 const KNOWN_PULSE_INDEXER_JOB_BOARD_START_BLOCKS = new Map([
@@ -460,6 +561,41 @@ const pulseContractIndexerRuntime = {
   syncedBlock: 0,
   lastError: "",
 };
+const AGENT_KEYS = {
+  summary: "summarybot",
+};
+const AGENT_WALLET_ROLES = {
+  owner: "owner",
+  validator: "validator",
+};
+const AGENT_RUN_STATUSES = {
+  pending: "pending",
+  claiming: "claiming",
+  claimed: "claimed",
+  running: "running",
+  submitting: "submitting",
+  submitted: "submitted",
+  completed: "completed",
+  failed: "failed",
+};
+const AGENT_ACTIVE_EXECUTION_STATUSES = new Set([
+  AGENT_RUN_STATUSES.pending,
+  AGENT_RUN_STATUSES.claiming,
+  AGENT_RUN_STATUSES.claimed,
+  AGENT_RUN_STATUSES.running,
+  AGENT_RUN_STATUSES.submitting,
+]);
+let circleDeveloperWalletClient = null;
+let summaryAgentLoopTimer = null;
+let summaryAgentLoopPromise = null;
+let summaryAgentLastCycleAt = 0;
+const summaryAgentRuntime = {
+  bootstrapped: false,
+  running: false,
+  lastStartedAt: 0,
+  lastCompletedAt: 0,
+  lastError: "",
+};
 
 function isArchivedCompletedJob(job, now = Date.now()) {
   return Number(job?.status) === 3 && Number(job?.completedAt) > 0 && (now - Number(job.completedAt)) > COMPLETED_JOB_RETENTION_MS;
@@ -565,6 +701,700 @@ async function getJobsForAddress(address, idFunctionName, matchesAddress) {
   }
   const allJobs = await getAllFormattedJobs();
   return allJobs.filter(job => matchesAddress(job, normalized));
+}
+
+function extractOpenAiResponseText(payload = {}) {
+  if (typeof payload?.output_text === "string" && payload.output_text.trim()) {
+    return payload.output_text.trim();
+  }
+
+  const output = Array.isArray(payload?.output) ? payload.output : [];
+  const parts = [];
+  for (const item of output) {
+    if (!Array.isArray(item?.content)) continue;
+    for (const content of item.content) {
+      if (content?.type === "output_text" && typeof content.text === "string") {
+        parts.push(content.text);
+      }
+    }
+  }
+  return parts.join("\n").trim();
+}
+
+function buildSummaryBotMetadata(db) {
+  const ownerWallet = getAgentWallet(db, AGENT_KEYS.summary, AGENT_WALLET_ROLES.owner);
+  return {
+    name: "SummaryBot",
+    description: "Autonomous Arc-native summarization and research agent for AgentMarket jobs.",
+    image: "",
+    agent_type: "summarization",
+    capabilities: [
+      "job_selection",
+      "public_link_reading",
+      "document_summarization",
+      "structured_report_generation",
+      "automated_job_delivery",
+    ],
+    version: "1.0.0",
+    operator: ownerWallet?.walletAddress || "",
+    scope: {
+      workerTypes: ["AI"],
+      categories: ["Research", "Writing", "Analysis", "Operations"],
+      maxBudgetUsdc: SUMMARY_AGENT_MAX_BUDGET_USDC,
+      sourceTypes: ["inline text", "public urls"],
+    },
+  };
+}
+
+function getSummaryBotMetadataUri() {
+  const base = resolvePublicApiBaseUrl();
+  return base ? `${base}/api/agents/${AGENT_KEYS.summary}/metadata` : "";
+}
+
+function getSummaryBotDeliverableLocator(jobId, runId) {
+  const base = resolvePublicApiBaseUrl();
+  return base ? `${base}/api/agents/${AGENT_KEYS.summary}/jobs/${Number(jobId)}/deliverable?run=${encodeURIComponent(String(runId || ""))}` : "";
+}
+
+function getSummaryBotMissingConfig(db) {
+  const missing = [];
+  if (!CIRCLE_API_KEY) missing.push("CIRCLE_API_KEY");
+  if (!CIRCLE_ENTITY_SECRET) missing.push("CIRCLE_ENTITY_SECRET");
+  if (!SUMMARY_AGENT_OPENAI_API_KEY) missing.push("OPENAI_API_KEY");
+  if (!resolvePublicApiBaseUrl()) missing.push("AGENTMARKET_PUBLIC_API_BASE_URL");
+  const ownerWallet = getAgentWallet(db, AGENT_KEYS.summary, AGENT_WALLET_ROLES.owner);
+  const validatorWallet = getAgentWallet(db, AGENT_KEYS.summary, AGENT_WALLET_ROLES.validator);
+  if (!ownerWallet?.walletId) missing.push("summarybot owner wallet");
+  if (!validatorWallet?.walletId) missing.push("summarybot validator wallet");
+  return missing;
+}
+
+async function waitForCircleDeveloperTransaction(client, transactionId, {
+  timeoutMs = 120_000,
+  pollMs = 2_500,
+} = {}) {
+  const startedAt = Date.now();
+  while ((Date.now() - startedAt) < timeoutMs) {
+    const response = await client.getTransaction({ id: transactionId });
+    const transaction = response?.data?.transaction || null;
+    const state = String(transaction?.state || "").toUpperCase();
+    if (state === "COMPLETE") return transaction;
+    if (state === "FAILED" || state === "CANCELLED" || state === "DENIED") {
+      throw new Error(transaction?.errorReason || transaction?.state || "Circle transaction failed");
+    }
+    await sleep(pollMs);
+  }
+  throw new Error(`Timed out waiting for Circle transaction ${transactionId}`);
+}
+
+async function ensureSummaryAgentWallets(db) {
+  const client = getCircleDeveloperWalletClient();
+  if (!client) throw new Error("Circle developer-controlled wallets are not configured");
+
+  const existingOwner = getAgentWallet(db, AGENT_KEYS.summary, AGENT_WALLET_ROLES.owner);
+  const existingValidator = getAgentWallet(db, AGENT_KEYS.summary, AGENT_WALLET_ROLES.validator);
+  if (existingOwner?.walletId && existingValidator?.walletId) {
+    return {
+      ownerWallet: existingOwner,
+      validatorWallet: existingValidator,
+    };
+  }
+
+  const existingWalletSetId = existingOwner?.walletSetId || existingValidator?.walletSetId || "";
+  let walletSetId = existingWalletSetId;
+  if (!walletSetId) {
+    const walletSetResponse = await client.createWalletSet({
+      name: "AgentMarket SummaryBot Wallets",
+      idempotencyKey: `agentmarket-summarybot-walletset-v1`,
+    });
+    walletSetId = String(walletSetResponse?.data?.walletSet?.id || "");
+  }
+  if (!walletSetId) throw new Error("Circle did not return a wallet set id");
+
+  const createResponse = await client.createWallets({
+    blockchains: [ARC_BLOCKCHAIN_ID],
+    count: 2,
+    walletSetId,
+    accountType: "SCA",
+    metadata: [
+      { name: "SummaryBot Owner", refId: `${AGENT_KEYS.summary}-${AGENT_WALLET_ROLES.owner}` },
+      { name: "SummaryBot Validator", refId: `${AGENT_KEYS.summary}-${AGENT_WALLET_ROLES.validator}` },
+    ],
+    idempotencyKey: `agentmarket-summarybot-wallets-v1`,
+  });
+  const wallets = Array.isArray(createResponse?.data?.wallets) ? createResponse.data.wallets : [];
+  const [ownerRaw, validatorRaw] = wallets;
+  if (!ownerRaw?.id || !ownerRaw?.address || !validatorRaw?.id || !validatorRaw?.address) {
+    throw new Error("Circle did not return both SummaryBot wallets");
+  }
+
+  const ownerWallet = saveAgentWallet(db, AGENT_KEYS.summary, AGENT_WALLET_ROLES.owner, {
+    walletSetId,
+    walletId: ownerRaw.id,
+    walletAddress: ownerRaw.address,
+    blockchain: ownerRaw.blockchain || ARC_BLOCKCHAIN_ID,
+    accountType: ownerRaw.accountType || "SCA",
+  });
+  const validatorWallet = saveAgentWallet(db, AGENT_KEYS.summary, AGENT_WALLET_ROLES.validator, {
+    walletSetId,
+    walletId: validatorRaw.id,
+    walletAddress: validatorRaw.address,
+    blockchain: validatorRaw.blockchain || ARC_BLOCKCHAIN_ID,
+    accountType: validatorRaw.accountType || "SCA",
+  });
+
+  return { ownerWallet, validatorWallet };
+}
+
+async function resolveIdentityTokenIdByOwner(ownerAddress) {
+  const latestBlock = await publicClient.getBlockNumber();
+  const blockRange = 10_000n;
+  const fromBlock = latestBlock > blockRange ? latestBlock - blockRange : 0n;
+  const logs = await publicClient.getLogs({
+    address: IDENTITY_REGISTRY,
+    event: parseAbiItem("event Transfer(address indexed from, address indexed to, uint256 indexed tokenId)"),
+    args: { to: ownerAddress },
+    fromBlock,
+    toBlock: latestBlock,
+  });
+  if (!logs.length) return "";
+  return String(logs[logs.length - 1]?.args?.tokenId || "");
+}
+
+async function ensureSummaryAgentIdentityRegistration(db) {
+  const client = getCircleDeveloperWalletClient();
+  if (!client) throw new Error("Circle developer-controlled wallets are not configured");
+
+  const registration = getAgentRegistration(db, AGENT_KEYS.summary);
+  if (registration?.identityTokenId) return registration;
+
+  const { ownerWallet } = await ensureSummaryAgentWallets(db);
+  const metadataUri = getSummaryBotMetadataUri();
+  if (!metadataUri) {
+    throw new Error("Set AGENTMARKET_PUBLIC_API_BASE_URL so SummaryBot metadata can be registered onchain");
+  }
+
+  const identityTx = await client.createContractExecutionTransaction({
+    walletId: ownerWallet.walletId,
+    contractAddress: IDENTITY_REGISTRY,
+    abiFunctionSignature: "register(string)",
+    abiParameters: [metadataUri],
+    fee: { type: "level", config: { feeLevel: "MEDIUM" } },
+    idempotencyKey: `agentmarket-summarybot-register-v1`,
+  });
+  const txId = String(identityTx?.data?.id || "");
+  const transaction = await waitForCircleDeveloperTransaction(client, txId);
+  const tokenId = await resolveIdentityTokenIdByOwner(ownerWallet.walletAddress);
+  if (!tokenId) {
+    throw new Error("SummaryBot identity registration completed, but no ERC-8004 token id was found");
+  }
+
+  return saveAgentRegistration(db, AGENT_KEYS.summary, {
+    metadataUri,
+    metadata: buildSummaryBotMetadata(db),
+    identityTokenId: tokenId,
+    identityTxId: txId,
+    identityTxHash: String(transaction?.txHash || ""),
+    registeredAt: Date.now(),
+  });
+}
+
+async function ensureSummaryAgentValidation(db) {
+  const client = getCircleDeveloperWalletClient();
+  if (!client) throw new Error("Circle developer-controlled wallets are not configured");
+
+  const registration = await ensureSummaryAgentIdentityRegistration(db);
+  if (registration?.validationStatus === 100) return registration;
+
+  const { ownerWallet, validatorWallet } = await ensureSummaryAgentWallets(db);
+  const tokenId = registration?.identityTokenId;
+  if (!tokenId) throw new Error("SummaryBot identity token id is required before validation");
+
+  const metadataUri = getSummaryBotMetadataUri();
+  const requestHash = registration?.validationRequestHash || keccak256(toBytes(`summarybot_validation_request_${tokenId}`));
+  const requestTx = await client.createContractExecutionTransaction({
+    walletId: ownerWallet.walletId,
+    contractAddress: VALIDATION_REGISTRY,
+    abiFunctionSignature: "validationRequest(address,uint256,string,bytes32)",
+    abiParameters: [validatorWallet.walletAddress, tokenId, metadataUri, requestHash],
+    fee: { type: "level", config: { feeLevel: "MEDIUM" } },
+    idempotencyKey: `agentmarket-summarybot-validation-request-v1`,
+  });
+  const requestTxId = String(requestTx?.data?.id || "");
+  const requestTransaction = await waitForCircleDeveloperTransaction(client, requestTxId);
+
+  const responseTx = await client.createContractExecutionTransaction({
+    walletId: validatorWallet.walletId,
+    contractAddress: VALIDATION_REGISTRY,
+    abiFunctionSignature: "validationResponse(bytes32,uint8,string,bytes32,string)",
+    abiParameters: [requestHash, 100, metadataUri, `0x${"0".repeat(64)}`, "platform_verified"],
+    fee: { type: "level", config: { feeLevel: "MEDIUM" } },
+    idempotencyKey: `agentmarket-summarybot-validation-response-v1`,
+  });
+  const responseTxId = String(responseTx?.data?.id || "");
+  const responseTransaction = await waitForCircleDeveloperTransaction(client, responseTxId);
+
+  return saveAgentRegistration(db, AGENT_KEYS.summary, {
+    metadataUri,
+    metadata: buildSummaryBotMetadata(db),
+    validationRequestHash: requestHash,
+    validationRequestTxId: requestTxId,
+    validationRequestTxHash: String(requestTransaction?.txHash || ""),
+    validationResponseTxId: responseTxId,
+    validationResponseTxHash: String(responseTransaction?.txHash || ""),
+    validationStatus: 100,
+    validationTag: "platform_verified",
+    validatedAt: Date.now(),
+  });
+}
+
+function isSummaryBotSupportedJob(job = {}) {
+  if (!SUMMARY_AGENT_ENABLED) return false;
+  if (Number(job.workerType) !== 0) return false;
+  if (job.isExpired) return false;
+  if (![0, 1].includes(Number(job.status))) return false;
+  if (toUsdcNumber(job.budget) > SUMMARY_AGENT_MAX_BUDGET_USDC) return false;
+
+  const signals = [
+    String(job.title || ""),
+    String(job.description || ""),
+    String(job.category || ""),
+    String(job.taskType || ""),
+  ].join(" ").toLowerCase();
+
+  return [
+    "summar",
+    "summary",
+    "analy",
+    "research",
+    "report",
+    "brief",
+    "notes",
+  ].some(token => signals.includes(token));
+}
+
+async function fetchSummarySourceFromUrl(url) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 12_000);
+  try {
+    const response = await fetch(url, {
+      signal: controller.signal,
+      headers: {
+        "User-Agent": "AgentMarket SummaryBot/1.0",
+      },
+    });
+    if (!response.ok) {
+      throw new Error(`Source request failed with status ${response.status}`);
+    }
+    const contentType = String(response.headers.get("content-type") || "").toLowerCase();
+    if (!(contentType.includes("text/") || contentType.includes("json") || contentType.includes("html"))) {
+      throw new Error(`Unsupported source content type ${contentType || "unknown"}`);
+    }
+    const raw = await response.text();
+    const text = contentType.includes("html") ? stripHtmlToText(raw) : raw.trim();
+    return truncateAgentText(text, 10_000);
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+async function buildSummaryBotPromptContext(job) {
+  const sourceUrls = extractUrlsFromText(job.description || "").slice(0, SUMMARY_AGENT_MAX_SOURCE_URLS);
+  const collectedSources = [];
+  for (const url of sourceUrls) {
+    try {
+      const text = await fetchSummarySourceFromUrl(url);
+      if (text) {
+        collectedSources.push({ url, text });
+      }
+    } catch (err) {
+      collectedSources.push({ url, error: err.message || "Could not read source" });
+    }
+  }
+
+  const sections = [
+    `Job title: ${job.title || "Untitled job"}`,
+    `Category: ${job.category || "Uncategorized"}`,
+    `Task type: ${job.taskType || "Not specified"}`,
+    `Budget: ${job.budget || "0.00"} USDC`,
+    `Client request:\n${truncateAgentText(job.description || "", 12_000)}`,
+  ];
+
+  if (collectedSources.length) {
+    sections.push(collectedSources.map((source, index) => (
+      source.error
+        ? `Source ${index + 1}: ${source.url}\nStatus: ${source.error}`
+        : `Source ${index + 1}: ${source.url}\n${truncateAgentText(source.text, 8_000)}`
+    )).join("\n\n"));
+  }
+
+  return {
+    sourceUrls,
+    collectedSources,
+    promptText: sections.join("\n\n"),
+  };
+}
+
+async function runSummaryBotModel(job, promptContext) {
+  if (!SUMMARY_AGENT_OPENAI_API_KEY) {
+    throw new Error("Set OPENAI_API_KEY to enable SummaryBot execution");
+  }
+
+  const response = await fetch(`${withTrailingSlashRemoved(SUMMARY_AGENT_OPENAI_BASE_URL)}/responses`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${SUMMARY_AGENT_OPENAI_API_KEY}`,
+    },
+    body: JSON.stringify({
+      model: SUMMARY_AGENT_MODEL,
+      instructions: [
+        "You are SummaryBot, an autonomous agent on AgentMarket running jobs on Arc Testnet.",
+        "Produce a client-ready deliverable for summarization or lightweight research tasks.",
+        "Ground the answer only in the provided job description and fetched public sources.",
+        "If sources are incomplete or ambiguous, say so clearly instead of inventing facts.",
+        "Output plain text with these sections: Executive Summary, Key Points, Action Items, Caveats.",
+      ].join(" "),
+      input: promptContext.promptText,
+      max_output_tokens: 1200,
+    }),
+  });
+
+  if (!response.ok) {
+    const detail = await response.text().catch(() => "");
+    throw new Error(`OpenAI request failed with status ${response.status}${detail ? `: ${detail.slice(0, 300)}` : ""}`);
+  }
+
+  const payload = await response.json();
+  const outputText = extractOpenAiResponseText(payload);
+  if (!outputText) throw new Error("SummaryBot model returned an empty response");
+
+  return {
+    outputText,
+    model: payload?.model || SUMMARY_AGENT_MODEL,
+    responseId: String(payload?.id || ""),
+  };
+}
+
+async function createSummaryBotClaimTransaction(ownerWallet, jobId) {
+  const client = getCircleDeveloperWalletClient();
+  const response = await client.createContractExecutionTransaction({
+    walletId: ownerWallet.walletId,
+    contractAddress: JOB_BOARD_ADDRESS,
+    abiFunctionSignature: "claimJob(uint256)",
+    abiParameters: [Number(jobId)],
+    fee: { type: "level", config: { feeLevel: "MEDIUM" } },
+    idempotencyKey: `agentmarket-summarybot-claim-${Number(jobId)}`,
+  });
+  const txId = String(response?.data?.id || "");
+  const transaction = await waitForCircleDeveloperTransaction(client, txId);
+  return {
+    id: txId,
+    hash: String(transaction?.txHash || ""),
+  };
+}
+
+async function createSummaryBotDeliverableTransaction(ownerWallet, jobId, locator) {
+  const client = getCircleDeveloperWalletClient();
+  const response = await client.createContractExecutionTransaction({
+    walletId: ownerWallet.walletId,
+    contractAddress: JOB_BOARD_ADDRESS,
+    abiFunctionSignature: "submitDeliverable(uint256,string)",
+    abiParameters: [Number(jobId), locator],
+    fee: { type: "level", config: { feeLevel: "MEDIUM" } },
+    idempotencyKey: `agentmarket-summarybot-submit-${Number(jobId)}`,
+  });
+  const txId = String(response?.data?.id || "");
+  const transaction = await waitForCircleDeveloperTransaction(client, txId);
+  return {
+    id: txId,
+    hash: String(transaction?.txHash || ""),
+  };
+}
+
+function computeSummaryBotFeedback(job, run) {
+  const completedOnTime = Number(job.completedAt || 0) > 0 && Number(job.deadline || 0) > 0
+    ? Number(job.completedAt) <= Number(job.deadline)
+    : true;
+  const score = completedOnTime ? 95 : 82;
+  const tag = completedOnTime ? "job_completed_on_time" : "job_completed_late";
+  const comment = completedOnTime
+    ? `SummaryBot delivered job #${job.id} and the client approved it before the deadline.`
+    : `SummaryBot delivered job #${job.id}; the client approved it after the original deadline.`;
+  const evidenceUri = run?.deliverableLocator || "";
+  return { score, tag, comment, evidenceUri };
+}
+
+async function maybeRecordSummaryBotReputation(db, job) {
+  if (Number(job.status) !== 3) return null;
+  const run = getAgentRunByJobId(db, AGENT_KEYS.summary, job.id);
+  if (!run || run.reputationTxHash) return run;
+
+  const client = getCircleDeveloperWalletClient();
+  if (!client) throw new Error("Circle developer-controlled wallets are not configured");
+  const validatorWallet = getAgentWallet(db, AGENT_KEYS.summary, AGENT_WALLET_ROLES.validator);
+  const registration = getAgentRegistration(db, AGENT_KEYS.summary);
+  if (!validatorWallet?.walletId || !registration?.identityTokenId) return run;
+
+  const feedback = computeSummaryBotFeedback(job, run);
+  const feedbackHash = keccak256(toBytes(`${feedback.tag}:${job.id}:${run.id}`));
+  const response = await client.createContractExecutionTransaction({
+    walletId: validatorWallet.walletId,
+    contractAddress: REPUTATION_REGISTRY,
+    abiFunctionSignature: "giveFeedback(uint256,int128,uint8,string,string,string,string,bytes32)",
+    abiParameters: [
+      registration.identityTokenId,
+      String(feedback.score),
+      0,
+      feedback.tag,
+      getSummaryBotMetadataUri(),
+      feedback.evidenceUri,
+      feedback.comment,
+      feedbackHash,
+    ],
+    fee: { type: "level", config: { feeLevel: "MEDIUM" } },
+    idempotencyKey: `agentmarket-summarybot-feedback-${Number(job.id)}`,
+  });
+  const txId = String(response?.data?.id || "");
+  const transaction = await waitForCircleDeveloperTransaction(client, txId);
+
+  return saveAgentRun(db, {
+    id: run.id,
+    status: AGENT_RUN_STATUSES.completed,
+    completedAt: Number(job.completedAt || Date.now()),
+    reputationTxId: txId,
+    reputationTxHash: String(transaction?.txHash || ""),
+    reputationScore: feedback.score,
+    reputationTag: feedback.tag,
+  });
+}
+
+async function ensureSummaryBotReady(db) {
+  if (!SUMMARY_AGENT_ENABLED) {
+    throw new Error("SummaryBot is disabled");
+  }
+  await ensureSummaryAgentWallets(db);
+  if (SUMMARY_AGENT_AUTO_BOOTSTRAP) {
+    await ensureSummaryAgentIdentityRegistration(db);
+    if (SUMMARY_AGENT_AUTO_VALIDATE) {
+      await ensureSummaryAgentValidation(db);
+    }
+  }
+}
+
+function isSummaryBotDirectAssignment(job, ownerWallet) {
+  return Boolean(
+    ownerWallet?.walletAddress
+    && sameAddress(job.agent, ownerWallet.walletAddress)
+    && Number(job.status) === 1
+    && Number(job.workerType) === 0
+  );
+}
+
+function isSummaryBotOpenClaim(job) {
+  return Boolean(
+    SUMMARY_AGENT_ALLOW_OPEN_CLAIMS
+    && sameAddress(job.agent, ZERO_ADDRESS)
+    && Number(job.status) === 0
+    && isSummaryBotSupportedJob(job)
+  );
+}
+
+async function processSummaryBotJob(db, ownerWallet, job) {
+  let run = getAgentRunByJobId(db, AGENT_KEYS.summary, job.id);
+  if (run && [AGENT_RUN_STATUSES.submitted, AGENT_RUN_STATUSES.completed].includes(run.status)) {
+    return run;
+  }
+
+  run = saveAgentRun(db, {
+    id: run?.id,
+    agentKey: AGENT_KEYS.summary,
+    jobId: job.id,
+    jobTitle: job.title,
+    jobCategory: job.category,
+    clientWallet: job.client,
+    workerWallet: ownerWallet.walletAddress,
+    status: run?.status || AGENT_RUN_STATUSES.pending,
+    attempts: Number(run?.attempts || 0) + 1,
+    startedAt: run?.startedAt || Date.now(),
+  });
+
+  let liveJob = job;
+  if (isSummaryBotOpenClaim(job)) {
+    run = saveAgentRun(db, {
+      id: run.id,
+      status: AGENT_RUN_STATUSES.claiming,
+    });
+    const claimTx = await createSummaryBotClaimTransaction(ownerWallet, job.id);
+    run = saveAgentRun(db, {
+      id: run.id,
+      status: AGENT_RUN_STATUSES.claimed,
+      claimTxId: claimTx.id,
+      claimTxHash: claimTx.hash,
+    });
+    const refreshedJobs = await getAllFormattedJobs();
+    liveJob = refreshedJobs.find(item => Number(item.id) === Number(job.id)) || job;
+  }
+
+  run = saveAgentRun(db, {
+    id: run.id,
+    status: AGENT_RUN_STATUSES.running,
+  });
+
+  const promptContext = await buildSummaryBotPromptContext(liveJob);
+  const modelResult = await runSummaryBotModel(liveJob, promptContext);
+  const deliverableLocator = getSummaryBotDeliverableLocator(liveJob.id, run.id);
+  if (!deliverableLocator) {
+    throw new Error("Set AGENTMARKET_PUBLIC_API_BASE_URL so SummaryBot can publish deliverable links");
+  }
+
+  run = saveAgentRun(db, {
+    id: run.id,
+    status: AGENT_RUN_STATUSES.submitting,
+    deliverableLocator,
+    result: {
+      jobId: liveJob.id,
+      agentKey: AGENT_KEYS.summary,
+      agentName: "SummaryBot",
+      title: liveJob.title,
+      category: liveJob.category,
+      generatedAt: Date.now(),
+      model: modelResult.model,
+      responseId: modelResult.responseId,
+      summary: modelResult.outputText,
+      sourceUrls: promptContext.sourceUrls,
+      collectedSources: promptContext.collectedSources.map(item => ({
+        url: item.url,
+        error: item.error || "",
+      })),
+      deliverableLocator,
+    },
+  });
+
+  const submitTx = await createSummaryBotDeliverableTransaction(ownerWallet, liveJob.id, deliverableLocator);
+  return saveAgentRun(db, {
+    id: run.id,
+    status: AGENT_RUN_STATUSES.submitted,
+    submitTxId: submitTx.id,
+    submitTxHash: submitTx.hash,
+  });
+}
+
+function getSummaryBotCatalogEntry(db) {
+  const ownerWallet = getAgentWallet(db, AGENT_KEYS.summary, AGENT_WALLET_ROLES.owner);
+  const validatorWallet = getAgentWallet(db, AGENT_KEYS.summary, AGENT_WALLET_ROLES.validator);
+  const registration = getAgentRegistration(db, AGENT_KEYS.summary);
+  const recentRuns = listAgentRuns(db, AGENT_KEYS.summary, { limit: 5 });
+  const activeRuns = recentRuns.filter(run => ![AGENT_RUN_STATUSES.completed, AGENT_RUN_STATUSES.failed].includes(run.status));
+  return {
+    id: "native-001",
+    agentKey: AGENT_KEYS.summary,
+    type: "AI",
+    name: "SummaryBot",
+    description: "Autonomous Arc-native summarizer that can claim eligible AI jobs, generate a client-ready brief, submit the deliverable onchain, and wait for payment approval.",
+    taskTypes: ["summarize", "analyze", "research"],
+    walletAddress: ownerWallet?.walletAddress || "",
+    validatorWalletAddress: validatorWallet?.walletAddress || "",
+    reputationScore: recentRuns.some(run => run.reputationScore > 0)
+      ? Math.round(recentRuns.reduce((sum, run) => sum + Number(run.reputationScore || 0), 0) / Math.max(1, recentRuns.filter(run => run.reputationScore > 0).length))
+      : 0,
+    completedJobs: recentRuns.filter(run => run.status === AGENT_RUN_STATUSES.completed).length,
+    isNative: true,
+    isVerified: registration?.validationStatus === 100,
+    isLive: SUMMARY_AGENT_ENABLED,
+    liveStatus: activeRuns.length ? activeRuns[0].status : (summaryAgentRuntime.lastError ? "degraded" : "idle"),
+    minBudget: "1.00",
+    maxBudget: formatUsdc(SUMMARY_AGENT_MAX_BUDGET_USDC),
+    identityTokenId: registration?.identityTokenId || "",
+    metadataUri: registration?.metadataUri || getSummaryBotMetadataUri(),
+    metadataUrl: getSummaryBotMetadataUri(),
+    validationStatus: registration?.validationStatus ?? -1,
+    validationTag: registration?.validationTag || "",
+    missingConfig: getSummaryBotMissingConfig(db),
+    recentRuns,
+  };
+}
+
+async function runSummaryAgentCycle({ reason = "background" } = {}) {
+  if (!SUMMARY_AGENT_ENABLED) return;
+  if (summaryAgentLoopPromise) return summaryAgentLoopPromise;
+
+  summaryAgentLoopPromise = (async () => {
+    summaryAgentRuntime.running = true;
+    summaryAgentRuntime.lastStartedAt = Date.now();
+    try {
+      const db = await ensurePulseDatabase();
+      await ensureSummaryBotReady(db);
+      summaryAgentRuntime.bootstrapped = true;
+      const ownerWallet = getAgentWallet(db, AGENT_KEYS.summary, AGENT_WALLET_ROLES.owner);
+      if (!ownerWallet?.walletAddress) throw new Error("SummaryBot owner wallet is not ready");
+
+      const [jobs, activeRuns] = await Promise.all([
+        getAllFormattedJobs(),
+        Promise.resolve(listAgentRuns(db, AGENT_KEYS.summary, { limit: 50 })
+          .filter(run => AGENT_ACTIVE_EXECUTION_STATUSES.has(run.status))),
+      ]);
+
+      for (const job of jobs.filter(item => sameAddress(item.agent, ownerWallet.walletAddress) && Number(item.status) === 3)) {
+        await maybeRecordSummaryBotReputation(db, job);
+      }
+
+      const capacity = Math.max(0, SUMMARY_AGENT_MAX_CONCURRENT_JOBS - activeRuns.length);
+      if (capacity <= 0) {
+        summaryAgentRuntime.lastCompletedAt = Date.now();
+        summaryAgentRuntime.lastError = "";
+        return;
+      }
+
+      const candidates = jobs.filter(job => (
+        (isSummaryBotDirectAssignment(job, ownerWallet) || isSummaryBotOpenClaim(job))
+        && !getAgentRunByJobId(db, AGENT_KEYS.summary, job.id)
+      )).slice(0, capacity);
+
+      for (const job of candidates) {
+        try {
+          await processSummaryBotJob(db, ownerWallet, job);
+        } catch (err) {
+          const existingRun = getAgentRunByJobId(db, AGENT_KEYS.summary, job.id);
+          saveAgentRun(db, {
+            id: existingRun?.id,
+            agentKey: AGENT_KEYS.summary,
+            jobId: job.id,
+            jobTitle: job.title,
+            jobCategory: job.category,
+            clientWallet: job.client,
+            workerWallet: ownerWallet.walletAddress,
+            status: AGENT_RUN_STATUSES.failed,
+            attempts: Number(existingRun?.attempts || 0) + (existingRun ? 0 : 1),
+            error: err.message || "SummaryBot job processing failed",
+            startedAt: existingRun?.startedAt || Date.now(),
+            completedAt: Date.now(),
+          });
+        }
+      }
+
+      summaryAgentRuntime.lastCompletedAt = Date.now();
+      summaryAgentRuntime.lastError = "";
+      summaryAgentLastCycleAt = Date.now();
+    } catch (err) {
+      summaryAgentRuntime.lastError = err.message || `SummaryBot ${reason} cycle failed`;
+      summaryAgentRuntime.lastCompletedAt = Date.now();
+    } finally {
+      summaryAgentRuntime.running = false;
+      summaryAgentLoopPromise = null;
+    }
+  })();
+
+  return summaryAgentLoopPromise;
+}
+
+function startSummaryAgentLoop() {
+  if (summaryAgentLoopTimer || !SUMMARY_AGENT_ENABLED) return;
+  runSummaryAgentCycle({ reason: "startup" }).catch(() => {});
+  summaryAgentLoopTimer = setInterval(() => {
+    if ((Date.now() - summaryAgentLastCycleAt) < Math.max(5_000, Math.floor(SUMMARY_AGENT_LOOP_MS / 2))) return;
+    runSummaryAgentCycle({ reason: "background" }).catch(() => {});
+  }, SUMMARY_AGENT_LOOP_MS);
 }
 
 async function getRecentBlocks(limit = PULSE_RECENT_BLOCK_LIMIT) {
@@ -1959,6 +2789,263 @@ function pulseMetaSet(db, key, value) {
   `).run(key, String(value ?? ""), Date.now());
 }
 
+function normalizeAgentWalletRecord(record) {
+  if (!record) return null;
+  return {
+    agentKey: String(record.agent_key || record.agentKey || "").toLowerCase(),
+    walletRole: String(record.wallet_role || record.walletRole || "").toLowerCase(),
+    walletSetId: String(record.wallet_set_id || record.walletSetId || ""),
+    walletId: String(record.wallet_id || record.walletId || ""),
+    walletAddress: String(record.wallet_address || record.walletAddress || "").toLowerCase(),
+    blockchain: String(record.blockchain || ARC_BLOCKCHAIN_ID),
+    accountType: String(record.account_type || record.accountType || "SCA"),
+    createdAt: Number(record.created_at || record.createdAt || 0),
+    updatedAt: Number(record.updated_at || record.updatedAt || 0),
+  };
+}
+
+function listAgentWallets(db, agentKey) {
+  return db.prepare("SELECT * FROM agent_wallets WHERE agent_key = ? ORDER BY wallet_role ASC")
+    .all(String(agentKey || "").toLowerCase())
+    .map(normalizeAgentWalletRecord)
+    .filter(Boolean);
+}
+
+function getAgentWallet(db, agentKey, walletRole) {
+  const row = db.prepare("SELECT * FROM agent_wallets WHERE agent_key = ? AND wallet_role = ?")
+    .get(String(agentKey || "").toLowerCase(), String(walletRole || "").toLowerCase());
+  return normalizeAgentWalletRecord(row);
+}
+
+function saveAgentWallet(db, agentKey, walletRole, payload = {}) {
+  const now = Date.now();
+  const existing = getAgentWallet(db, agentKey, walletRole);
+  db.prepare(`
+    INSERT INTO agent_wallets (
+      agent_key, wallet_role, wallet_set_id, wallet_id, wallet_address,
+      blockchain, account_type, created_at, updated_at
+    )
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ON CONFLICT(agent_key, wallet_role) DO UPDATE SET
+      wallet_set_id = excluded.wallet_set_id,
+      wallet_id = excluded.wallet_id,
+      wallet_address = excluded.wallet_address,
+      blockchain = excluded.blockchain,
+      account_type = excluded.account_type,
+      updated_at = excluded.updated_at
+  `).run(
+    String(agentKey || "").toLowerCase(),
+    String(walletRole || "").toLowerCase(),
+    String(payload.walletSetId || existing?.walletSetId || ""),
+    String(payload.walletId || existing?.walletId || ""),
+    String(payload.walletAddress || existing?.walletAddress || "").toLowerCase(),
+    String(payload.blockchain || existing?.blockchain || ARC_BLOCKCHAIN_ID),
+    String(payload.accountType || existing?.accountType || "SCA"),
+    existing?.createdAt || now,
+    now,
+  );
+  return getAgentWallet(db, agentKey, walletRole);
+}
+
+function normalizeAgentRegistrationRecord(record) {
+  if (!record) return null;
+  let metadata = {};
+  try {
+    metadata = JSON.parse(record.metadata_json || record.metadataJson || "{}");
+  } catch {}
+  return {
+    agentKey: String(record.agent_key || record.agentKey || "").toLowerCase(),
+    metadataUri: String(record.metadata_uri || record.metadataUri || ""),
+    metadata: isPlainObject(metadata) ? metadata : {},
+    identityTokenId: String(record.identity_token_id || record.identityTokenId || ""),
+    identityTxId: String(record.identity_tx_id || record.identityTxId || ""),
+    identityTxHash: String(record.identity_tx_hash || record.identityTxHash || ""),
+    validationRequestHash: String(record.validation_request_hash || record.validationRequestHash || ""),
+    validationRequestTxId: String(record.validation_request_tx_id || record.validationRequestTxId || ""),
+    validationRequestTxHash: String(record.validation_request_tx_hash || record.validationRequestTxHash || ""),
+    validationResponseTxId: String(record.validation_response_tx_id || record.validationResponseTxId || ""),
+    validationResponseTxHash: String(record.validation_response_tx_hash || record.validationResponseTxHash || ""),
+    validationStatus: Number(record.validation_status ?? record.validationStatus ?? -1),
+    validationTag: String(record.validation_tag || record.validationTag || ""),
+    registeredAt: Number(record.registered_at || record.registeredAt || 0),
+    validatedAt: Number(record.validated_at || record.validatedAt || 0),
+    updatedAt: Number(record.updated_at || record.updatedAt || 0),
+  };
+}
+
+function getAgentRegistration(db, agentKey) {
+  const row = db.prepare("SELECT * FROM agent_registrations WHERE agent_key = ?")
+    .get(String(agentKey || "").toLowerCase());
+  return normalizeAgentRegistrationRecord(row);
+}
+
+function saveAgentRegistration(db, agentKey, payload = {}) {
+  const now = Date.now();
+  const existing = getAgentRegistration(db, agentKey);
+  const metadata = isPlainObject(payload.metadata) ? payload.metadata : (existing?.metadata || {});
+  db.prepare(`
+    INSERT INTO agent_registrations (
+      agent_key, metadata_uri, metadata_json, identity_token_id, identity_tx_id, identity_tx_hash,
+      validation_request_hash, validation_request_tx_id, validation_request_tx_hash,
+      validation_response_tx_id, validation_response_tx_hash, validation_status, validation_tag,
+      registered_at, validated_at, updated_at
+    )
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ON CONFLICT(agent_key) DO UPDATE SET
+      metadata_uri = excluded.metadata_uri,
+      metadata_json = excluded.metadata_json,
+      identity_token_id = excluded.identity_token_id,
+      identity_tx_id = excluded.identity_tx_id,
+      identity_tx_hash = excluded.identity_tx_hash,
+      validation_request_hash = excluded.validation_request_hash,
+      validation_request_tx_id = excluded.validation_request_tx_id,
+      validation_request_tx_hash = excluded.validation_request_tx_hash,
+      validation_response_tx_id = excluded.validation_response_tx_id,
+      validation_response_tx_hash = excluded.validation_response_tx_hash,
+      validation_status = excluded.validation_status,
+      validation_tag = excluded.validation_tag,
+      registered_at = excluded.registered_at,
+      validated_at = excluded.validated_at,
+      updated_at = excluded.updated_at
+  `).run(
+    String(agentKey || "").toLowerCase(),
+    String(payload.metadataUri ?? existing?.metadataUri ?? ""),
+    JSON.stringify(metadata),
+    String(payload.identityTokenId ?? existing?.identityTokenId ?? ""),
+    String(payload.identityTxId ?? existing?.identityTxId ?? ""),
+    String(payload.identityTxHash ?? existing?.identityTxHash ?? ""),
+    String(payload.validationRequestHash ?? existing?.validationRequestHash ?? ""),
+    String(payload.validationRequestTxId ?? existing?.validationRequestTxId ?? ""),
+    String(payload.validationRequestTxHash ?? existing?.validationRequestTxHash ?? ""),
+    String(payload.validationResponseTxId ?? existing?.validationResponseTxId ?? ""),
+    String(payload.validationResponseTxHash ?? existing?.validationResponseTxHash ?? ""),
+    payload.validationStatus ?? existing?.validationStatus ?? -1,
+    String(payload.validationTag ?? existing?.validationTag ?? ""),
+    Number(payload.registeredAt ?? existing?.registeredAt ?? 0),
+    Number(payload.validatedAt ?? existing?.validatedAt ?? 0),
+    now,
+  );
+  return getAgentRegistration(db, agentKey);
+}
+
+function normalizeAgentRunRecord(record) {
+  if (!record) return null;
+  let result = {};
+  try {
+    result = JSON.parse(record.result_json || record.resultJson || "{}");
+  } catch {}
+  return {
+    id: String(record.id || ""),
+    agentKey: String(record.agent_key || record.agentKey || "").toLowerCase(),
+    jobId: Number(record.job_id || record.jobId || 0),
+    jobTitle: String(record.job_title || record.jobTitle || ""),
+    jobCategory: String(record.job_category || record.jobCategory || ""),
+    clientWallet: String(record.client_wallet || record.clientWallet || "").toLowerCase(),
+    workerWallet: String(record.worker_wallet || record.workerWallet || "").toLowerCase(),
+    status: String(record.status || AGENT_RUN_STATUSES.pending),
+    attempts: Number(record.attempts || 0),
+    claimTxId: String(record.claim_tx_id || record.claimTxId || ""),
+    claimTxHash: String(record.claim_tx_hash || record.claimTxHash || ""),
+    submitTxId: String(record.submit_tx_id || record.submitTxId || ""),
+    submitTxHash: String(record.submit_tx_hash || record.submitTxHash || ""),
+    deliverableLocator: String(record.deliverable_locator || record.deliverableLocator || ""),
+    result: isPlainObject(result) ? result : {},
+    error: String(record.error || ""),
+    reputationTxId: String(record.reputation_tx_id || record.reputationTxId || ""),
+    reputationTxHash: String(record.reputation_tx_hash || record.reputationTxHash || ""),
+    reputationScore: Number(record.reputation_score || 0),
+    reputationTag: String(record.reputation_tag || record.reputationTag || ""),
+    createdAt: Number(record.created_at || record.createdAt || 0),
+    updatedAt: Number(record.updated_at || record.updatedAt || 0),
+    startedAt: Number(record.started_at || record.startedAt || 0),
+    completedAt: Number(record.completed_at || record.completedAt || 0),
+  };
+}
+
+function getAgentRunByJobId(db, agentKey, jobId) {
+  const row = db.prepare("SELECT * FROM agent_runs WHERE agent_key = ? AND job_id = ?")
+    .get(String(agentKey || "").toLowerCase(), Number(jobId || 0));
+  return normalizeAgentRunRecord(row);
+}
+
+function getAgentRunById(db, runId) {
+  const row = db.prepare("SELECT * FROM agent_runs WHERE id = ?").get(String(runId || ""));
+  return normalizeAgentRunRecord(row);
+}
+
+function listAgentRuns(db, agentKey, { limit = 20 } = {}) {
+  return db.prepare("SELECT * FROM agent_runs WHERE agent_key = ? ORDER BY updated_at DESC LIMIT ?")
+    .all(String(agentKey || "").toLowerCase(), Math.max(1, Number(limit || 20)))
+    .map(normalizeAgentRunRecord)
+    .filter(Boolean);
+}
+
+function saveAgentRun(db, payload = {}) {
+  const existing = payload.id
+    ? getAgentRunById(db, payload.id)
+    : getAgentRunByJobId(db, payload.agentKey, payload.jobId);
+  const id = String(payload.id || existing?.id || randomUUID());
+  const now = Date.now();
+  const result = isPlainObject(payload.result) ? payload.result : (existing?.result || {});
+  db.prepare(`
+    INSERT INTO agent_runs (
+      id, agent_key, job_id, job_title, job_category, client_wallet, worker_wallet, status, attempts,
+      claim_tx_id, claim_tx_hash, submit_tx_id, submit_tx_hash, deliverable_locator, result_json, error,
+      reputation_tx_id, reputation_tx_hash, reputation_score, reputation_tag, created_at, updated_at, started_at, completed_at
+    )
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ON CONFLICT(id) DO UPDATE SET
+      agent_key = excluded.agent_key,
+      job_id = excluded.job_id,
+      job_title = excluded.job_title,
+      job_category = excluded.job_category,
+      client_wallet = excluded.client_wallet,
+      worker_wallet = excluded.worker_wallet,
+      status = excluded.status,
+      attempts = excluded.attempts,
+      claim_tx_id = excluded.claim_tx_id,
+      claim_tx_hash = excluded.claim_tx_hash,
+      submit_tx_id = excluded.submit_tx_id,
+      submit_tx_hash = excluded.submit_tx_hash,
+      deliverable_locator = excluded.deliverable_locator,
+      result_json = excluded.result_json,
+      error = excluded.error,
+      reputation_tx_id = excluded.reputation_tx_id,
+      reputation_tx_hash = excluded.reputation_tx_hash,
+      reputation_score = excluded.reputation_score,
+      reputation_tag = excluded.reputation_tag,
+      updated_at = excluded.updated_at,
+      started_at = excluded.started_at,
+      completed_at = excluded.completed_at
+  `).run(
+    id,
+    String(payload.agentKey || existing?.agentKey || "").toLowerCase(),
+    Number(payload.jobId || existing?.jobId || 0),
+    String(payload.jobTitle ?? existing?.jobTitle ?? ""),
+    String(payload.jobCategory ?? existing?.jobCategory ?? ""),
+    String(payload.clientWallet ?? existing?.clientWallet ?? "").toLowerCase(),
+    String(payload.workerWallet ?? existing?.workerWallet ?? "").toLowerCase(),
+    String(payload.status || existing?.status || AGENT_RUN_STATUSES.pending),
+    Number(payload.attempts ?? existing?.attempts ?? 0),
+    String(payload.claimTxId ?? existing?.claimTxId ?? ""),
+    String(payload.claimTxHash ?? existing?.claimTxHash ?? ""),
+    String(payload.submitTxId ?? existing?.submitTxId ?? ""),
+    String(payload.submitTxHash ?? existing?.submitTxHash ?? ""),
+    String(payload.deliverableLocator ?? existing?.deliverableLocator ?? ""),
+    JSON.stringify(result),
+    String(payload.error ?? existing?.error ?? ""),
+    String(payload.reputationTxId ?? existing?.reputationTxId ?? ""),
+    String(payload.reputationTxHash ?? existing?.reputationTxHash ?? ""),
+    Number(payload.reputationScore ?? existing?.reputationScore ?? 0),
+    String(payload.reputationTag ?? existing?.reputationTag ?? ""),
+    Number(existing?.createdAt || payload.createdAt || now),
+    now,
+    Number(payload.startedAt ?? existing?.startedAt ?? 0),
+    Number(payload.completedAt ?? existing?.completedAt ?? 0),
+  );
+  return getAgentRunById(db, id);
+}
+
 function normalizePulseProfileRecord(record) {
   if (!record) return null;
   return {
@@ -2194,6 +3281,65 @@ async function ensurePulseDatabase() {
           PRIMARY KEY (tx_hash, log_index)
         );
 
+        CREATE TABLE IF NOT EXISTS agent_wallets (
+          agent_key TEXT NOT NULL,
+          wallet_role TEXT NOT NULL,
+          wallet_set_id TEXT NOT NULL DEFAULT '',
+          wallet_id TEXT NOT NULL DEFAULT '',
+          wallet_address TEXT NOT NULL DEFAULT '',
+          blockchain TEXT NOT NULL DEFAULT 'ARC-TESTNET',
+          account_type TEXT NOT NULL DEFAULT 'SCA',
+          created_at INTEGER NOT NULL,
+          updated_at INTEGER NOT NULL,
+          PRIMARY KEY (agent_key, wallet_role)
+        );
+
+        CREATE TABLE IF NOT EXISTS agent_registrations (
+          agent_key TEXT PRIMARY KEY,
+          metadata_uri TEXT NOT NULL DEFAULT '',
+          metadata_json TEXT NOT NULL DEFAULT '{}',
+          identity_token_id TEXT NOT NULL DEFAULT '',
+          identity_tx_id TEXT NOT NULL DEFAULT '',
+          identity_tx_hash TEXT NOT NULL DEFAULT '',
+          validation_request_hash TEXT NOT NULL DEFAULT '',
+          validation_request_tx_id TEXT NOT NULL DEFAULT '',
+          validation_request_tx_hash TEXT NOT NULL DEFAULT '',
+          validation_response_tx_id TEXT NOT NULL DEFAULT '',
+          validation_response_tx_hash TEXT NOT NULL DEFAULT '',
+          validation_status INTEGER NOT NULL DEFAULT -1,
+          validation_tag TEXT NOT NULL DEFAULT '',
+          registered_at INTEGER NOT NULL DEFAULT 0,
+          validated_at INTEGER NOT NULL DEFAULT 0,
+          updated_at INTEGER NOT NULL
+        );
+
+        CREATE TABLE IF NOT EXISTS agent_runs (
+          id TEXT PRIMARY KEY,
+          agent_key TEXT NOT NULL,
+          job_id INTEGER NOT NULL UNIQUE,
+          job_title TEXT NOT NULL DEFAULT '',
+          job_category TEXT NOT NULL DEFAULT '',
+          client_wallet TEXT NOT NULL DEFAULT '',
+          worker_wallet TEXT NOT NULL DEFAULT '',
+          status TEXT NOT NULL DEFAULT 'pending',
+          attempts INTEGER NOT NULL DEFAULT 0,
+          claim_tx_id TEXT NOT NULL DEFAULT '',
+          claim_tx_hash TEXT NOT NULL DEFAULT '',
+          submit_tx_id TEXT NOT NULL DEFAULT '',
+          submit_tx_hash TEXT NOT NULL DEFAULT '',
+          deliverable_locator TEXT NOT NULL DEFAULT '',
+          result_json TEXT NOT NULL DEFAULT '{}',
+          error TEXT NOT NULL DEFAULT '',
+          reputation_tx_id TEXT NOT NULL DEFAULT '',
+          reputation_tx_hash TEXT NOT NULL DEFAULT '',
+          reputation_score INTEGER NOT NULL DEFAULT 0,
+          reputation_tag TEXT NOT NULL DEFAULT '',
+          created_at INTEGER NOT NULL,
+          updated_at INTEGER NOT NULL,
+          started_at INTEGER NOT NULL DEFAULT 0,
+          completed_at INTEGER NOT NULL DEFAULT 0
+        );
+
         CREATE INDEX IF NOT EXISTS idx_pulse_posts_created_at ON pulse_posts(created_at DESC);
         CREATE INDEX IF NOT EXISTS idx_pulse_posts_lane_created_at ON pulse_posts(lane, created_at DESC);
         CREATE INDEX IF NOT EXISTS idx_pulse_profiles_points ON pulse_profiles(points DESC, updated_at DESC);
@@ -2207,6 +3353,9 @@ async function ensurePulseDatabase() {
         CREATE INDEX IF NOT EXISTS idx_pulse_indexed_contract_events_block ON pulse_indexed_contract_events(block_number DESC);
         CREATE INDEX IF NOT EXISTS idx_pulse_indexed_contract_events_event_key ON pulse_indexed_contract_events(event_key, block_timestamp DESC);
         CREATE INDEX IF NOT EXISTS idx_pulse_indexed_contract_events_wallet_primary ON pulse_indexed_contract_events(wallet_primary);
+        CREATE INDEX IF NOT EXISTS idx_agent_wallets_address ON agent_wallets(wallet_address);
+        CREATE INDEX IF NOT EXISTS idx_agent_runs_agent_status ON agent_runs(agent_key, status, updated_at DESC);
+        CREATE INDEX IF NOT EXISTS idx_agent_runs_updated_at ON agent_runs(updated_at DESC);
       `);
       const unlockColumns = new Set(db.prepare("PRAGMA table_info(pulse_arc_id_unlocks)").all().map(column => String(column.name || "")));
       if (!unlockColumns.has("tx_hash")) {
@@ -4284,6 +5433,12 @@ app.get("/api/config", (req, res) => {
     pulseEnabled: true,
     arcIdUnlock: getArcIdUnlockConfig(),
     arcIdNft: getArcIdNftConfig(),
+    agentAutomation: {
+      summaryBotEnabled: SUMMARY_AGENT_ENABLED,
+      maxBudgetUsdc: formatUsdc(SUMMARY_AGENT_MAX_BUDGET_USDC),
+      maxConcurrentJobs: SUMMARY_AGENT_MAX_CONCURRENT_JOBS,
+      publicBaseUrl: resolvePublicApiBaseUrl(),
+    },
     unifiedBalanceEnabled: true,
     unifiedBalanceSupportedChains: [
       { id: "Ethereum_Sepolia", name: "Ethereum Sepolia", chainId: 11155111, type: "evm", testnet: true },
@@ -4302,6 +5457,115 @@ app.get("/api/config", (req, res) => {
       { id: "Solana_Devnet", name: "Solana Devnet", type: "solana", testnet: true },
     ],
   });
+});
+
+app.get("/api/agents/:agentKey/metadata", async (req, res) => {
+  if (String(req.params.agentKey || "").toLowerCase() !== AGENT_KEYS.summary) {
+    return res.status(404).json({ error: "Unknown agent" });
+  }
+
+  try {
+    const db = await ensurePulseDatabase();
+    res.json(buildSummaryBotMetadata(db));
+  } catch (err) {
+    res.status(500).json({ error: err.message || "Could not load SummaryBot metadata" });
+  }
+});
+
+app.get("/api/agents/:agentKey/status", async (req, res) => {
+  if (String(req.params.agentKey || "").toLowerCase() !== AGENT_KEYS.summary) {
+    return res.status(404).json({ error: "Unknown agent" });
+  }
+
+  try {
+    const db = await ensurePulseDatabase();
+    const registration = getAgentRegistration(db, AGENT_KEYS.summary);
+    res.json({
+      ...getSummaryBotCatalogEntry(db),
+      runtime: {
+        bootstrapped: summaryAgentRuntime.bootstrapped,
+        running: summaryAgentRuntime.running,
+        lastStartedAt: summaryAgentRuntime.lastStartedAt,
+        lastCompletedAt: summaryAgentRuntime.lastCompletedAt,
+        lastError: summaryAgentRuntime.lastError,
+      },
+      registration,
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message || "Could not load SummaryBot status" });
+  }
+});
+
+app.get("/api/agents/:agentKey/jobs/:jobId/deliverable", async (req, res) => {
+  if (String(req.params.agentKey || "").toLowerCase() !== AGENT_KEYS.summary) {
+    return res.status(404).json({ error: "Unknown agent" });
+  }
+
+  try {
+    const db = await ensurePulseDatabase();
+    const run = req.query?.run
+      ? getAgentRunById(db, req.query.run)
+      : getAgentRunByJobId(db, AGENT_KEYS.summary, req.params.jobId);
+    if (!run?.result || !run.result.summary) {
+      return res.status(404).json({ error: "Deliverable not found" });
+    }
+
+    const payload = {
+      jobId: run.jobId,
+      agentKey: run.agentKey,
+      jobTitle: run.jobTitle,
+      generatedAt: run.result.generatedAt || run.updatedAt,
+      summary: run.result.summary,
+      sourceUrls: Array.isArray(run.result.sourceUrls) ? run.result.sourceUrls : [],
+      model: run.result.model || SUMMARY_AGENT_MODEL,
+      deliverableLocator: run.deliverableLocator,
+      submitTxHash: run.submitTxHash,
+    };
+
+    const acceptsHtml = String(req.headers.accept || "").includes("text/html");
+    if (!acceptsHtml) return res.json(payload);
+
+    const list = payload.sourceUrls.length
+      ? `<ul>${payload.sourceUrls.map(url => `<li><a href="${escapeAgentHtml(url)}" target="_blank" rel="noreferrer">${escapeAgentHtml(url)}</a></li>`).join("")}</ul>`
+      : "<p>No external public URLs were attached to this job.</p>";
+
+    res.type("html").send(`<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SummaryBot Deliverable #${Number(payload.jobId)}</title>
+    <style>
+      body { font-family: Georgia, serif; margin: 0; background: #f7f4ee; color: #1b1b1b; }
+      main { max-width: 820px; margin: 0 auto; padding: 40px 24px 72px; }
+      .kicker { font: 600 12px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: 0.12em; text-transform: uppercase; color: #7a6a58; }
+      h1 { font-size: 34px; line-height: 1.1; margin: 10px 0 12px; }
+      .meta { color: #695d50; margin-bottom: 28px; }
+      .card { background: #fff; border: 1px solid #ded5c6; border-radius: 18px; padding: 24px; box-shadow: 0 10px 30px rgba(44, 36, 22, 0.06); }
+      h2 { font-size: 18px; margin-top: 0; }
+      pre { white-space: pre-wrap; word-break: break-word; font: 15px/1.7 ui-monospace, SFMono-Regular, Menlo, monospace; margin: 0; }
+      a { color: #245f9f; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="kicker">AgentMarket SummaryBot</div>
+      <h1>${escapeAgentHtml(payload.jobTitle || `Job #${payload.jobId}`)}</h1>
+      <div class="meta">Generated ${escapeAgentHtml(new Date(Number(payload.generatedAt || Date.now())).toUTCString())}${payload.submitTxHash ? ` · <a href="${ARC_EXPLORER_URL}/tx/${escapeAgentHtml(payload.submitTxHash)}" target="_blank" rel="noreferrer">Arc tx</a>` : ""}</div>
+      <section class="card">
+        <h2>Deliverable</h2>
+        <pre>${escapeAgentHtml(payload.summary)}</pre>
+      </section>
+      <section class="card" style="margin-top:20px">
+        <h2>Public sources</h2>
+        ${list}
+      </section>
+    </main>
+  </body>
+</html>`);
+  } catch (err) {
+    res.status(500).json({ error: err.message || "Could not load the SummaryBot deliverable" });
+  }
 });
 
 app.get("/api/pulse/overview", async (req, res) => {
@@ -4585,12 +5849,15 @@ app.get("/api/agent/:agentId/identity", async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-app.get("/api/agents", (req, res) => {
-  res.json([
-    { id:"native-001", type:"AI", name:"SummaryBot", description:"Summarizes documents, PDFs, and long text into clear bullet points", taskTypes:["summarize","analyze"], walletAddress: process.env.SUMMARY_AGENT_WALLET||"0x0000000000000000000000000000000000000001", reputationScore:98, completedJobs:0, isNative:true, isVerified:true, minBudget:"1.00" },
-    { id:"native-002", type:"AI", name:"ReportAgent", description:"Generates structured market and data reports from raw inputs", taskTypes:["report","research"], walletAddress: process.env.REPORT_AGENT_WALLET||"0x0000000000000000000000000000000000000002", reputationScore:95, completedJobs:0, isNative:true, isVerified:true, minBudget:"2.00" },
-    { id:"native-003", type:"AI", name:"TranslateAI", description:"Translates content between languages with context awareness", taskTypes:["translate"], walletAddress: process.env.TRANSLATE_AGENT_WALLET||"0x0000000000000000000000000000000000000003", reputationScore:97, completedJobs:0, isNative:true, isVerified:true, minBudget:"1.00" },
-  ]);
+app.get("/api/agents", async (req, res) => {
+  try {
+    const db = await ensurePulseDatabase();
+    res.json([
+      getSummaryBotCatalogEntry(db),
+    ]);
+  } catch (err) {
+    res.status(500).json({ error: err.message || "Could not load agents" });
+  }
 });
 
 // ─── Campaigns ────────────────────────────────────────────────────
@@ -4696,6 +5963,7 @@ if (isDirectRun) {
     console.log(`Network: Arc Testnet`);
     console.log(`Contract: ${JOB_BOARD_ADDRESS}`);
     startPulseContractIndexerLoop();
+    startSummaryAgentLoop();
   });
 }
 

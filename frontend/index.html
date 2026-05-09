@@ -457,6 +457,8 @@
     }
 
     .agent-card:hover { border-color: rgba(255,255,255,0.12); transform: translateY(-1px); }
+    .agent-card.ai-locked { opacity: 0.78; }
+    .agent-card.ai-locked:hover { border-color: rgba(255,255,255,0.08); transform: none; }
 
     .agent-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 12px; }
 
@@ -4598,7 +4600,7 @@
             <label>Worker Type</label>
             <select id="workerType" onchange="handleWorkerTypeChange()">
               <option value="Human">Human</option>
-              <option value="AI">AI Agent (Coming Soon)</option>
+              <option value="AI">AI Agent</option>
             </select>
           </div>
         </div>
@@ -5104,23 +5106,23 @@
   </div>
 </div>
 
-<!-- ── AI COMING SOON MODAL ── -->
+<!-- ── AI SETUP MODAL ── -->
 <div class="modal-overlay" id="aiComingSoonModal" onclick="closeAiModal(event)">
   <div class="modal">
     <div class="ai-coming-soon-modal">
       <span class="robot-icon">🤖</span>
-      <h3>AI Agents — Coming Soon</h3>
-      <p>Autonomous AI workers that automatically pick up, execute, and deliver jobs on-chain are currently in development.</p>
+      <h3>AI Agent Setup</h3>
+      <p>SummaryBot is wired for Arc-native execution once your backend has Circle wallets, a model key, and a public API base URL configured.</p>
       <ul class="feature-list">
-        <li>Auto-execution of tasks without human intervention</li>
-        <li>On-chain verification of AI deliverables</li>
-        <li>Reputation scoring for AI agents</li>
-        <li>Multi-step job pipelines with AI coordination</li>
+        <li>Circle developer-controlled owner and validator wallets</li>
+        <li>ERC-8004 identity registration on Arc</li>
+        <li>Validation and reputation recording for completed jobs</li>
+        <li>Public deliverable URLs for onchain submission</li>
       </ul>
-      <p style="font-size:13px;color:var(--gold)">For now, please select a <strong>Human worker</strong> to get your job done.</p>
+      <p style="font-size:13px;color:var(--gold)">If the SummaryBot card still shows <strong>Setup</strong>, finish the backend configuration or use a Human worker for now.</p>
     </div>
     <div style="display:flex;gap:10px;margin-top:8px">
-      <button class="btn btn-primary" style="flex:1" onclick="closeAiModal();switchToHuman()">Use Human Worker Instead</button>
+      <button class="btn btn-primary" style="flex:1" onclick="closeAiModal();switchToHuman()">Use Human Worker</button>
       <button class="btn btn-outline" onclick="closeAiModal()">Close</button>
     </div>
   </div>
@@ -5626,21 +5628,67 @@ function closeAiModal(e) {
 function switchToHuman() {
   document.getElementById('workerType').value = 'Human';
   selectedWorkerType = 'Human';
+  selectedAgent = null;
+  document.querySelectorAll('.agent-select-card').forEach(c => c.classList.remove('selected'));
   renderAgentSelect();
+}
+
+function agentIsOperational(agent) {
+  if (!agent || agent.type !== 'AI') return true;
+  const missingConfig = Array.isArray(agent.missingConfig) ? agent.missingConfig.filter(Boolean) : [];
+  return Boolean(agent.isLive && !missingConfig.length && agent.walletAddress);
+}
+
+function agentLiveStatusLabel(agent) {
+  if (!agent || agent.type !== 'AI') return 'Live';
+  if (!agentIsOperational(agent)) return 'Setup';
+  const raw = String(agent.liveStatus || 'ready').replace(/[_-]+/g, ' ').trim();
+  if (!raw) return 'Ready';
+  return raw.charAt(0).toUpperCase() + raw.slice(1);
+}
+
+function startAiJobFlow(agentId = '') {
+  const workerTypeEl = document.getElementById('workerType');
+  if (workerTypeEl) workerTypeEl.value = 'AI';
+  selectedWorkerType = 'AI';
+  selectedAgent = null;
+  renderAgentSelect();
+  if (!agentId) return;
+  const agent = agents.find(item => item.id === agentId);
+  if (agent && agentIsOperational(agent)) {
+    selectAgent(agentId);
+    return;
+  }
+  showAiComingSoon();
 }
 
 // ── Agents ───────────────────────────────────────────────────────
 async function loadAgents() {
   try {
     const res = await fetch(`${API}/api/agents`);
-    agents = await res.json();
+    if (!res.ok) throw new Error('Could not load agent catalog');
+    const payload = await res.json();
+    agents = Array.isArray(payload) ? payload : [];
     renderAgents();
     renderAgentSelect();
   } catch(e) {
     agents = [
-      { id:'native-001', type:'AI', name:'SummaryBot', description:'Summarizes documents and long text into clear bullet points', taskTypes:['summarize','analyze'], walletAddress:'0x89E3D24A54E9EEA0799A4d8d5843487606330378', reputationScore:98, isNative:true, isVerified:true, minBudget:'1.00' },
-      { id:'native-002', type:'AI', name:'ReportAgent', description:'Generates structured market reports from raw inputs', taskTypes:['report','research'], walletAddress:'0x11be84f570c3670b4bB0682a9aCa10C6B80d1300', reputationScore:95, isNative:true, isVerified:true, minBudget:'2.00' },
-      { id:'native-003', type:'AI', name:'TranslateAI', description:'Translates content between languages accurately', taskTypes:['translate'], walletAddress:'0x986008ac6580395ff496559880b6fcDDFEB9AeE9', reputationScore:97, isNative:true, isVerified:true, minBudget:'1.00' },
+      {
+        id: 'native-001',
+        type: 'AI',
+        name: 'SummaryBot',
+        description: 'Autonomous Arc-native summarizer for structured briefs and public-link research.',
+        taskTypes: ['summarize', 'analyze', 'research'],
+        walletAddress: '',
+        reputationScore: 0,
+        isNative: true,
+        isVerified: false,
+        isLive: false,
+        liveStatus: 'setup',
+        minBudget: '1.00',
+        maxBudget: '10.00',
+        missingConfig: ['backend connection'],
+      },
       { id:'human-001', type:'Human', name:'Claire Jones', description:'Experienced researcher and report writer for startups and founders.', taskTypes:['research','report'], walletAddress:'0x0000000000000000000000000000000000000011', reputationScore:92, isNative:false, isVerified:true, minBudget:'2.50' },
       { id:'human-002', type:'Human', name:'Sam Patel', description:'Human operator for compliance checks, writing, and manual workflow support.', taskTypes:['compliance','review','monitor'], walletAddress:'0x0000000000000000000000000000000000000022', reputationScore:90, isNative:false, isVerified:true, minBudget:'3.00' },
     ];
@@ -5655,24 +5703,36 @@ function renderAgents() {
   const grid = document.getElementById('agentsGrid');
   grid.innerHTML = agents.map(a => {
     const isAI = a.type === 'AI';
+    const taskTypes = Array.isArray(a.taskTypes) ? a.taskTypes : [];
+    const isOperational = agentIsOperational(a);
+    const badgeLabel = isAI ? (isOperational ? 'AI Live' : 'Setup') : 'Live';
+    const badgeTone = isAI ? (isOperational ? 'badge-funded' : 'badge-coming-soon') : 'badge-funded';
+    const statusHint = isAI
+      ? (isOperational
+        ? `Ready for ${a.maxBudget || a.minBudget || '0.00'} USDC AI jobs`
+        : `Needs ${(Array.isArray(a.missingConfig) && a.missingConfig.length) ? a.missingConfig.slice(0, 2).join(', ') : 'setup'}`)
+      : '';
     const summary = escapeHtml(String(a.description || '').split('.')[0]);
-    const visibleTags = a.taskTypes.slice(0, 2);
+    const visibleTags = taskTypes.slice(0, 2);
+    const clickHandler = isAI
+      ? (isOperational ? `showPage('post');startAiJobFlow('${a.id}')` : `showPage('post');showAiComingSoon()`)
+      : `showPage('post');selectAgent('${a.id}')`;
     return `
-      <div class="agent-card" onclick="${isAI ? 'showPage(\'post\');showAiComingSoon()' : `showPage('post');selectAgent('${a.id}')`}">
+      <div class="agent-card${isAI && !isOperational ? ' ai-locked' : ''}" onclick="${clickHandler}">
         <div class="agent-header">
-          <div class="agent-icon">${isAI ? AGENT_ICONS[a.taskTypes[0]] || '🤖' : '🧑'}</div>
+          <div class="agent-icon">${isAI ? AGENT_ICONS[taskTypes[0]] || '🤖' : '🧑'}</div>
           <div>
-            <span class="badge ${isAI ? 'badge-coming-soon' : 'badge-funded'}">${isAI ? 'Soon' : 'Live'}</span>
+            <span class="badge ${badgeTone}">${badgeLabel}</span>
             ${a.isVerified ? '<span class="badge badge-verified" style="margin-left:4px">Verified</span>' : ''}
           </div>
         </div>
         <div class="agent-name">${a.name}</div>
-        <div class="agent-desc">${summary}${isAI ? ' <span style="color:var(--gold);font-size:11px">AI launch soon</span>' : ''}</div>
+        <div class="agent-desc">${summary}${isAI ? ` <span style="color:${isOperational ? 'var(--accent2)' : 'var(--gold)'};font-size:11px">${escapeHtml(statusHint)}</span>` : ''}</div>
         <div class="tags">${visibleTags.map(t => `<span class="tag">${t}</span>`).join('')}</div>
         <div class="agent-footer">
-          <div class="rep-score"><div class="rep-dot"></div>${a.reputationScore}/100 rep</div>
+          <div class="rep-score"><div class="rep-dot"></div>${Number(a.reputationScore || 0)}/100 rep</div>
           <span style="font-family:var(--font-mono);font-size:12px;color:${isAI ? 'var(--gold)' : 'var(--accent2)'}">
-            ${isAI ? 'AI' : `${a.minBudget}+ USDC`}
+            ${isAI ? escapeHtml(agentLiveStatusLabel(a)) : `${a.minBudget}+ USDC`}
           </span>
         </div>
       </div>
@@ -5684,42 +5744,47 @@ function renderAgentSelect() {
   const grid = document.getElementById('agentSelectGrid');
   const workerType = document.getElementById('workerType').value;
 
-  if (workerType === 'AI') {
-    // Show coming soon message inline
-    grid.innerHTML = `
-      <div style="grid-column:1/-1">
-        <div class="coming-soon-banner">
-          <div class="coming-soon-icon">🤖</div>
-          <div class="coming-soon-text">
-            <strong>AI Agent Automation — Coming Soon</strong>
-            <span>Our AI workers are in development. Please select "Human" worker type to post a job now.</span>
-          </div>
-        </div>
-      </div>
-    `;
+  const matchingAgents = agents.filter(a => a.type === workerType);
+  if (!matchingAgents.length) {
+    grid.innerHTML = `<div class="empty-state"><p>No ${workerType.toLowerCase()} workers available yet.</p></div>`;
     return;
   }
 
-  const humanAgents = agents.filter(a => a.type === 'Human');
-  if (!humanAgents.length) {
-    grid.innerHTML = '<div class="empty-state"><p>No human workers available yet.</p></div>';
-    return;
-  }
-
-  grid.innerHTML = humanAgents.map(a => `
-    <div class="agent-select-card" id="asel-${a.id}" onclick="selectAgent('${a.id}')">
+  grid.innerHTML = matchingAgents.map(a => {
+    const isAI = a.type === 'AI';
+    const isOperational = agentIsOperational(a);
+    const missingConfig = Array.isArray(a.missingConfig) ? a.missingConfig.filter(Boolean) : [];
+    const description = isAI
+      ? (isOperational
+        ? `${(a.taskTypes || []).join(', ')}`
+        : `Waiting for setup: ${missingConfig.join(', ') || 'backend configuration'}`)
+      : `${(a.taskTypes || []).join(', ')}`;
+    const leftMeta = isAI ? agentLiveStatusLabel(a) : `${Number(a.reputationScore || 0)}/100 rep`;
+    const rightMeta = isAI
+      ? `up to ${a.maxBudget || a.minBudget || '0.00'} USDC`
+      : `from ${a.minBudget} USDC`;
+    const disabledClass = isAI && !isOperational ? ' ai-locked' : '';
+    const clickHandler = isAI && !isOperational ? 'showAiComingSoon()' : `selectAgent('${a.id}')`;
+    return `
+    <div class="agent-select-card${disabledClass}" id="asel-${a.id}" onclick="${clickHandler}">
       <div class="agent-select-name">${a.name}</div>
-      <div class="agent-select-desc">${a.taskTypes.join(', ')}</div>
+      <div class="agent-select-desc">${escapeHtml(description)}</div>
       <div class="agent-select-meta">
-        <span>${a.reputationScore}/100 rep</span>
-        <span>from ${a.minBudget} USDC</span>
+        <span>${escapeHtml(leftMeta)}</span>
+        <span>${escapeHtml(rightMeta)}</span>
       </div>
     </div>
-  `).join('');
+  `;
+  }).join('');
 }
 
 function selectAgent(id) {
   selectedAgent = agents.find(a => a.id === id);
+  if (!selectedAgent) return;
+  const workerTypeEl = document.getElementById('workerType');
+  selectedWorkerType = selectedAgent.type === 'AI' ? 'AI' : 'Human';
+  if (workerTypeEl) workerTypeEl.value = selectedWorkerType;
+  renderAgentSelect();
   document.querySelectorAll('.agent-select-card').forEach(c => c.classList.remove('selected'));
   const card = document.getElementById('asel-' + id);
   if (card) card.classList.add('selected');
@@ -5727,12 +5792,6 @@ function selectAgent(id) {
 
 function handleWorkerTypeChange() {
   const workerType = document.getElementById('workerType').value;
-  if (workerType === 'AI') {
-    showAiComingSoon();
-    // Reset back to Human
-    setTimeout(() => { document.getElementById('workerType').value = 'Human'; renderAgentSelect(); }, 100);
-    return;
-  }
   selectedWorkerType = workerType;
   selectedAgent = null;
   document.querySelectorAll('.agent-select-card').forEach(c => c.classList.remove('selected'));
@@ -5764,7 +5823,18 @@ async function loadAvailableJobs() {
       return;
     }
 
-    container.innerHTML = '<div class="jobs-list">' + openJobs.map(j => `
+    container.innerHTML = '<div class="jobs-list">' + openJobs.map(j => {
+      const isAiJob = Number(j.workerType) === 0;
+      const actionHtml = currentWallet
+        ? currentWallet.toLowerCase() === j.client.toLowerCase()
+          ? '<span class="job-note">Your job</span>'
+          : (isAiJob
+            ? '<span class="job-note">SummaryBot auto-claims eligible AI jobs</span>'
+            : `<button class="btn btn-primary btn-sm" onclick="event.stopPropagation();claimJob(${j.id})">Claim Job</button>`)
+        : (isAiJob
+          ? '<span class="job-note">AI worker monitors this lane</span>'
+          : '<button class="btn btn-outline btn-sm" onclick="event.stopPropagation();connectWallet()">Connect to Claim</button>');
+      return `
       <div class="job-card" onclick="openJobModal(${j.id})">
         <div>
           <div class="job-title">${escapeHtml(j.title)}</div>
@@ -5780,16 +5850,12 @@ async function loadAvailableJobs() {
           <div class="job-budget">${j.budget} USDC</div>
           <div class="job-actions-row">
             <span class="badge ${STATUS_CLASS[j.status]}">${j.statusLabel}</span>
-            ${currentWallet
-              ? currentWallet.toLowerCase() === j.client.toLowerCase()
-                ? '<span class="job-note">Your job</span>'
-                : `<button class="btn btn-primary btn-sm" onclick="event.stopPropagation();claimJob(${j.id})">Claim Job</button>`
-              : '<button class="btn btn-outline btn-sm" onclick="event.stopPropagation();connectWallet()">Connect to Claim</button>'
-            }
+            ${actionHtml}
           </div>
         </div>
       </div>
-    `).join('') + '</div>';
+    `;
+    }).join('') + '</div>';
   } catch(e) {
     document.getElementById('availableJobs').innerHTML = '<div class="empty-state"><p>Could not load open jobs. Backend may be starting up — try refreshing.</p></div>';
   }
@@ -7601,6 +7667,7 @@ async function loadReviewBoard() {
     const res = await fetch(`${API}/api/agents`);
     const workers = await res.json();
     const workerCards = await Promise.all(workers.map(async worker => {
+      if (!worker.walletAddress) return { ...worker, reviews: [], average: '—' };
       try {
         const reviewsRes = await fetch(`${API}/api/worker/${worker.walletAddress}/reviews`);
         const reviews = reviewsRes.ok ? await reviewsRes.json() : [];
@@ -7611,18 +7678,21 @@ async function loadReviewBoard() {
 
     container.innerHTML = workerCards.map(worker => {
       const isAI = worker.type === 'AI';
+      const isOperational = agentIsOperational(worker);
+      const workerTaskTypes = Array.isArray(worker.taskTypes) ? worker.taskTypes : [];
+      const reviewClick = worker.walletAddress ? `openWorkerReviewModal('${worker.walletAddress}')` : 'showAiComingSoon()';
       return `
-        <div class="agent-card" onclick="openWorkerReviewModal('${worker.walletAddress}')">
+        <div class="agent-card${isAI && !isOperational ? ' ai-locked' : ''}" onclick="${reviewClick}">
           <div class="agent-header">
-            <div class="agent-icon">${isAI ? AGENT_ICONS[worker.taskTypes[0]] || '🤖' : '🧑'}</div>
+            <div class="agent-icon">${isAI ? AGENT_ICONS[workerTaskTypes[0]] || '🤖' : '🧑'}</div>
             <div>
-              <span class="badge ${isAI ? 'badge-coming-soon' : 'badge-funded'}">${isAI ? '⏳ Coming Soon' : 'Human'}</span>
+              <span class="badge ${isAI ? (isOperational ? 'badge-funded' : 'badge-coming-soon') : 'badge-funded'}">${isAI ? (isOperational ? 'AI Live' : 'Setup') : 'Human'}</span>
               ${worker.isVerified ? '<span class="badge badge-verified" style="margin-left:4px">✓ Verified</span>' : ''}
             </div>
           </div>
           <div class="agent-name">${worker.name}</div>
           <div class="agent-desc">${worker.description}</div>
-          <div class="tags">${worker.taskTypes.map(t => `<span class="tag">${t}</span>`).join('')}</div>
+          <div class="tags">${workerTaskTypes.map(t => `<span class="tag">${t}</span>`).join('')}</div>
           <div class="agent-footer">
             <div class="rep-score"><div class="rep-dot"></div>${worker.average} rating</div>
             <span style="font-family:var(--font-mono);font-size:12px;color:var(--accent2)">${worker.reviews.length} reviews</span>
@@ -7637,7 +7707,7 @@ async function loadReviewBoard() {
 
 async function openWorkerReviewModal(address) {
   try {
-    const agent = agents.find(a => a.walletAddress.toLowerCase() === address.toLowerCase());
+    const agent = agents.find(a => String(a.walletAddress || '').toLowerCase() === String(address || '').toLowerCase());
     const res = await fetch(`${API}/api/worker/${address}/reviews`);
     const reviews = res.ok ? await res.json() : [];
     document.getElementById('modalTitle').textContent = agent ? agent.name : 'Worker Reviews';
@@ -7659,9 +7729,11 @@ async function submitJob() {
   if (!currentWallet) { toast('Wallet Required', 'Please connect your wallet first', 'error'); return; }
 
   const workerType = document.getElementById('workerType').value;
-  if (workerType === 'AI') { showAiComingSoon(); return; }
+  const liveAiAgents = agents.filter(agent => agent.type === 'AI' && agentIsOperational(agent));
+  if (workerType === 'AI' && !liveAiAgents.length) { showAiComingSoon(); return; }
 
   if (!isOpenJob && !selectedAgent) { toast('Select a Worker', 'Please choose who will do the work', 'error'); return; }
+  if (workerType === 'AI' && !isOpenJob && !agentIsOperational(selectedAgent)) { showAiComingSoon(); return; }
 
   const title = document.getElementById('jobTitle').value.trim();
   const desc = document.getElementById('jobDesc').value.trim();
@@ -7719,7 +7791,7 @@ async function submitJob() {
 
     const jobContract = new ethers.Contract(JOB_BOARD, jobAbi, signer);
     const agentAddress = isOpenJob ? ethers.ZeroAddress : selectedAgent.walletAddress;
-    const workerTypeValue = 1; // Always Human for now
+    const workerTypeValue = workerType === 'AI' ? 0 : 1;
     const jobTx = await jobContract.postAndFundJob({
       agent: agentAddress,
       title,
@@ -7911,6 +7983,15 @@ function renderDashboardJobs(jobs) {
 }
 
 // ── Job Modal ────────────────────────────────────────────────────
+function renderDeliverableValue(value) {
+  const trimmed = String(value || '').trim();
+  if (!trimmed) return '';
+  if (/^(https?:\/\/|ipfs:\/\/)/i.test(trimmed)) {
+    return `<a class="tx-link" href="${escapeHtml(trimmed)}" target="_blank" rel="noopener noreferrer">${escapeHtml(trimmed)} ↗</a>`;
+  }
+  return escapeHtml(trimmed);
+}
+
 async function openJobModal(id) {
   try {
     const res = await fetch(`${API}/api/jobs/${id}`);
@@ -7925,7 +8006,7 @@ async function openJobModal(id) {
       <div class="detail-row"><span class="detail-key">Worker</span><span class="detail-val mono"><a class="tx-link" href="${EXPLORER}/address/${job.agent}" target="_blank">${shortAddr(job.agent)} ↗</a></span></div>
       <div class="detail-row"><span class="detail-key">Client</span><span class="detail-val mono">${shortAddr(job.client)}</span></div>
       <div class="detail-row"><span class="detail-key">Description</span><span class="detail-val" style="font-size:12px;color:var(--muted);text-align:left;max-width:100%">${escapeHtml(job.description)}</span></div>
-      ${job.deliverableHash ? `<div class="detail-row"><span class="detail-key">Deliverable</span><span class="detail-val" style="font-size:12px;color:var(--accent2);word-break:break-all">${escapeHtml(job.deliverableHash)}</span></div>` : ''}
+      ${job.deliverableHash ? `<div class="detail-row"><span class="detail-key">Deliverable</span><span class="detail-val" style="font-size:12px;color:var(--accent2);word-break:break-all">${renderDeliverableValue(job.deliverableHash)}</span></div>` : ''}
       <div class="detail-row"><span class="detail-key">View onchain</span><span class="detail-val"><a class="tx-link" href="${EXPLORER}/address/${JOB_BOARD}" target="_blank">Arcscan ↗</a></span></div>
     `;
 
@@ -7945,7 +8026,13 @@ async function openJobModal(id) {
 
     // Open job — anyone can claim
     if (job.status === 0 && !expired && currentWallet && !isClient) {
-      actions.innerHTML = `<button class="btn btn-primary" style="flex:1" onclick="claimJob(${id})">Claim This Job</button>`;
+      actions.innerHTML = Number(job.workerType) === 0
+        ? `<button class="btn btn-outline" style="flex:1" disabled>SummaryBot monitors eligible AI jobs</button>`
+        : `<button class="btn btn-primary" style="flex:1" onclick="claimJob(${id})">Claim This Job</button>`;
+    }
+
+    if (job.status === 0 && !expired && !currentWallet && Number(job.workerType) === 0) {
+      actions.innerHTML = `<button class="btn btn-outline" style="flex:1" disabled>AI worker monitors this job</button>`;
     }
 
     if (canRefundExpired) {

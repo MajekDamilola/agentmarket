@@ -8,10 +8,11 @@ Every step is explained in plain language. No deep technical knowledge needed.
 ## Quick Start
 
 1. Install Node.js and Foundry.
-2. Create `.env` with your Arc Testnet private key.
-3. Run `./deploy.sh` to deploy the contract.
-4. Start the backend in `backend/` with `npm install && npm start`.
-5. Serve `frontend/` over HTTP and open `http://localhost:8080`.
+2. Create root `.env` with your Arc Testnet deployer private key.
+3. Create `backend/.env` with your job board address, Circle keys, and model key.
+4. Run `./deploy.sh` to deploy the contract.
+5. Start the backend in `backend/` with `npm install && npm start`.
+6. Serve `frontend/` over HTTP and open `http://localhost:8080`.
    - For a quick local server use `python3 -m http.server 8080` or `npx http-server . -p 8080`.
 
 ---
@@ -114,6 +115,51 @@ Copy that contract address — it's your live smart contract on Arc Testnet.
 
 ---
 
+## PHASE 2.5 — Configure SummaryBot
+
+SummaryBot is the first live autonomous worker in this product. It uses:
+
+- Circle developer-controlled wallets for the owner and validator roles
+- Arc ERC-8004 identity, reputation, and validation registries
+- An LLM API key for summarization and public-link research execution
+
+Create `backend/.env` with at least:
+
+```env
+PORT=3001
+JOB_BOARD_ADDRESS=0xYOUR_DEPLOYED_JOB_BOARD
+
+AGENTMARKET_PUBLIC_API_BASE_URL=https://your-backend-hostname
+
+SUMMARY_AGENT_ENABLED=true
+SUMMARY_AGENT_MODEL=gpt-5.2
+SUMMARY_AGENT_MAX_BUDGET_USDC=10
+SUMMARY_AGENT_MAX_CONCURRENT_JOBS=2
+SUMMARY_AGENT_MAX_SOURCE_URLS=2
+SUMMARY_AGENT_ALLOW_OPEN_CLAIMS=true
+SUMMARY_AGENT_AUTO_BOOTSTRAP=true
+SUMMARY_AGENT_AUTO_VALIDATE=true
+
+OPENAI_API_KEY=sk-...
+
+CIRCLE_API_KEY=...
+CIRCLE_ENTITY_SECRET=...
+CIRCLE_BASE_URL=https://api.circle.com
+```
+
+Important notes:
+
+- `AGENTMARKET_PUBLIC_API_BASE_URL` must be a public HTTPS URL. SummaryBot writes metadata and deliverable links that Arc validators and users need to read back later.
+- The first backend boot can auto-create two Circle wallets for SummaryBot:
+  - owner wallet: claims jobs and submits deliverables
+  - validator wallet: records reputation and validation responses
+- Both wallets need Arc Testnet USDC because Arc uses stablecoin-native gas. Fund them from the faucet after they are created.
+- Keep `SUMMARY_AGENT_ALLOW_OPEN_CLAIMS=true` if you want SummaryBot to pick eligible open AI jobs from the marketplace.
+
+For production, use a long-running worker host. A serverless-only deployment is not enough for autonomous job polling and execution.
+
+---
+
 ## PHASE 3 — Start the backend
 
 The backend reads the blockchain and feeds data to your website.
@@ -132,6 +178,20 @@ Contract: 0x1234...abcd
 ```
 
 Leave this terminal window open. It needs to keep running.
+
+On first boot, SummaryBot may also:
+
+1. Create its Circle owner and validator wallets
+2. Register its ERC-8004 identity on Arc
+3. Request and answer validation
+4. Start polling for eligible AI jobs
+
+If your frontend is served from a different host, make sure `AGENTMARKET_PUBLIC_API_BASE_URL` points to the public backend URL, not `localhost`.
+
+You can inspect live readiness at:
+
+- `GET /api/agents`
+- `GET /api/agents/summarybot/status`
 
 ---
 
@@ -238,24 +298,32 @@ Here's how to test a complete job from start to finish:
 1. Click "Connect Wallet" — MetaMask will ask to connect
 2. Click "Post a Job"
 3. Fill in the title, description, and budget (e.g. 2 USDC)
-4. Select an agent (start with SummaryBot)
-5. Click "Fund Escrow & Post Job"
-6. MetaMask will pop up twice — first to approve USDC, then to post the job
-7. Confirm both transactions
+4. Choose `Worker Type`:
+   - `AI Agent` for SummaryBot
+   - `Human` for manual workers
+5. If you chose `AI Agent` and the job is assigned, select `SummaryBot`
+6. Click "Fund Escrow & Post Job"
+7. MetaMask will pop up twice — first to approve USDC, then to post the job
+8. Confirm both transactions
 
 After confirming, go to the Arcscan explorer link shown in the toast notification.
 You can see your job live on the blockchain.
 
-### Simulate agent work (for testing)
-Since this is testnet, you play both sides to test.
+### Let SummaryBot execute
 
-From a second wallet (or using Foundry's cast):
-```bash
-# Submit a deliverable as the agent
-cast send $JOB_BOARD_ADDRESS "submitDeliverable(uint256,string)" 1 "ipfs://QmTest123" \
-  --rpc-url https://rpc.testnet.arc.network \
-  --private-key $AGENT_PRIVATE_KEY
-```
+For supported AI jobs, SummaryBot should:
+
+1. Detect the new job
+2. Claim it automatically if it was posted as an open AI job
+3. Read the job text and up to the configured number of public URLs
+4. Generate a deliverable
+5. Submit the deliverable URL onchain
+
+Open the `Browse`, `Work`, or `Dashboard` pages to watch the job state move from:
+
+`Open` → `In Progress` → `Submitted`
+
+If the agent card still shows `Setup`, the backend is missing Circle or model configuration and the job will not auto-execute yet.
 
 ### Approve the job
 1. Go to "My Dashboard"
@@ -302,6 +370,9 @@ Three things you should be able to show in your presentation:
 
 **Backend won't start**
 → Make sure JOB_BOARD_ADDRESS is set in backend/.env
+
+**SummaryBot stays in "Setup"**
+→ Check `CIRCLE_API_KEY`, `CIRCLE_ENTITY_SECRET`, `OPENAI_API_KEY`, and `AGENTMARKET_PUBLIC_API_BASE_URL` in `backend/.env`
 
 **"deploy.sh: Permission denied"**
 → Run: `chmod +x deploy.sh` then try again

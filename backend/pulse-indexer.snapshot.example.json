@@ -39,12 +39,19 @@
       "name": "AgentMarket",
       "category": "AI / Work",
       "description": "Indexed AgentMarket activity pulled from a wider Arc snapshot.",
+      "sourceLabel": "Example Goldsky export",
+      "scopeLabel": "Hosted network",
+      "chainLabel": "Arc Testnet",
       "volumeUsdc": "18420.50",
       "weeklyVolumeUsdc": "3220.00",
       "previousWeekVolumeUsdc": "2750.00",
       "activeWallets": 142,
       "jobs": 88,
       "campaigns": 6,
+      "contractsCount": 1,
+      "contractLabels": ["AgentMarket job board"],
+      "networkSharePercent": 41.3,
+      "attributionNote": "Single-app slice from the hosted network export, merged into the broader Pulse overlay.",
       "liveContracts": ["0x70586f1A7936190a6b325F98eB3F2e27eF81d628"],
       "status": "Full-network indexed"
     },
@@ -53,17 +60,77 @@
       "name": "ThreadForge",
       "category": "Social / Creator",
       "description": "Example second app included to show how multi-app Pulse rankings render.",
+      "sourceLabel": "Example Goldsky export",
+      "scopeLabel": "Hosted network",
+      "chainLabel": "Arc Testnet",
       "volumeUsdc": "11380.00",
       "weeklyVolumeUsdc": "2485.00",
       "previousWeekVolumeUsdc": "1960.00",
       "activeWallets": 108,
       "jobs": 61,
       "campaigns": 4,
+      "contractsCount": 2,
+      "contractLabels": ["ThreadForge posts", "ThreadForge payouts"],
+      "networkSharePercent": 25.5,
+      "attributionNote": "Second hosted app included to demonstrate cross-app coverage and attribution inside Pulse.",
       "status": "Full-network indexed"
+    }
+  ],
+  "walletAnalytics": [
+    {
+      "wallet": "0x1111111111111111111111111111111111111111",
+      "displayName": "Arc Builder One",
+      "jobsAsClient": 6,
+      "jobsAsWorker": 9,
+      "jobsCompleted": 7,
+      "jobsSettled": 5,
+      "campaignsCreated": 2,
+      "trackedVolumeUsdc": "2480.00",
+      "settledVolumeUsdc": "1385.00",
+      "mostUsedApp": "ThreadForge",
+      "appFootprint": [
+        {
+          "name": "ThreadForge",
+          "trackedActions": 11,
+          "trackedVolumeUsdc": "1710.00",
+          "contractLabels": ["ThreadForge posts", "ThreadForge payouts"]
+        },
+        {
+          "name": "AgentMarket",
+          "trackedActions": 5,
+          "trackedVolumeUsdc": "770.00",
+          "contractLabels": ["AgentMarket job board"]
+        }
+      ],
+      "primaryLane": "thread",
+      "firstSeenAt": "2026-04-18T00:00:00Z"
+    },
+    {
+      "wallet": "0x2222222222222222222222222222222222222222",
+      "displayName": "Automation Pilot",
+      "jobsAsClient": 3,
+      "jobsAsWorker": 11,
+      "jobsCompleted": 8,
+      "jobsSettled": 3,
+      "campaignsCreated": 1,
+      "trackedVolumeUsdc": "1935.50",
+      "settledVolumeUsdc": "1180.00",
+      "mostUsedApp": "AgentMarket",
+      "appFootprint": [
+        {
+          "name": "AgentMarket",
+          "trackedActions": 12,
+          "trackedVolumeUsdc": "1935.50",
+          "contractLabels": ["AgentMarket job board"]
+        }
+      ],
+      "primaryLane": "build",
+      "firstSeenAt": "2026-04-22T00:00:00Z"
     }
   ],
   "notes": [
     "This file is example data only. Replace it with a real Goldsky or Envio snapshot.",
-    "Pulse will keep its live Arc block sampler and local community store even when an indexed overlay is attached."
+    "Pulse will keep its live Arc block sampler and local community store even when an indexed overlay is attached.",
+    "The optional walletAnalytics section lets Arc ID widen wallet scoring from a hosted multi-app source."
   ]
 }

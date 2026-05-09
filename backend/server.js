@@ -92,7 +92,7 @@ const PULSE_LANES = new Set(["build", "thread", "art"]);
 const PULSE_INDEXER_EVENT_CHUNK_SIZE = 10_000n;
 const PULSE_INDEXER_SYNC_INTERVAL_MS = 30_000;
 const PULSE_INDEXER_CONFIRMATION_BLOCKS = 2n;
-const PULSE_INDEXER_SCHEMA_VERSION = "2";
+const PULSE_INDEXER_SCHEMA_VERSION = "3";
 const PULSE_INTERNAL_INDEXER_ENABLED = String(process.env.PULSE_INTERNAL_INDEXER_ENABLED || "true").trim().toLowerCase() !== "false";
 const ARC_ID_UNLOCK_PRICE_USDC = "2.50";
 const ARC_ID_UNLOCK_PRICE_BASE_UNITS = 2_500_000n;
@@ -112,6 +112,7 @@ const PULSE_INDEXER_SNAPSHOT_PATH = resolvePulseIndexerSnapshotPath(
 const PULSE_INDEXER_SNAPSHOT_URL = String(process.env.PULSE_INDEXER_SNAPSHOT_URL || "").trim();
 const PULSE_INDEXER_CACHE_MS = Math.max(0, parseEnvInt(process.env.PULSE_INDEXER_CACHE_MS, 30_000));
 const PULSE_INDEXER_JOB_BOARD_START_BLOCK = Math.max(0, parseEnvInt(process.env.PULSE_INDEXER_JOB_BOARD_START_BLOCK, 0));
+const PULSE_INDEXER_EXTRA_CONTRACTS_JSON = String(process.env.PULSE_INDEXER_EXTRA_CONTRACTS_JSON || "").trim();
 const ARC_WALLET_ACTIVITY_CACHE_MS = Math.max(0, parseEnvInt(process.env.ARC_WALLET_ACTIVITY_CACHE_MS, 10 * 60 * 1000));
 const ARC_WALLET_ACTIVITY_TX_PAGE_SIZE = Math.min(1000, Math.max(100, parseEnvInt(process.env.ARC_WALLET_ACTIVITY_TX_PAGE_SIZE, 500)));
 const ARC_WALLET_ACTIVITY_MAX_PAGES = Math.max(1, parseEnvInt(process.env.ARC_WALLET_ACTIVITY_MAX_PAGES, 30));
@@ -226,6 +227,159 @@ function getPulseIndexerJobBoardStartBlock(latestBlock = 0n) {
   }
 
   return 0n;
+}
+
+function slugifyPulseIndexerText(value = "", fallback = "pulse-app") {
+  const slug = String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+  return slug || fallback;
+}
+
+function parsePulseIndexerStartBlockValue(value, fallback = 0n) {
+  if (typeof value === "bigint") return value >= 0n ? value : fallback;
+  const text = String(value ?? "").trim();
+  if (!text) return fallback;
+  if (!/^\d+$/.test(text)) return fallback;
+  try {
+    const parsed = BigInt(text);
+    return parsed >= 0n ? parsed : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function createDefaultPulseIndexerLiveContract(latestBlock = 0n) {
+  const hasKnownStartBlock = KNOWN_PULSE_INDEXER_JOB_BOARD_START_BLOCKS.has(JOB_BOARD_ADDRESS.toLowerCase());
+  return {
+    address: JOB_BOARD_ADDRESS,
+    addressLower: JOB_BOARD_ADDRESS.toLowerCase(),
+    id: "agentmarket",
+    name: "AgentMarket",
+    category: "AI / Work",
+    description: "Live event-indexed view built from the configured AgentMarket-style Arc contracts.",
+    contractLabel: "AgentMarket job board",
+    chainLabel: "Arc Testnet",
+    startBlock: getPulseIndexerJobBoardStartBlock(latestBlock),
+    startBlockLocked: PULSE_INDEXER_JOB_BOARD_START_BLOCK > 0 || hasKnownStartBlock,
+  };
+}
+
+function normalizePulseIndexerLiveContract(input = {}, fallback = {}) {
+  if (!input || typeof input !== "object" || Array.isArray(input)) return null;
+
+  const address = resolveOptionalAddress(
+    input.address,
+    input.contractAddress,
+    input.contract,
+    fallback.address,
+  );
+  if (!address) return null;
+
+  const name = String(input.name || input.appName || fallback.name || "Arc app").trim() || "Arc app";
+  const id = slugifyPulseIndexerText(
+    input.id || input.appId || name || fallback.id || address.slice(2, 8),
+    fallback.id || "pulse-app",
+  );
+  const category = String(input.category || fallback.category || "Arc App").trim() || "Arc App";
+  const description = String(
+    input.description
+    || fallback.description
+    || `Live event-indexed view built from the configured ${name} Arc contracts.`,
+  ).trim();
+  const contractLabel = String(
+    input.contractLabel
+    || input.label
+    || fallback.contractLabel
+    || `${name} contract`,
+  ).trim() || `${name} contract`;
+  const chainLabel = String(input.chainLabel || fallback.chainLabel || "Arc Testnet").trim() || "Arc Testnet";
+  const fallbackStartBlock = parsePulseIndexerStartBlockValue(fallback.startBlock, 0n);
+  const hasExplicitStartBlock = input.startBlock !== undefined && input.startBlock !== null && String(input.startBlock).trim() !== "";
+  const startBlock = parsePulseIndexerStartBlockValue(input.startBlock, fallbackStartBlock);
+
+  return {
+    address,
+    addressLower: address.toLowerCase(),
+    id,
+    name,
+    category,
+    description,
+    contractLabel,
+    chainLabel,
+    startBlock,
+    startBlockLocked: hasExplicitStartBlock || Boolean(fallback.startBlockLocked),
+  };
+}
+
+function parsePulseIndexerExtraContracts(latestBlock = 0n) {
+  if (!PULSE_INDEXER_EXTRA_CONTRACTS_JSON) return [];
+
+  try {
+    const parsed = JSON.parse(PULSE_INDEXER_EXTRA_CONTRACTS_JSON);
+    const items = Array.isArray(parsed)
+      ? parsed
+      : (Array.isArray(parsed?.contracts) ? parsed.contracts : []);
+    return items
+      .map(item => normalizePulseIndexerLiveContract(item, { startBlock: 0n }))
+      .filter(Boolean);
+  } catch (err) {
+    console.warn("Could not parse PULSE_INDEXER_EXTRA_CONTRACTS_JSON:", err.message || err);
+    return [];
+  }
+}
+
+function getPulseIndexerLiveContracts(latestBlock = 0n) {
+  const merged = new Map();
+  const defaults = [createDefaultPulseIndexerLiveContract(latestBlock)];
+
+  for (const item of [...defaults, ...parsePulseIndexerExtraContracts(latestBlock)]) {
+    if (!item?.addressLower) continue;
+    const existing = merged.get(item.addressLower);
+    merged.set(item.addressLower, existing ? {
+      ...existing,
+      ...item,
+      startBlock: parsePulseIndexerStartBlockValue(item.startBlock, existing.startBlock),
+      startBlockLocked: Boolean(item.startBlockLocked || existing.startBlockLocked),
+    } : item);
+  }
+
+  return [...merged.values()];
+}
+
+function getPulseIndexerLiveContractMap(latestBlock = 0n) {
+  const map = new Map();
+  for (const item of getPulseIndexerLiveContracts(latestBlock)) {
+    map.set(item.addressLower, item);
+  }
+  return map;
+}
+
+function getPulseIndexerConfiguredStartBlock(latestBlock = 0n, liveContracts = null) {
+  const contracts = Array.isArray(liveContracts) && liveContracts.length
+    ? liveContracts
+    : getPulseIndexerLiveContracts(latestBlock);
+  if (!contracts.length) return 0n;
+
+  return contracts.reduce((winner, item) => {
+    const startBlock = parsePulseIndexerStartBlockValue(item.startBlock, 0n);
+    return winner === null || startBlock < winner ? startBlock : winner;
+  }, null) ?? 0n;
+}
+
+function getPulseIndexerConfigFingerprint(liveContracts = null) {
+  const contracts = Array.isArray(liveContracts) ? liveContracts : getPulseIndexerLiveContracts();
+  return JSON.stringify(contracts
+    .map(item => ({
+      address: item.addressLower,
+      id: item.id,
+      name: item.name,
+      contractLabel: item.contractLabel,
+      startBlock: item.startBlockLocked ? parsePulseIndexerStartBlockValue(item.startBlock, 0n).toString() : "",
+    }))
+    .sort((a, b) => a.address.localeCompare(b.address)));
 }
 
 const ARC_ID_UNLOCK_RECIPIENT = resolveOptionalAddress(
@@ -553,6 +707,15 @@ function buildTrackedAppRankings(jobs, campaigns) {
     jobs: jobs.length,
     campaigns: campaigns.length,
     liveContracts: [JOB_BOARD_ADDRESS],
+    contractsCount: 1,
+    contractLabels: ["AgentMarket job board"],
+    sourceLabel: "Tracked contract reads",
+    sourceScope: "tracked-beta",
+    scopeLabel: "Tracked beta",
+    chainLabel: "Arc Testnet",
+    walletCoverage: activeWallets.size,
+    networkSharePercent: 100,
+    attributionNote: "Single-contract fallback view from the live AgentMarket Arc contracts.",
     status: "Tracked beta",
   }];
 }
@@ -577,13 +740,54 @@ async function getPulseBlockTimestamp(blockNumber, cache = new Map()) {
   return timestamp;
 }
 
-function getPulseIndexedContractRows(db) {
+function getPulseIndexedContractRows(db, liveContracts = null) {
+  const contracts = Array.isArray(liveContracts) && liveContracts.length
+    ? liveContracts
+    : getPulseIndexerLiveContracts();
+  const addressSet = new Set(contracts.map(item => String(item.addressLower || item.address || "").toLowerCase()).filter(Boolean));
+  if (!addressSet.size) return [];
+
   return db.prepare(`
     SELECT *
     FROM pulse_indexed_contract_events
-    WHERE contract_address = ?
     ORDER BY block_timestamp ASC, block_number ASC, log_index ASC
-  `).all(JOB_BOARD_ADDRESS.toLowerCase());
+  `).all().filter(row => addressSet.has(String(row.contract_address || "").toLowerCase()));
+}
+
+function createPulseIndexedAppStat(contractConfig = {}) {
+  return {
+    id: String(contractConfig.id || "indexed-app"),
+    name: String(contractConfig.name || "Arc app"),
+    category: String(contractConfig.category || "Arc App"),
+    description: String(contractConfig.description || "Indexed Arc activity view."),
+    chainLabel: String(contractConfig.chainLabel || "Arc Testnet"),
+    contractLabels: new Set(),
+    liveContracts: new Set(),
+    activeWallets: new Set(),
+    volumeUsdcRaw: 0,
+    weeklyVolumeUsdcRaw: 0,
+    previousWeekVolumeUsdcRaw: 0,
+    jobs: 0,
+    campaigns: 0,
+    walletCoverage: 0,
+    status: "Live indexed",
+  };
+}
+
+function ensurePulseIndexedAppStat(statsMap, contractConfig = {}) {
+  const key = String(contractConfig.id || "indexed-app").toLowerCase();
+  if (!statsMap.has(key)) {
+    statsMap.set(key, createPulseIndexedAppStat(contractConfig));
+  }
+  const entry = statsMap.get(key);
+  entry.id = String(contractConfig.id || entry.id || "indexed-app");
+  entry.name = String(contractConfig.name || entry.name || "Arc app");
+  entry.category = String(contractConfig.category || entry.category || "Arc App");
+  entry.description = String(contractConfig.description || entry.description || "Indexed Arc activity view.");
+  entry.chainLabel = String(contractConfig.chainLabel || entry.chainLabel || "Arc Testnet");
+  if (contractConfig.contractLabel) entry.contractLabels.add(String(contractConfig.contractLabel));
+  if (contractConfig.address) entry.liveContracts.add(String(contractConfig.address));
+  return entry;
 }
 
 function createPulseIndexedSeries(rows = [], days = PULSE_SERIES_DAYS) {
@@ -637,7 +841,9 @@ function createPulseIndexedCategoryBreakdown(rows = []) {
 }
 
 function buildPulseContractIndexerState(db, baseOverview = {}) {
-  const rows = getPulseIndexedContractRows(db);
+  const liveContracts = getPulseIndexerLiveContracts();
+  const contractConfigByAddress = getPulseIndexerLiveContractMap();
+  const rows = getPulseIndexedContractRows(db, liveContracts);
   const lastSyncedAt = Number(pulseMetaGet(db, "pulse-indexer:last-synced-at") || 0);
   const syncedToBlock = Number(pulseMetaGet(db, "pulse-indexer:last-synced-block") || 0);
   const startBlock = Number(pulseMetaGet(db, "pulse-indexer:start-block") || 0);
@@ -648,34 +854,65 @@ function buildPulseContractIndexerState(db, baseOverview = {}) {
   let completedJobs = 0;
   let campaigns = 0;
   const activityRows = [];
+  const appStats = new Map();
+  const weekMs = 7 * DAY_MS;
+  const now = Date.now();
+  const currentWeekStart = now - weekMs;
+  const previousWeekStart = now - (2 * weekMs);
+
+  for (const contractConfig of liveContracts) {
+    ensurePulseIndexedAppStat(appStats, contractConfig);
+  }
 
   for (const row of rows) {
     const eventKey = String(row.event_key || "");
     const primaryWallet = String(row.wallet_primary || "").toLowerCase();
     const secondaryWallet = String(row.wallet_secondary || "").toLowerCase();
     const amountUsdc = toUsdcNumber(row.amount_usdc);
+    const contractAddress = String(row.contract_address || "").toLowerCase();
+    const contractConfig = contractConfigByAddress.get(contractAddress);
+    const appEntry = contractConfig ? ensurePulseIndexedAppStat(appStats, contractConfig) : null;
+    const eventTimestamp = Number(row.block_timestamp || 0);
 
     if (primaryWallet && !sameAddress(primaryWallet, ZERO_ADDRESS)) wallets.add(primaryWallet);
     if (secondaryWallet && !sameAddress(secondaryWallet, ZERO_ADDRESS)) wallets.add(secondaryWallet);
+    if (appEntry) {
+      if (primaryWallet && !sameAddress(primaryWallet, ZERO_ADDRESS)) appEntry.activeWallets.add(primaryWallet);
+      if (secondaryWallet && !sameAddress(secondaryWallet, ZERO_ADDRESS)) appEntry.activeWallets.add(secondaryWallet);
+    }
 
     if (eventKey === "job_posted") {
       totalJobs += 1;
       trackedVolumeUsdcRaw += amountUsdc;
       activityRows.push(row);
+      if (appEntry) {
+        appEntry.jobs += 1;
+        appEntry.volumeUsdcRaw += amountUsdc;
+        if (eventTimestamp >= currentWeekStart) {
+          appEntry.weeklyVolumeUsdcRaw += amountUsdc;
+        } else if (eventTimestamp >= previousWeekStart) {
+          appEntry.previousWeekVolumeUsdcRaw += amountUsdc;
+        }
+      }
     } else if (eventKey === "campaign_created") {
       campaigns += 1;
       trackedVolumeUsdcRaw += amountUsdc;
       activityRows.push(row);
+      if (appEntry) {
+        appEntry.campaigns += 1;
+        appEntry.volumeUsdcRaw += amountUsdc;
+        if (eventTimestamp >= currentWeekStart) {
+          appEntry.weeklyVolumeUsdcRaw += amountUsdc;
+        } else if (eventTimestamp >= previousWeekStart) {
+          appEntry.previousWeekVolumeUsdcRaw += amountUsdc;
+        }
+      }
     } else if (eventKey === "job_completed") {
       completedJobs += 1;
       settledVolumeUsdcRaw += amountUsdc;
     }
   }
 
-  const weekMs = 7 * DAY_MS;
-  const now = Date.now();
-  const currentWeekStart = now - weekMs;
-  const previousWeekStart = now - (2 * weekMs);
   const thisWeekVolume = activityRows
     .filter(row => Number(row.block_timestamp || 0) >= currentWeekStart)
     .reduce((sum, row) => sum + toUsdcNumber(row.amount_usdc), 0);
@@ -701,13 +938,68 @@ function buildPulseContractIndexerState(db, baseOverview = {}) {
   if (baseOverview.activeCampaigns !== undefined) overview.activeCampaigns = baseOverview.activeCampaigns;
   if (baseOverview.openJobs !== undefined) overview.openJobs = baseOverview.openJobs;
 
+  const indexedContractCount = liveContracts.length;
+  const totalIndexedVolume = [...appStats.values()].reduce((sum, item) => sum + Number(item.volumeUsdcRaw || 0), 0);
+  const liveAppRankings = [...appStats.values()]
+    .map(item => {
+      const rankingGrowthDirection = item.weeklyVolumeUsdcRaw > item.previousWeekVolumeUsdcRaw
+        ? "up"
+        : item.weeklyVolumeUsdcRaw < item.previousWeekVolumeUsdcRaw
+          ? "down"
+          : "flat";
+      return {
+        rank: 0,
+        id: item.id,
+        name: item.name,
+        category: item.category,
+        description: item.description,
+        volumeUsdc: formatUsdc(item.volumeUsdcRaw),
+        weeklyVolumeUsdc: formatUsdc(item.weeklyVolumeUsdcRaw),
+        previousWeekVolumeUsdc: formatUsdc(item.previousWeekVolumeUsdcRaw),
+        growthDirection: rankingGrowthDirection,
+        growthPercent: item.previousWeekVolumeUsdcRaw > 0
+          ? Number((((item.weeklyVolumeUsdcRaw - item.previousWeekVolumeUsdcRaw) / item.previousWeekVolumeUsdcRaw) * 100).toFixed(1))
+          : null,
+        activeWallets: item.activeWallets.size,
+        jobs: item.jobs,
+        campaigns: item.campaigns,
+        liveContracts: [...item.liveContracts],
+        contractsCount: item.liveContracts.size || item.contractLabels.size,
+        contractLabels: [...item.contractLabels],
+        sourceLabel: indexedContractCount > 1 ? "Arc RPC multi-contract indexer" : "Arc RPC event indexer",
+        sourceScope: indexedContractCount > 1 ? "live-multi-contract-indexed" : "live-contract-indexed",
+        scopeLabel: indexedContractCount > 1 ? "Live multi-contract" : "Live contract",
+        chainLabel: item.chainLabel,
+        walletCoverage: item.activeWallets.size,
+        networkSharePercent: totalIndexedVolume > 0
+          ? Number(((item.volumeUsdcRaw / totalIndexedVolume) * 100).toFixed(1))
+          : (item.volumeUsdcRaw > 0 ? 100 : null),
+        attributionNote: indexedContractCount > 1
+          ? `Live Arc RPC slice grouped from ${item.liveContracts.size || 1} configured contract${(item.liveContracts.size || 1) === 1 ? "" : "s"}.`
+          : "Live contract events indexed locally from Arc.",
+        status: indexedContractCount > 1 ? "Live multi-contract" : "Live indexed",
+      };
+    })
+    .sort((a, b) => (
+      parsePulseIndexerNumber(b.volumeUsdc, 0) - parsePulseIndexerNumber(a.volumeUsdc, 0)
+      || parsePulseIndexerNumber(b.weeklyVolumeUsdc, 0) - parsePulseIndexerNumber(a.weeklyVolumeUsdc, 0)
+      || Number(b.activeWallets || 0) - Number(a.activeWallets || 0)
+      || String(a.name || "").localeCompare(String(b.name || ""))
+    ))
+    .map((item, index) => ({ ...item, rank: index + 1 }));
+
+  const indexedContractLabels = liveContracts
+    .map(item => String(item.contractLabel || "").trim())
+    .filter(Boolean)
+    .slice(0, 6);
+
   return createPulseIndexerState({
     configured: true,
     connected: Boolean(lastSyncedAt > 0 || rows.length > 0),
     syncing: pulseContractIndexerRuntime.syncing,
     bootstrapped: pulseContractIndexerRuntime.bootstrapped || lastSyncedAt > 0,
-    sourceLabel: "Arc RPC event indexer",
-    scope: "live-contract-indexed",
+    sourceLabel: indexedContractCount > 1 ? "Arc RPC multi-contract indexer" : "Arc RPC event indexer",
+    scope: indexedContractCount > 1 ? "live-multi-contract-indexed" : "live-contract-indexed",
     generatedAt: lastSyncedAt || Date.now(),
     syncStartedAt: pulseContractIndexerRuntime.startedAt,
     syncCompletedAt: pulseContractIndexerRuntime.completedAt || lastSyncedAt,
@@ -717,7 +1009,7 @@ function buildPulseContractIndexerState(db, baseOverview = {}) {
     overview,
     volume14d: createPulseIndexedSeries(rows),
     categoryBreakdown: createPulseIndexedCategoryBreakdown(rows),
-    appRankings: [{
+    appRankings: liveAppRankings.length ? liveAppRankings : [{
       rank: 1,
       id: "agentmarket",
       name: "AgentMarket",
@@ -734,16 +1026,27 @@ function buildPulseContractIndexerState(db, baseOverview = {}) {
       jobs: totalJobs,
       campaigns,
       liveContracts: [JOB_BOARD_ADDRESS],
+      contractsCount: 1,
+      contractLabels: ["AgentMarket job board"],
+      sourceLabel: "Arc RPC event indexer",
+      sourceScope: "live-contract-indexed",
+      scopeLabel: "Live contract",
+      chainLabel: "Arc Testnet",
+      walletCoverage: wallets.size,
+      networkSharePercent: 100,
+      attributionNote: "Live contract events indexed locally from the AgentMarket job board on Arc.",
       status: "Live indexed",
     }],
     notes: [
-      `Pulse contract indexer is live against ${shortWallet(JOB_BOARD_ADDRESS)} on Arc.`,
+      indexedContractCount > 1
+        ? `Pulse contract indexer is live across ${indexedContractCount} Arc contracts: ${indexedContractLabels.join(", ")}.`
+        : `Pulse contract indexer is live against ${shortWallet(JOB_BOARD_ADDRESS)} on Arc.`,
       syncedToBlock > 0
         ? `Latest indexed block #${syncedToBlock.toLocaleString("en-US")} with sync time ${formatPulseCalendarLabel(lastSyncedAt || Date.now())}.`
         : "The live contract indexer is connected and waiting for the first indexed block.",
       startBlock > 0
-        ? `Indexer backfill starts from block #${startBlock.toLocaleString("en-US")}.`
-        : "Indexer start block is using the automatic fallback window.",
+        ? `Indexer backfill starts from block #${startBlock.toLocaleString("en-US")} for the configured live contract set.`
+        : "Indexer start block is using the automatic fallback window for the configured live contract set.",
     ],
     error: pulseContractIndexerRuntime.lastError || "",
   });
@@ -765,8 +1068,10 @@ async function syncPulseContractIndexer(db) {
     : latestBlock;
   pulseContractIndexerRuntime.targetBlock = Number(targetBlock);
 
-  const configuredStartBlock = getPulseIndexerJobBoardStartBlock(targetBlock);
-  ensurePulseContractIndexerSchema(db, configuredStartBlock);
+  const liveContracts = getPulseIndexerLiveContracts(targetBlock);
+  const liveContractsByAddress = new Map(liveContracts.map(item => [item.addressLower, item]));
+  const configuredStartBlock = getPulseIndexerConfiguredStartBlock(targetBlock, liveContracts);
+  ensurePulseContractIndexerSchema(db, configuredStartBlock, liveContracts);
   const storedLastBlockValue = pulseMetaGet(db, "pulse-indexer:last-synced-block");
   const storedLastBlock = storedLastBlockValue ? BigInt(storedLastBlockValue) : (configuredStartBlock > 0n ? configuredStartBlock - 1n : -1n);
 
@@ -832,7 +1137,7 @@ async function syncPulseContractIndexer(db) {
 
     const normalizedRows = [];
     const rawLogs = await publicClient.getLogs({
-      address: JOB_BOARD_ADDRESS,
+      address: liveContracts.map(item => item.address),
       fromBlock: chunkStart,
       toBlock: chunkEnd,
     });
@@ -849,10 +1154,13 @@ async function syncPulseContractIndexer(db) {
       const logIndex = Number(log.logIndex || 0);
       const blockNumber = Number(log.blockNumber || 0n);
       const args = log.args || {};
+      const contractAddress = String(log.address || "").toLowerCase();
+      const contractConfig = liveContractsByAddress.get(contractAddress);
+      if (!contractConfig) continue;
 
       if (eventName === "JobPosted") {
         normalizedRows.push({
-          contractAddress: JOB_BOARD_ADDRESS.toLowerCase(),
+          contractAddress,
           eventKey: "job_posted",
           entityId: String(args.jobId || ""),
           walletPrimary: String(args.client || "").toLowerCase(),
@@ -866,12 +1174,15 @@ async function syncPulseContractIndexer(db) {
           blockTimestamp,
           payloadJson: JSON.stringify({
             workerType: Number(args.workerType || 0),
+            appId: contractConfig.id,
+            appName: contractConfig.name,
+            contractLabel: contractConfig.contractLabel,
           }),
           createdAt: blockTimestamp,
         });
       } else if (eventName === "JobClaimed") {
         normalizedRows.push({
-          contractAddress: JOB_BOARD_ADDRESS.toLowerCase(),
+          contractAddress,
           eventKey: "job_claimed",
           entityId: String(args.jobId || ""),
           walletPrimary: String(args.agent || "").toLowerCase(),
@@ -883,12 +1194,16 @@ async function syncPulseContractIndexer(db) {
           logIndex,
           blockNumber,
           blockTimestamp,
-          payloadJson: "{}",
+          payloadJson: JSON.stringify({
+            appId: contractConfig.id,
+            appName: contractConfig.name,
+            contractLabel: contractConfig.contractLabel,
+          }),
           createdAt: blockTimestamp,
         });
       } else if (eventName === "JobCompleted") {
         normalizedRows.push({
-          contractAddress: JOB_BOARD_ADDRESS.toLowerCase(),
+          contractAddress,
           eventKey: "job_completed",
           entityId: String(args.jobId || ""),
           walletPrimary: String(args.agent || "").toLowerCase(),
@@ -903,12 +1218,15 @@ async function syncPulseContractIndexer(db) {
           payloadJson: JSON.stringify({
             agentPayoutUsdc: formatIndexedUsdcFromBaseUnits(args.agentPayout || 0n),
             platformFeeUsdc: formatIndexedUsdcFromBaseUnits(args.platformFee || 0n),
+            appId: contractConfig.id,
+            appName: contractConfig.name,
+            contractLabel: contractConfig.contractLabel,
           }),
           createdAt: blockTimestamp,
         });
       } else if (eventName === "JobRejected") {
         normalizedRows.push({
-          contractAddress: JOB_BOARD_ADDRESS.toLowerCase(),
+          contractAddress,
           eventKey: "job_rejected",
           entityId: String(args.jobId || ""),
           walletPrimary: String(args.client || "").toLowerCase(),
@@ -920,12 +1238,16 @@ async function syncPulseContractIndexer(db) {
           logIndex,
           blockNumber,
           blockTimestamp,
-          payloadJson: "{}",
+          payloadJson: JSON.stringify({
+            appId: contractConfig.id,
+            appName: contractConfig.name,
+            contractLabel: contractConfig.contractLabel,
+          }),
           createdAt: blockTimestamp,
         });
       } else if (eventName === "CampaignCreated") {
         normalizedRows.push({
-          contractAddress: JOB_BOARD_ADDRESS.toLowerCase(),
+          contractAddress,
           eventKey: "campaign_created",
           entityId: String(args.campaignId || ""),
           walletPrimary: String(args.creator || "").toLowerCase(),
@@ -937,12 +1259,16 @@ async function syncPulseContractIndexer(db) {
           logIndex,
           blockNumber,
           blockTimestamp,
-          payloadJson: "{}",
+          payloadJson: JSON.stringify({
+            appId: contractConfig.id,
+            appName: contractConfig.name,
+            contractLabel: contractConfig.contractLabel,
+          }),
           createdAt: blockTimestamp,
         });
       } else if (eventName === "CampaignExpired") {
         normalizedRows.push({
-          contractAddress: JOB_BOARD_ADDRESS.toLowerCase(),
+          contractAddress,
           eventKey: "campaign_expired",
           entityId: String(args.campaignId || ""),
           walletPrimary: String(args.creator || "").toLowerCase(),
@@ -954,7 +1280,11 @@ async function syncPulseContractIndexer(db) {
           logIndex,
           blockNumber,
           blockTimestamp,
-          payloadJson: "{}",
+          payloadJson: JSON.stringify({
+            appId: contractConfig.id,
+            appName: contractConfig.name,
+            contractLabel: contractConfig.contractLabel,
+          }),
           createdAt: blockTimestamp,
         });
       }
@@ -1136,6 +1466,7 @@ function createPulseIndexerState(overrides = {}) {
     volume14d: [],
     categoryBreakdown: [],
     appRankings: [],
+    walletAnalytics: [],
     notes: [],
     error: "",
     ...overrides,
@@ -1213,7 +1544,26 @@ function normalizePulseIndexerNotes(notes = []) {
     .slice(0, 8);
 }
 
-function normalizePulseIndexerAppRanking(item, fallbackIndex = 0) {
+function describePulseIndexerScopeLabel(scope = "", fallback = "Indexed overlay") {
+  const value = normalizePulseIndexerText(scope, "").toLowerCase();
+  if (!value) return fallback;
+  if (value.includes("full-network")) return "Hosted network";
+  if (value.includes("hosted")) return "Hosted overlay";
+  if (value.includes("live-contract")) return "Live contract";
+  if (value.includes("tracked")) return "Tracked beta";
+  if (value.includes("indexed")) return "Indexed overlay";
+  return fallback;
+}
+
+function normalizePulseIndexerLabelList(items = []) {
+  if (!Array.isArray(items)) return [];
+  return items
+    .map(item => normalizePulseIndexerText(item, ""))
+    .filter(Boolean)
+    .slice(0, 6);
+}
+
+function normalizePulseIndexerAppRanking(item, fallbackIndex = 0, context = {}) {
   if (!isPlainObject(item)) return null;
 
   const id = normalizePulseIndexerText(item.id, `indexed-${fallbackIndex + 1}`);
@@ -1247,6 +1597,36 @@ function normalizePulseIndexerAppRanking(item, fallbackIndex = 0) {
   const liveContracts = Array.isArray(item.liveContracts)
     ? item.liveContracts.map(value => String(value || "").trim()).filter(isHexAddress)
     : [];
+  const contractLabels = normalizePulseIndexerLabelList(item.contractLabels ?? item.contractNames ?? item.contracts);
+  const contractsCount = Math.max(
+    liveContracts.length,
+    contractLabels.length,
+    parsePulseIndexerCount(item.contractCount ?? item.contractsCount ?? item.liveContractCount, 0),
+  );
+  const sourceScope = normalizePulseWalletAnalyticsSourceScope(item.sourceScope ?? context.sourceScope);
+  const sourceLabel = normalizePulseIndexerText(
+    item.sourceLabel ?? item.source ?? item.provider,
+    context.sourceLabel ?? "",
+  );
+  const scopeLabel = normalizePulseIndexerText(
+    item.scopeLabel ?? item.coverageLabel,
+    describePulseIndexerScopeLabel(sourceScope),
+  );
+  const chainLabel = normalizePulseIndexerText(
+    item.chainLabel ?? item.chain ?? item.network,
+    "Arc Testnet",
+  );
+  const walletCoverage = parsePulseIndexerCount(
+    item.walletCoverage ?? item.attributedWallets ?? item.walletsCovered ?? item.activeWallets,
+    0,
+  );
+  const networkSharePercent = item.networkSharePercent !== undefined && item.networkSharePercent !== null && item.networkSharePercent !== ""
+    ? Number(parsePulseIndexerNumber(item.networkSharePercent, 0).toFixed(1))
+    : null;
+  const attributionNote = normalizePulseIndexerText(
+    item.attributionNote ?? item.attribution ?? item.note,
+    "",
+  );
 
   return {
     rank: fallbackIndex + 1,
@@ -1263,7 +1643,62 @@ function normalizePulseIndexerAppRanking(item, fallbackIndex = 0) {
     jobs: parsePulseIndexerCount(item.jobs ?? item.contractEvents ?? item.events, 0),
     campaigns: parsePulseIndexerCount(item.campaigns, 0),
     liveContracts,
+    contractsCount,
+    contractLabels,
+    sourceLabel,
+    sourceScope,
+    scopeLabel,
+    chainLabel,
+    walletCoverage,
+    networkSharePercent,
+    attributionNote,
     status: normalizePulseIndexerText(item.status, "Full-network indexed"),
+  };
+}
+
+function normalizePulseWalletAnalyticsSourceScope(value = "") {
+  const scope = normalizePulseIndexerText(value, "").toLowerCase();
+  if (!scope) return "hosted-network-indexed";
+  return scope.includes("indexed") ? scope : `${scope}-indexed`;
+}
+
+function normalizePulseIndexerLaneValue(value = "") {
+  const lane = normalizePulseIndexerText(value, "").toLowerCase();
+  return PULSE_LANES.has(lane) ? lane : "";
+}
+
+function normalizePulseIndexerWalletAnalyticsItem(item, fallbackIndex = 0, context = {}) {
+  if (!isPlainObject(item)) return null;
+
+  const wallet = String(item.wallet ?? item.address ?? "").trim().toLowerCase();
+  if (!isHexAddress(wallet) || sameAddress(wallet, ZERO_ADDRESS)) return null;
+
+  return {
+    wallet,
+    displayName: normalizePulseIndexerText(item.displayName ?? item.name ?? item.label, ""),
+    jobsAsClient: parsePulseIndexerCount(item.jobsAsClient ?? item.jobsPosted ?? item.clientJobs, 0),
+    jobsAsWorker: parsePulseIndexerCount(item.jobsAsWorker ?? item.jobsClaimed ?? item.workerJobs, 0),
+    jobsCompleted: parsePulseIndexerCount(item.jobsCompleted ?? item.completions ?? item.completedJobs, 0),
+    jobsSettled: parsePulseIndexerCount(item.jobsSettled ?? item.settlements ?? item.settledJobs, 0),
+    campaignsCreated: parsePulseIndexerCount(item.campaignsCreated ?? item.campaigns ?? item.campaignCount, 0),
+    trackedVolumeUsdc: parsePulseIndexerNumber(item.trackedVolumeUsdc ?? item.volumeUsdc ?? item.totalVolumeUsdc ?? item.volume, 0),
+    settledVolumeUsdc: parsePulseIndexerNumber(item.settledVolumeUsdc ?? item.completedVolumeUsdc ?? item.settledVolume ?? item.completedVolume, 0),
+    memberSince: normalizePulseIndexerTimestamp(
+      item.memberSince ?? item.firstSeenAt ?? item.createdAt ?? item.firstActivityAt ?? item.since,
+    ),
+    mostUsedAppLabel: normalizePulseIndexerText(
+      item.mostUsedApp ?? item.primaryApp ?? item.app ?? item.appName,
+      "",
+    ),
+    primaryLane: normalizePulseIndexerLaneValue(
+      item.primaryLane ?? item.lane ?? item.primaryCategory,
+    ),
+    appFootprint: normalizePulseWalletAppFootprint(
+      item.appFootprint ?? item.topApps ?? item.apps,
+    ),
+    sourceLabel: normalizePulseIndexerText(item.sourceLabel, context.sourceLabel),
+    sourceScope: normalizePulseWalletAnalyticsSourceScope(item.sourceScope ?? context.sourceScope),
+    rank: parsePulseIndexerCount(item.rank, fallbackIndex + 1),
   };
 }
 
@@ -1276,10 +1711,11 @@ function normalizePulseIndexerSnapshot(input = {}) {
     input.source ?? input.sourceLabel ?? input.provider,
     getPulseIndexerDefaultSourceLabel(),
   );
+  const scope = normalizePulseIndexerText(input.scope, "indexed-overlay");
 
   return {
     sourceLabel,
-    scope: normalizePulseIndexerText(input.scope, "indexed-overlay"),
+    scope,
     generatedAt: normalizePulseIndexerTimestamp(
       input.generatedAt ?? input.generated_at ?? input.updatedAt ?? input.updated_at,
     ),
@@ -1290,7 +1726,12 @@ function normalizePulseIndexerSnapshot(input = {}) {
     ),
     appRankings: Array.isArray(input.appRankings ?? input.rankings)
       ? (input.appRankings ?? input.rankings)
-        .map((item, index) => normalizePulseIndexerAppRanking(item, index))
+        .map((item, index) => normalizePulseIndexerAppRanking(item, index, { sourceLabel, sourceScope: scope }))
+        .filter(Boolean)
+      : [],
+    walletAnalytics: Array.isArray(input.walletAnalytics ?? input.walletRankings ?? input.wallets)
+      ? (input.walletAnalytics ?? input.walletRankings ?? input.wallets)
+        .map((item, index) => normalizePulseIndexerWalletAnalyticsItem(item, index, { sourceLabel, sourceScope: scope }))
         .filter(Boolean)
       : [],
     notes: normalizePulseIndexerNotes(input.notes),
@@ -1463,7 +1904,10 @@ function buildPulseOverviewNotes(indexerState) {
       ? ` Sync timestamp ${formatPulseCalendarLabel(indexerState.generatedAt)}.`
       : "";
     notes.push(`Volume, categories, and app rankings now widen through ${indexerState.sourceLabel || "the active Pulse indexer"}.${freshness}`.trim());
-    notes.push("Arc ID wallet scoring now uses indexed AgentMarket wallet activity whenever live contract rows are available.");
+    if (Array.isArray(indexerState.walletAnalytics) && indexerState.walletAnalytics.length) {
+      notes.push(`Hosted wallet analytics are attached for ${indexerState.walletAnalytics.length} wallets, so Arc ID can widen beyond the local AgentMarket contract rows.`);
+    }
+    notes.push("Arc ID wallet scoring now uses the indexed wallet layer whenever live contract rows or hosted wallet overlays are available.");
     if (indexerState.syncing) {
       notes.push("A background refresh is running now, so indexed totals may keep moving upward until the current sync finishes.");
     }
@@ -1482,12 +1926,15 @@ function buildPulseOverviewNotes(indexerState) {
   return notes;
 }
 
-function ensurePulseContractIndexerSchema(db, configuredStartBlock) {
+function ensurePulseContractIndexerSchema(db, configuredStartBlock, liveContracts = null) {
   const currentVersion = pulseMetaGet(db, "pulse-indexer:schema-version");
-  if (currentVersion === PULSE_INDEXER_SCHEMA_VERSION) return;
+  const currentFingerprint = pulseMetaGet(db, "pulse-indexer:config-fingerprint");
+  const nextFingerprint = getPulseIndexerConfigFingerprint(liveContracts);
+  if (currentVersion === PULSE_INDEXER_SCHEMA_VERSION && currentFingerprint === nextFingerprint) return;
 
   db.exec("DELETE FROM pulse_indexed_contract_events;");
   pulseMetaSet(db, "pulse-indexer:schema-version", PULSE_INDEXER_SCHEMA_VERSION);
+  pulseMetaSet(db, "pulse-indexer:config-fingerprint", nextFingerprint);
   pulseMetaSet(db, "pulse-indexer:start-block", configuredStartBlock.toString());
   pulseMetaSet(
     db,
@@ -1972,6 +2419,26 @@ function formatPulseCalendarLabel(timestamp) {
   }
 }
 
+function createPulseWalletArcActivityState() {
+  return {
+    totalSentTransactions: 0,
+    totalWalletTouches: 0,
+    contractsDeployed: 0,
+    uniqueContractsInteracted: 0,
+    activeDays: 0,
+    successfulTransactions: 0,
+    failedTransactions: 0,
+    totalFeesPaidUsdc: 0,
+    currentBalanceUsdc: 0,
+    firstActivityAt: 0,
+    lastActivityAt: 0,
+    updatedAt: 0,
+    stale: false,
+    sourceLabel: "",
+    score: 0,
+  };
+}
+
 function createPulseWalletActivity(wallet) {
   return {
     wallet: String(wallet || "").toLowerCase(),
@@ -1992,6 +2459,10 @@ function createPulseWalletActivity(wallet) {
     memberSince: 0,
     sourceScope: "",
     sourceLabel: "",
+    mostUsedAppLabel: "",
+    appUsage: {},
+    primaryLane: "",
+    arcActivity: createPulseWalletArcActivityState(),
     laneCounts: {
       build: 0,
       thread: 0,
@@ -2017,6 +2488,82 @@ function notePulseWalletTimestamp(entry, timestamp) {
   }
 }
 
+function ensurePulseWalletAppUsage(entry, descriptor = {}) {
+  if (!entry) return null;
+  if (!entry.appUsage || typeof entry.appUsage !== "object" || Array.isArray(entry.appUsage)) {
+    entry.appUsage = {};
+  }
+
+  const appId = slugifyPulseIndexerText(
+    descriptor.id || descriptor.appId || descriptor.name || descriptor.contractLabel || "arc-app",
+    "arc-app",
+  );
+  if (!entry.appUsage[appId]) {
+    entry.appUsage[appId] = {
+      id: appId,
+      name: String(descriptor.name || descriptor.appName || descriptor.label || "Arc app"),
+      trackedActions: 0,
+      trackedVolumeUsdc: 0,
+      contractLabels: [],
+    };
+  }
+
+  const item = entry.appUsage[appId];
+  if (descriptor.name && !item.name) item.name = String(descriptor.name);
+  const contractLabel = String(descriptor.contractLabel || descriptor.label || "").trim();
+  if (contractLabel && !item.contractLabels.includes(contractLabel)) {
+    item.contractLabels.push(contractLabel);
+  }
+  return item;
+}
+
+function notePulseWalletAppAttribution(entry, descriptor = {}, {
+  trackedActions = 0,
+  trackedVolumeUsdc = 0,
+} = {}) {
+  const item = ensurePulseWalletAppUsage(entry, descriptor);
+  if (!item) return;
+  item.trackedActions += Math.max(0, Number(trackedActions || 0));
+  item.trackedVolumeUsdc += Math.max(0, Number(trackedVolumeUsdc || 0));
+}
+
+function normalizePulseWalletAppFootprint(items = []) {
+  if (!Array.isArray(items)) return [];
+  return items
+    .map(item => {
+      if (!isPlainObject(item)) return null;
+      const name = normalizePulseIndexerText(item.name ?? item.app ?? item.label, "");
+      if (!name) return null;
+      return {
+        id: slugifyPulseIndexerText(item.id || item.appId || name, "arc-app"),
+        name,
+        trackedActions: parsePulseIndexerCount(item.trackedActions ?? item.actions ?? item.events, 0),
+        trackedVolumeUsdc: parsePulseIndexerNumber(item.trackedVolumeUsdc ?? item.volumeUsdc ?? item.volume, 0),
+        contractLabels: normalizePulseIndexerLabelList(item.contractLabels ?? item.contracts),
+      };
+    })
+    .filter(Boolean)
+    .slice(0, 6);
+}
+
+function formatPulseWalletAppFootprint(entry) {
+  return Object.values(entry?.appUsage || {})
+    .map(item => ({
+      id: String(item.id || ""),
+      name: String(item.name || "Arc app"),
+      trackedActions: Math.max(0, Number(item.trackedActions || 0)),
+      trackedVolumeUsdc: formatUsdc(item.trackedVolumeUsdc || 0),
+      trackedVolumeUsdcRaw: Number((Number(item.trackedVolumeUsdc || 0)).toFixed(2)),
+      contractLabels: Array.isArray(item.contractLabels) ? item.contractLabels.slice(0, 4) : [],
+    }))
+    .sort((a, b) => (
+      b.trackedActions - a.trackedActions
+      || b.trackedVolumeUsdcRaw - a.trackedVolumeUsdcRaw
+      || a.name.localeCompare(b.name)
+    ))
+    .slice(0, 6);
+}
+
 function resolvePulseLaneLabel(laneCounts = {}, fallback = "") {
   let winner = "";
   let winnerCount = 0;
@@ -2035,9 +2582,65 @@ function resolvePulseLaneLabel(laneCounts = {}, fallback = "") {
   return "None yet";
 }
 
+function scorePulseWalletArcActivity(state = {}) {
+  const totalSentTransactions = Math.max(0, Number(state.totalSentTransactions || 0));
+  const activeDays = Math.max(0, Number(state.activeDays || 0));
+  const uniqueContractsInteracted = Math.max(0, Number(state.uniqueContractsInteracted || 0));
+  const contractsDeployed = Math.max(0, Number(state.contractsDeployed || 0));
+  const successfulTransactions = Math.max(0, Number(state.successfulTransactions || 0));
+  const failedTransactions = Math.max(0, Number(state.failedTransactions || 0));
+  const totalFeesPaidUsdc = Math.max(0, Number(state.totalFeesPaidUsdc || 0));
+  const currentBalanceUsdc = Math.max(0, Number(state.currentBalanceUsdc || 0));
+  const totalKnownTransactions = successfulTransactions + failedTransactions;
+  const successRate = totalKnownTransactions > 0 ? (successfulTransactions / totalKnownTransactions) : 0;
+
+  return Math.round(
+    Math.min(72, Math.sqrt(totalSentTransactions) * 12)
+    + Math.min(30, activeDays * 3)
+    + Math.min(24, uniqueContractsInteracted * 4)
+    + Math.min(20, contractsDeployed * 8)
+    + Math.min(14, Math.sqrt(totalFeesPaidUsdc) * 5)
+    + Math.min(12, Math.sqrt(currentBalanceUsdc) * 3)
+    + (totalKnownTransactions >= 3
+      ? (successRate >= 0.95 ? 12 : (successRate >= 0.85 ? 8 : (successRate >= 0.7 ? 4 : 0)))
+      : 0)
+  );
+}
+
+function normalizePulseWalletArcActivity(payload = {}) {
+  const summary = payload?.summary && typeof payload.summary === "object" ? payload.summary : payload;
+  const arcActivity = createPulseWalletArcActivityState();
+  arcActivity.totalSentTransactions = Math.max(0, Number(summary?.totalSentTransactions || 0));
+  arcActivity.totalWalletTouches = Math.max(0, Number(summary?.totalWalletTouches || 0));
+  arcActivity.contractsDeployed = Math.max(0, Number(summary?.contractsDeployed || 0));
+  arcActivity.uniqueContractsInteracted = Math.max(0, Number(summary?.uniqueContractsInteracted || 0));
+  arcActivity.activeDays = Math.max(0, Number(summary?.activeDays || 0));
+  arcActivity.successfulTransactions = Math.max(0, Number(summary?.successfulTransactions || 0));
+  arcActivity.failedTransactions = Math.max(0, Number(summary?.failedTransactions || 0));
+  arcActivity.totalFeesPaidUsdc = Math.max(0, toUsdcNumber(summary?.totalFeesPaidUsdc));
+  arcActivity.currentBalanceUsdc = Math.max(0, toUsdcNumber(summary?.currentBalanceUsdc));
+  arcActivity.firstActivityAt = Math.max(0, Number(summary?.firstActivityAt || 0));
+  arcActivity.lastActivityAt = Math.max(0, Number(summary?.lastActivityAt || 0));
+  arcActivity.updatedAt = Math.max(0, Number(payload?.updatedAt || 0));
+  arcActivity.stale = Boolean(payload?.stale);
+  arcActivity.sourceLabel = String(payload?.sourceLabel || "");
+  arcActivity.score = scorePulseWalletArcActivity(arcActivity);
+  return arcActivity;
+}
+
+function applyArcWalletActivityToPulseWalletEntry(entry, payload = {}) {
+  if (!entry) return null;
+  const arcActivity = normalizePulseWalletArcActivity(payload);
+  entry.arcActivity = arcActivity;
+  notePulseWalletTimestamp(entry, arcActivity.firstActivityAt || arcActivity.updatedAt);
+  return entry;
+}
+
 function formatPulseWalletActivity(entry) {
   const trackedVolumeUsdcRaw = Number((Number(entry.trackedVolumeUsdc || 0)).toFixed(2));
   const settledVolumeUsdcRaw = Number((Number(entry.settledVolumeUsdc || 0)).toFixed(2));
+  const arcActivity = normalizePulseWalletArcActivity(entry.arcActivity || {});
+  const appFootprint = formatPulseWalletAppFootprint(entry);
   const totalTrackedActions = Number(entry.jobsAsClient || 0)
     + Number(entry.jobsAsWorker || 0)
     + Number(entry.campaignsCreated || 0)
@@ -2053,6 +2656,7 @@ function formatPulseWalletActivity(entry) {
     + Number(entry.points || 0)
     + (Number(entry.longestStreak || 0) * 4)
     + (Number(entry.postUpvotesEarned || 0) * 3)
+    + arcActivity.score
   );
 
   return {
@@ -2077,27 +2681,121 @@ function formatPulseWalletActivity(entry) {
     memberSinceLabel: formatPulseCalendarLabel(entry.memberSince),
     totalTrackedActions,
     lifecycleActions,
-    mostUsedLane: resolvePulseLaneLabel(entry.laneCounts, totalTrackedActions > 0 ? "build" : ""),
-    mostUsedApp: totalTrackedActions > 0
-      ? (entry.sourceScope === "live-contract-indexed" ? "AgentMarket indexed" : "AgentMarket")
-      : "Awaiting first signal",
+    mostUsedLane: resolvePulseLaneLabel(entry.laneCounts, entry.primaryLane || (totalTrackedActions > 0 ? "build" : "")),
+    mostUsedApp: String(
+      entry.mostUsedAppLabel
+      || appFootprint[0]?.name
+      || (totalTrackedActions > 0
+        ? (String(entry.sourceScope || "").includes("indexed") ? "Indexed Arc app" : "AgentMarket")
+        : (arcActivity.score > 0 ? "Arc wallet activity" : "Awaiting first signal"))
+    ),
+    appFootprint,
     sourceScope: String(entry.sourceScope || ""),
     sourceLabel: String(entry.sourceLabel || ""),
+    arcActivityScore: arcActivity.score,
+    arcTotalSentTransactions: arcActivity.totalSentTransactions,
+    arcTotalWalletTouches: arcActivity.totalWalletTouches,
+    arcContractsDeployed: arcActivity.contractsDeployed,
+    arcUniqueContractsInteracted: arcActivity.uniqueContractsInteracted,
+    arcActiveDays: arcActivity.activeDays,
+    arcSuccessfulTransactions: arcActivity.successfulTransactions,
+    arcFailedTransactions: arcActivity.failedTransactions,
+    arcTotalFeesPaidUsdc: formatUsdc(arcActivity.totalFeesPaidUsdc),
+    arcTotalFeesPaidUsdcRaw: arcActivity.totalFeesPaidUsdc,
+    arcCurrentBalanceUsdc: formatUsdc(arcActivity.currentBalanceUsdc),
+    arcCurrentBalanceUsdcRaw: arcActivity.currentBalanceUsdc,
+    arcFirstActivityAt: arcActivity.firstActivityAt,
+    arcLastActivityAt: arcActivity.lastActivityAt,
+    arcUpdatedAt: arcActivity.updatedAt,
+    arcSourceLabel: arcActivity.sourceLabel,
+    arcStale: arcActivity.stale,
     activityScore,
   };
 }
 
 function describePulseArcIdBadge(summary, topPercent) {
-  if (!summary.totalTrackedActions && !summary.points) return "Network Arrival";
-  if (topPercent <= 10 || summary.activityScore >= 260) return "Arc Vanguard";
+  if (!summary.totalTrackedActions && !summary.points && !summary.arcActivityScore) return "Network Arrival";
+  if (!summary.totalTrackedActions && !summary.points && summary.arcActivityScore >= 90) return "Arc Navigator";
+  if (topPercent <= 10 || summary.activityScore >= 320) return "Arc Vanguard";
   if (summary.jobsCompleted > 0 && summary.jobsSettled > 0) return "Market Closer";
-  if (topPercent <= 30 || summary.activityScore >= 140) return "Pulse Builder";
-  if (summary.postsShared > 0 || summary.totalCheckIns > 0) return "Signal Starter";
+  if (summary.arcActivityScore >= 110 && summary.arcTotalSentTransactions >= 12) return "Chain Operator";
+  if (topPercent <= 30 || summary.activityScore >= 180) return "Pulse Builder";
+  if (summary.postsShared > 0 || summary.totalCheckIns > 0 || summary.arcTotalSentTransactions > 0) return "Signal Starter";
   return "Fresh Builder";
 }
 
-function applyIndexedPulseWalletAnalytics(db, analytics) {
-  const rows = getPulseIndexedContractRows(db);
+function isPulseWalletAnalyticsSkipped(skipWallets, wallet) {
+  if (!(skipWallets instanceof Set)) return false;
+  const canonicalWallet = String(wallet || "").toLowerCase();
+  return Boolean(canonicalWallet && skipWallets.has(canonicalWallet));
+}
+
+function applyHostedPulseWalletAnalytics(snapshotState, analytics) {
+  const items = Array.isArray(snapshotState?.walletAnalytics) ? snapshotState.walletAnalytics : [];
+  if (!items.length) {
+    return {
+      usedHostedWalletOverlay: false,
+      sourceScope: "",
+      sourceLabel: "",
+      coveredWallets: new Set(),
+    };
+  }
+
+  const coveredWallets = new Set();
+  for (const item of items) {
+    const entry = ensurePulseWalletActivity(analytics, item.wallet);
+    if (!entry) continue;
+
+    coveredWallets.add(entry.wallet);
+    const hasCustomDisplayName = Boolean(entry.displayName && entry.displayName !== shortWallet(entry.wallet));
+    if (!hasCustomDisplayName && item.displayName) {
+      entry.displayName = item.displayName;
+    }
+
+    entry.jobsAsClient = Number(item.jobsAsClient || 0);
+    entry.jobsAsWorker = Number(item.jobsAsWorker || 0);
+    entry.jobsCompleted = Number(item.jobsCompleted || 0);
+    entry.jobsSettled = Number(item.jobsSettled || 0);
+    entry.campaignsCreated = Number(item.campaignsCreated || 0);
+    entry.trackedVolumeUsdc = Number(item.trackedVolumeUsdc || 0);
+    entry.settledVolumeUsdc = Number(item.settledVolumeUsdc || 0);
+    entry.sourceScope = String(item.sourceScope || "hosted-network-indexed");
+    entry.sourceLabel = String(item.sourceLabel || snapshotState?.sourceLabel || "");
+    entry.mostUsedAppLabel = String(item.mostUsedAppLabel || entry.mostUsedAppLabel || "");
+    entry.primaryLane = String(item.primaryLane || entry.primaryLane || "");
+    for (const app of item.appFootprint || []) {
+      notePulseWalletAppAttribution(entry, {
+        id: app.id,
+        name: app.name,
+      }, {
+        trackedActions: app.trackedActions,
+        trackedVolumeUsdc: app.trackedVolumeUsdc,
+      });
+      const usage = ensurePulseWalletAppUsage(entry, {
+        id: app.id,
+        name: app.name,
+      });
+      if (usage) {
+        usage.contractLabels = [...new Set([...(usage.contractLabels || []), ...(app.contractLabels || [])])].slice(0, 4);
+      }
+    }
+    notePulseWalletTimestamp(entry, item.memberSince);
+  }
+
+  return {
+    usedHostedWalletOverlay: true,
+    sourceScope: normalizePulseWalletAnalyticsSourceScope(snapshotState?.scope),
+    sourceLabel: String(snapshotState?.sourceLabel || ""),
+    coveredWallets,
+  };
+}
+
+function applyIndexedPulseWalletAnalytics(db, analytics, skipWallets = null) {
+  const liveContracts = getPulseIndexerLiveContracts();
+  const contractConfigByAddress = getPulseIndexerLiveContractMap();
+  const rows = getPulseIndexedContractRows(db, liveContracts);
+  const indexedSourceScope = liveContracts.length > 1 ? "live-multi-contract-indexed" : "live-contract-indexed";
+  const indexedSourceLabel = liveContracts.length > 1 ? "Arc RPC multi-contract indexer" : "Arc RPC event indexer";
   if (!rows.length) {
     return {
       usedIndexedContractRows: false,
@@ -2117,24 +2815,38 @@ function applyIndexedPulseWalletAnalytics(db, analytics) {
     const eventKey = String(row.event_key || "");
     const eventTimestamp = Number(row.block_timestamp || row.created_at || 0);
     const amountUsdc = toUsdcNumber(row.amount_usdc);
+    const contractAddress = String(row.contract_address || "").toLowerCase();
+    const contractConfig = contractConfigByAddress.get(contractAddress) || {
+      id: "agentmarket",
+      name: "AgentMarket",
+      contractLabel: shortWallet(contractAddress),
+    };
 
     if (eventKey === "job_posted") {
-      const clientEntry = ensurePulseWalletActivity(analytics, row.wallet_primary);
+      const clientEntry = isPulseWalletAnalyticsSkipped(skipWallets, row.wallet_primary)
+        ? null
+        : ensurePulseWalletActivity(analytics, row.wallet_primary);
       if (clientEntry) {
         clientEntry.jobsAsClient += 1;
         clientEntry.trackedVolumeUsdc += amountUsdc;
-        clientEntry.sourceScope = "live-contract-indexed";
-        clientEntry.sourceLabel = "Arc RPC event indexer";
+        clientEntry.sourceScope = indexedSourceScope;
+        clientEntry.sourceLabel = indexedSourceLabel;
+        notePulseWalletAppAttribution(clientEntry, contractConfig, { trackedActions: 1, trackedVolumeUsdc: amountUsdc });
         notePulseWalletTimestamp(clientEntry, eventTimestamp);
       }
 
-      if (row.wallet_secondary && !sameAddress(row.wallet_secondary, ZERO_ADDRESS)) {
+      if (
+        row.wallet_secondary
+        && !sameAddress(row.wallet_secondary, ZERO_ADDRESS)
+        && !isPulseWalletAnalyticsSkipped(skipWallets, row.wallet_secondary)
+      ) {
         const workerEntry = ensurePulseWalletActivity(analytics, row.wallet_secondary);
         if (workerEntry) {
           workerEntry.jobsAsWorker += 1;
           workerEntry.trackedVolumeUsdc += amountUsdc;
-          workerEntry.sourceScope = "live-contract-indexed";
-          workerEntry.sourceLabel = "Arc RPC event indexer";
+          workerEntry.sourceScope = indexedSourceScope;
+          workerEntry.sourceLabel = indexedSourceLabel;
+          notePulseWalletAppAttribution(workerEntry, contractConfig, { trackedActions: 1, trackedVolumeUsdc: amountUsdc });
           notePulseWalletTimestamp(workerEntry, eventTimestamp);
         }
       }
@@ -2143,35 +2855,46 @@ function applyIndexedPulseWalletAnalytics(db, analytics) {
     }
 
     if (eventKey === "job_claimed") {
+      if (isPulseWalletAnalyticsSkipped(skipWallets, row.wallet_primary)) continue;
       const workerEntry = ensurePulseWalletActivity(analytics, row.wallet_primary);
       if (!workerEntry) continue;
       const postedRow = jobPostsById.get(String(row.entity_id || ""));
       if (postedRow?.wallet_secondary && !sameAddress(postedRow.wallet_secondary, ZERO_ADDRESS)) continue;
       workerEntry.jobsAsWorker += 1;
       workerEntry.trackedVolumeUsdc += toUsdcNumber(postedRow?.amount_usdc || 0);
-      workerEntry.sourceScope = "live-contract-indexed";
-      workerEntry.sourceLabel = "Arc RPC event indexer";
+      workerEntry.sourceScope = indexedSourceScope;
+      workerEntry.sourceLabel = indexedSourceLabel;
+      notePulseWalletAppAttribution(workerEntry, contractConfig, {
+        trackedActions: 1,
+        trackedVolumeUsdc: toUsdcNumber(postedRow?.amount_usdc || 0),
+      });
       notePulseWalletTimestamp(workerEntry, eventTimestamp);
       continue;
     }
 
     if (eventKey === "job_completed") {
-      const workerEntry = ensurePulseWalletActivity(analytics, row.wallet_primary);
+      const workerEntry = isPulseWalletAnalyticsSkipped(skipWallets, row.wallet_primary)
+        ? null
+        : ensurePulseWalletActivity(analytics, row.wallet_primary);
       if (workerEntry) {
         workerEntry.jobsCompleted += 1;
         workerEntry.settledVolumeUsdc += amountUsdc;
-        workerEntry.sourceScope = "live-contract-indexed";
-        workerEntry.sourceLabel = "Arc RPC event indexer";
+        workerEntry.sourceScope = indexedSourceScope;
+        workerEntry.sourceLabel = indexedSourceLabel;
+        notePulseWalletAppAttribution(workerEntry, contractConfig, { trackedActions: 1, trackedVolumeUsdc: amountUsdc });
         notePulseWalletTimestamp(workerEntry, eventTimestamp);
       }
 
       const postedRow = jobPostsById.get(String(row.entity_id || ""));
-      const clientEntry = ensurePulseWalletActivity(analytics, postedRow?.wallet_primary || "");
+      const clientEntry = isPulseWalletAnalyticsSkipped(skipWallets, postedRow?.wallet_primary || "")
+        ? null
+        : ensurePulseWalletActivity(analytics, postedRow?.wallet_primary || "");
       if (clientEntry) {
         clientEntry.jobsSettled += 1;
         clientEntry.settledVolumeUsdc += amountUsdc;
-        clientEntry.sourceScope = "live-contract-indexed";
-        clientEntry.sourceLabel = "Arc RPC event indexer";
+        clientEntry.sourceScope = indexedSourceScope;
+        clientEntry.sourceLabel = indexedSourceLabel;
+        notePulseWalletAppAttribution(clientEntry, contractConfig, { trackedActions: 1, trackedVolumeUsdc: amountUsdc });
         notePulseWalletTimestamp(clientEntry, eventTimestamp);
       }
 
@@ -2179,24 +2902,26 @@ function applyIndexedPulseWalletAnalytics(db, analytics) {
     }
 
     if (eventKey === "campaign_created") {
+      if (isPulseWalletAnalyticsSkipped(skipWallets, row.wallet_primary)) continue;
       const creatorEntry = ensurePulseWalletActivity(analytics, row.wallet_primary);
       if (!creatorEntry) continue;
       creatorEntry.campaignsCreated += 1;
       creatorEntry.trackedVolumeUsdc += amountUsdc;
-      creatorEntry.sourceScope = "live-contract-indexed";
-      creatorEntry.sourceLabel = "Arc RPC event indexer";
+      creatorEntry.sourceScope = indexedSourceScope;
+      creatorEntry.sourceLabel = indexedSourceLabel;
+      notePulseWalletAppAttribution(creatorEntry, contractConfig, { trackedActions: 1, trackedVolumeUsdc: amountUsdc });
       notePulseWalletTimestamp(creatorEntry, eventTimestamp);
     }
   }
 
   return {
     usedIndexedContractRows: true,
-    sourceScope: "live-contract-indexed",
-    sourceLabel: "Arc RPC event indexer",
+    sourceScope: indexedSourceScope,
+    sourceLabel: indexedSourceLabel,
   };
 }
 
-function buildPulseWalletAnalytics(db, jobs = [], campaigns = []) {
+function buildPulseWalletAnalytics(db, jobs = [], campaigns = [], snapshotState = null) {
   const analytics = new Map();
 
   for (const row of db.prepare("SELECT * FROM pulse_profiles").all()) {
@@ -2235,62 +2960,96 @@ function buildPulseWalletAnalytics(db, jobs = [], campaigns = []) {
     notePulseWalletTimestamp(entry, post.created_at);
   }
 
-  const indexedState = applyIndexedPulseWalletAnalytics(db, analytics);
+  const hostedState = applyHostedPulseWalletAnalytics(snapshotState, analytics);
+  const skipWallets = hostedState.usedHostedWalletOverlay ? hostedState.coveredWallets : null;
+  const indexedState = applyIndexedPulseWalletAnalytics(db, analytics, skipWallets);
   if (!indexedState.usedIndexedContractRows) {
+    const trackedDescriptor = createDefaultPulseIndexerLiveContract();
     for (const job of jobs) {
       const budget = toUsdcNumber(job.budget);
       const createdAt = Number(job.createdAt || 0);
 
-      if (job.client && !sameAddress(job.client, ZERO_ADDRESS)) {
+      if (
+        job.client
+        && !sameAddress(job.client, ZERO_ADDRESS)
+        && !isPulseWalletAnalyticsSkipped(skipWallets, job.client)
+      ) {
         const clientEntry = ensurePulseWalletActivity(analytics, job.client);
         if (clientEntry) {
           clientEntry.jobsAsClient += 1;
           clientEntry.trackedVolumeUsdc += budget;
+          notePulseWalletAppAttribution(clientEntry, trackedDescriptor, { trackedActions: 1, trackedVolumeUsdc: budget });
           notePulseWalletTimestamp(clientEntry, createdAt);
         }
       }
 
-      if (job.agent && !sameAddress(job.agent, ZERO_ADDRESS)) {
+      if (
+        job.agent
+        && !sameAddress(job.agent, ZERO_ADDRESS)
+        && !isPulseWalletAnalyticsSkipped(skipWallets, job.agent)
+      ) {
         const workerEntry = ensurePulseWalletActivity(analytics, job.agent);
         if (workerEntry) {
           workerEntry.jobsAsWorker += 1;
           workerEntry.trackedVolumeUsdc += budget;
+          notePulseWalletAppAttribution(workerEntry, trackedDescriptor, { trackedActions: 1, trackedVolumeUsdc: budget });
           notePulseWalletTimestamp(workerEntry, createdAt);
         }
       }
 
-      if (Number(job.status) === 3 && job.agent && !sameAddress(job.agent, ZERO_ADDRESS)) {
+      if (
+        Number(job.status) === 3
+        && job.agent
+        && !sameAddress(job.agent, ZERO_ADDRESS)
+        && !isPulseWalletAnalyticsSkipped(skipWallets, job.agent)
+      ) {
         const workerEntry = ensurePulseWalletActivity(analytics, job.agent);
         if (workerEntry) {
           workerEntry.jobsCompleted += 1;
           workerEntry.settledVolumeUsdc += budget;
+          notePulseWalletAppAttribution(workerEntry, trackedDescriptor, { trackedActions: 1, trackedVolumeUsdc: budget });
         }
       }
 
-      if (Number(job.status) === 3 && job.client && !sameAddress(job.client, ZERO_ADDRESS)) {
+      if (
+        Number(job.status) === 3
+        && job.client
+        && !sameAddress(job.client, ZERO_ADDRESS)
+        && !isPulseWalletAnalyticsSkipped(skipWallets, job.client)
+      ) {
         const clientEntry = ensurePulseWalletActivity(analytics, job.client);
         if (clientEntry) {
           clientEntry.jobsSettled += 1;
           clientEntry.settledVolumeUsdc += budget;
+          notePulseWalletAppAttribution(clientEntry, trackedDescriptor, { trackedActions: 1, trackedVolumeUsdc: budget });
         }
       }
     }
 
     for (const campaign of campaigns) {
-      if (!campaign.creator || sameAddress(campaign.creator, ZERO_ADDRESS)) continue;
+      if (
+        !campaign.creator
+        || sameAddress(campaign.creator, ZERO_ADDRESS)
+        || isPulseWalletAnalyticsSkipped(skipWallets, campaign.creator)
+      ) continue;
       const creatorEntry = ensurePulseWalletActivity(analytics, campaign.creator);
       if (!creatorEntry) continue;
       creatorEntry.campaignsCreated += 1;
       creatorEntry.trackedVolumeUsdc += toUsdcNumber(campaign.prizePool);
+      notePulseWalletAppAttribution(creatorEntry, trackedDescriptor, {
+        trackedActions: 1,
+        trackedVolumeUsdc: toUsdcNumber(campaign.prizePool),
+      });
       notePulseWalletTimestamp(creatorEntry, Number(campaign.createdAt || 0));
     }
   }
 
   return {
     analytics,
+    usedHostedWalletOverlay: hostedState.usedHostedWalletOverlay,
     usedIndexedContractRows: indexedState.usedIndexedContractRows,
-    sourceScope: indexedState.sourceScope,
-    sourceLabel: indexedState.sourceLabel,
+    sourceScope: hostedState.usedHostedWalletOverlay ? hostedState.sourceScope : indexedState.sourceScope,
+    sourceLabel: hostedState.usedHostedWalletOverlay ? hostedState.sourceLabel : indexedState.sourceLabel,
   };
 }
 
@@ -2680,6 +3439,25 @@ function getPulseArcWalletActivityCache(db, wallet) {
   }
 }
 
+function getAllPulseArcWalletActivityCaches(db) {
+  const rows = db.prepare("SELECT wallet, payload_json, updated_at FROM pulse_arc_wallet_activity_cache").all();
+  const caches = new Map();
+
+  for (const row of rows) {
+    if (!row?.wallet || !row?.payload_json) continue;
+    try {
+      const wallet = String(row.wallet || "").toLowerCase();
+      const payload = JSON.parse(String(row.payload_json || "{}"));
+      caches.set(wallet, createArcWalletActivityPayload(wallet, {
+        ...payload,
+        updatedAt: Number(row.updated_at || payload?.updatedAt || 0),
+      }));
+    } catch {}
+  }
+
+  return caches;
+}
+
 function savePulseArcWalletActivityCache(db, wallet, payload = {}) {
   const canonicalWallet = String(wallet || "").toLowerCase();
   const updatedAt = Number(payload.updatedAt || Date.now());
@@ -2999,9 +3777,25 @@ async function getArcWalletActivity(db, wallet) {
 
 async function buildPulseArcIdProfile(db, wallet, jobs = [], campaigns = []) {
   const canonicalWallet = String(wallet || "").toLowerCase();
-  const walletAnalytics = buildPulseWalletAnalytics(db, jobs, campaigns);
+  const configuredSnapshot = await getConfiguredPulseIndexerSnapshot();
+  const walletAnalytics = buildPulseWalletAnalytics(
+    db,
+    jobs,
+    campaigns,
+    configuredSnapshot?.connected ? configuredSnapshot : null,
+  );
   const analyticsMap = walletAnalytics.analytics;
-  const entry = analyticsMap.get(canonicalWallet) || createPulseWalletActivity(canonicalWallet);
+  const cachedArcActivityByWallet = getAllPulseArcWalletActivityCaches(db);
+  const arcWalletActivity = await getArcWalletActivity(db, canonicalWallet);
+  cachedArcActivityByWallet.set(canonicalWallet, arcWalletActivity);
+
+  for (const [walletKey, payload] of cachedArcActivityByWallet.entries()) {
+    const walletEntry = ensurePulseWalletActivity(analyticsMap, walletKey);
+    if (!walletEntry) continue;
+    applyArcWalletActivityToPulseWalletEntry(walletEntry, payload);
+  }
+
+  const entry = ensurePulseWalletActivity(analyticsMap, canonicalWallet) || createPulseWalletActivity(canonicalWallet);
   if (walletAnalytics.sourceScope) entry.sourceScope = walletAnalytics.sourceScope;
   if (walletAnalytics.sourceLabel) entry.sourceLabel = walletAnalytics.sourceLabel;
   const summary = formatPulseWalletActivity(entry);
@@ -3011,15 +3805,21 @@ async function buildPulseArcIdProfile(db, wallet, jobs = [], campaigns = []) {
   const nftMintRecord = getPulseArcIdNftMintRecord(db, canonicalWallet);
   const onchainNftState = await getArcIdNftOnchainState(canonicalWallet);
   const unlockMode = unlockRecord?.tx_hash ? "paid-usdc" : (unlockRecord ? "beta-free" : "locked");
-  const arcWalletActivity = await getArcWalletActivity(db, canonicalWallet);
   const activityDetailsUnlocked = unlockMode === "paid-usdc";
-  const indexedArcId = Boolean(walletAnalytics.usedIndexedContractRows);
-  const arcIdScope = indexedArcId ? "indexed-live" : "tracked-beta";
+  const indexedArcId = Boolean(walletAnalytics.usedIndexedContractRows || walletAnalytics.usedHostedWalletOverlay);
+  const arcIdScope = walletAnalytics.sourceScope || (indexedArcId ? "indexed-live" : "tracked-beta");
   const arcIdSourceLabel = walletAnalytics.sourceLabel || (indexedArcId ? "Arc RPC event indexer" : "Tracked contract reads");
 
   const rankedWallets = [...analyticsMap.values()]
     .map(formatPulseWalletActivity)
-    .filter(item => item.totalTrackedActions > 0 || item.points > 0 || item.trackedVolumeUsdcRaw > 0 || item.memberSince > 0);
+    .filter(item => (
+      item.totalTrackedActions > 0
+      || item.points > 0
+      || item.trackedVolumeUsdcRaw > 0
+      || item.memberSince > 0
+      || item.arcActivityScore > 0
+      || item.arcTotalSentTransactions > 0
+    ));
 
   if (!rankedWallets.some(item => sameAddress(item.wallet, canonicalWallet))) {
     rankedWallets.push(summary);
@@ -3027,6 +3827,7 @@ async function buildPulseArcIdProfile(db, wallet, jobs = [], campaigns = []) {
 
   rankedWallets.sort((a, b) => (
     b.activityScore - a.activityScore
+    || b.arcActivityScore - a.arcActivityScore
     || b.trackedVolumeUsdcRaw - a.trackedVolumeUsdcRaw
     || b.points - a.points
     || a.memberSince - b.memberSince
@@ -3089,11 +3890,20 @@ async function buildPulseArcIdProfile(db, wallet, jobs = [], campaigns = []) {
       position: rankPosition,
       total: totalRanked,
       topPercent,
-      label: totalRanked > 1
-        ? `Top ${topPercent}% ${indexedArcId ? "indexed builder" : "builder"}`
-        : (indexedArcId ? "Indexed founding builder" : "Founding builder"),
+      score: summary.activityScore,
+      arcScore: summary.arcActivityScore,
+      label: (!summary.totalTrackedActions && !summary.points && summary.arcActivityScore > 0)
+        ? (totalRanked > 1 ? `Top ${topPercent}% Arc wallet` : "Arc wallet pioneer")
+        : (totalRanked > 1
+          ? `Top ${topPercent}% ${indexedArcId ? "indexed builder" : "builder"}`
+          : (indexedArcId ? "Indexed founding builder" : "Founding builder")),
     },
     teaser: {
+      activityScore: summary.activityScore,
+      arcActivityScore: summary.arcActivityScore,
+      arcSentTransactions: summary.arcTotalSentTransactions,
+      arcActiveDays: summary.arcActiveDays,
+      arcContractsDeployed: summary.arcContractsDeployed,
       points: summary.points,
       trackedActions: summary.totalTrackedActions,
       trackedVolumeUsdc: summary.trackedVolumeUsdc,
@@ -3102,7 +3912,9 @@ async function buildPulseArcIdProfile(db, wallet, jobs = [], campaigns = []) {
     },
     profile: summary,
     notes: [
-      indexedArcId
+      walletAnalytics.usedHostedWalletOverlay
+        ? `Arc ID now ranks this wallet from hosted multi-app activity through ${arcIdSourceLabel}.`
+        : indexedArcId
         ? `Arc ID now ranks this wallet from indexed AgentMarket activity through ${arcIdSourceLabel}.`
         : "Arc ID beta is based on tracked AgentMarket and ArcPulse activity right now.",
       unlockConfig.enabled
@@ -3111,9 +3923,14 @@ async function buildPulseArcIdProfile(db, wallet, jobs = [], campaigns = []) {
       nftConfig.enabled
         ? `Season 1 Arc ID NFT minting is live at ${ARC_ID_NFT_MINT_PRICE_USDC} USDC after a paid unlock.`
         : "Deploy and configure the Arc ID NFT contract to turn the collectible mint live.",
-      indexedArcId
-        ? "Wallet ranking now blends indexed jobs, claims, completions, settlement volume, Pulse streaks, and community activity."
-        : "Arc ID still uses tracked AgentMarket and Pulse activity until indexed wallet-level stats are attached.",
+      walletAnalytics.usedHostedWalletOverlay
+        ? "Wallet ranking now blends hosted multi-app wallet analytics, Pulse streaks, community activity, and broader Arc wallet behavior."
+        : indexedArcId
+        ? "Wallet ranking now blends indexed jobs, claims, completions, settlement volume, Pulse streaks, community activity, and broader Arc wallet behavior."
+        : "Arc ID now layers Arc wallet behavior into the tracked AgentMarket, streak, and community model.",
+      summary.appFootprint?.length
+        ? `Wallet-level attribution is now live across ${summary.appFootprint.length} tracked app slice${summary.appFootprint.length === 1 ? "" : "s"}, led by ${summary.appFootprint[0].name}.`
+        : "Wallet-level attribution will deepen as more Arc app slices are connected to Pulse.",
       arcWalletActivity.error
         ? `Arc wallet activity is currently serving a limited view: ${arcWalletActivity.error}`
         : `Arc wallet activity summary is powered by ${arcWalletActivity.sourceLabel}.`,

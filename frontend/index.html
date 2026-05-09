@@ -2015,29 +2015,41 @@
     }
 
     #page-bridge {
-      background:
-        radial-gradient(circle at 8% 0%, rgba(83,206,255,0.16), transparent 26%),
-        radial-gradient(circle at 100% 8%, rgba(83,120,255,0.14), transparent 28%),
-        linear-gradient(180deg, #07101c 0%, #091421 42%, #060c16 100%);
+      background: var(--bg);
+    }
+
+    #page-bridge .container {
+      max-width: 980px;
+      padding-left: 24px;
+      padding-right: 24px;
+    }
+
+    #page-bridge .fund-stack {
+      gap: 24px;
+      grid-template-columns: 1fr;
+      max-width: 920px;
+    }
+
+    #page-bridge .fund-section {
+      gap: 12px;
     }
 
     #page-bridge .fund-section-title {
-      color: rgba(163,233,255,0.86);
-      text-shadow: 0 0 18px rgba(75,196,255,0.12);
+      color: var(--text);
+      font-size: 12px;
+      letter-spacing: 0.18em;
     }
 
     #page-bridge .fund-section-copy {
-      color: rgba(209,225,244,0.72);
+      color: var(--muted);
+      max-width: 760px;
     }
 
     #page-bridge .bridge-simple-card {
-      background:
-        radial-gradient(circle at top right, rgba(76,194,255,0.1), transparent 34%),
-        linear-gradient(180deg, rgba(16,24,39,0.98), rgba(9,14,26,0.98));
-      border-color: rgba(106,190,255,0.16);
-      box-shadow:
-        0 26px 58px rgba(0,8,22,0.46),
-        inset 0 1px 0 rgba(255,255,255,0.03);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      box-shadow: none;
       padding: 24px;
     }
 
@@ -2045,130 +2057,227 @@
       gap: 18px;
     }
 
+    #page-bridge .bridge-simple-head {
+      align-items: flex-start;
+      border-bottom: 1px solid var(--border);
+      gap: 16px;
+      padding-bottom: 16px;
+    }
+
+    #page-bridge .bridge-classic-title-wrap {
+      display: grid;
+      gap: 8px;
+    }
+
+    #page-bridge .bridge-classic-kicker {
+      color: var(--muted);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    #page-bridge .bridge-classic-copy {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.6;
+      margin: 0;
+    }
+
     #page-bridge .bridge-simple-tabs {
-      background: rgba(10,18,33,0.92);
-      border-color: rgba(104,186,255,0.14);
+      background: none;
+      border: 0;
+      padding: 0;
     }
 
     #page-bridge .bridge-simple-tab {
-      color: rgba(216,232,252,0.66);
+      color: var(--text);
+      font-size: 24px;
+      padding: 0;
     }
 
     #page-bridge .bridge-simple-tab.active {
-      background: linear-gradient(135deg, #97f0ff 0%, #60cbff 42%, #7a8fff 100%);
-      box-shadow: 0 10px 24px rgba(81,190,255,0.26);
-      color: #071420;
+      background: none;
+      color: var(--text);
+      box-shadow: none;
+    }
+
+    #page-bridge .bridge-simple-tab:only-child {
+      min-width: 0;
+    }
+
+    #page-bridge .bridge-simple-head-actions {
+      flex-wrap: wrap;
+      gap: 10px;
     }
 
     #page-bridge .bridge-icon-btn,
     #page-bridge .bridge-simple-arrow {
-      background: rgba(10,20,35,0.88);
-      border-color: rgba(107,191,255,0.14);
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
-      color: #88e4ff;
+      align-items: center;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: none;
+      color: var(--text);
+      gap: 8px;
+      height: auto;
+      padding: 10px 14px;
+      width: auto;
     }
 
     #page-bridge .bridge-icon-btn:hover,
     #page-bridge .bridge-simple-arrow:hover {
-      background: rgba(18,34,57,0.94);
-      border-color: rgba(129,219,255,0.26);
-      color: #f2fbff;
+      background: var(--surface);
+      border-color: var(--border-hover);
+      color: var(--text);
+    }
+
+    #page-bridge .bridge-simple-panel,
+    #page-bridge .bridge-advanced,
+    #page-bridge .bridge-simple-summary {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: none;
     }
 
     #page-bridge .bridge-simple-panel,
     #page-bridge .bridge-advanced {
-      background: linear-gradient(180deg, rgba(15,24,40,0.92), rgba(10,16,29,0.9));
-      border-color: rgba(104,189,255,0.12);
-      border-radius: 26px;
-      gap: 18px;
-      padding: 22px;
+      gap: 14px;
+      padding: 18px;
     }
 
     #page-bridge .bridge-simple-panel-label {
-      color: #83ecff;
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
     }
 
     #page-bridge .bridge-simple-panel-note,
     #page-bridge .bridge-token-sub,
     #page-bridge .bridge-simple-select-note,
     #page-bridge .bridge-simple-mode-note,
-    #page-bridge .bridge-simple-usd {
-      color: rgba(209,226,246,0.68);
+    #page-bridge .bridge-simple-usd,
+    #page-bridge .bridge-field-note,
+    #page-bridge .bridge-help {
+      color: var(--muted);
     }
 
     #page-bridge .bridge-token-chip,
-    #page-bridge .bridge-simple-select {
-      background: linear-gradient(180deg, rgba(14,27,45,0.84), rgba(10,20,35,0.9));
-      border-color: rgba(114,197,255,0.14);
-      box-shadow:
-        inset 0 1px 0 rgba(255,255,255,0.04),
-        0 10px 20px rgba(4,14,30,0.22);
-    }
-
-    #page-bridge .bridge-simple-panel-body {
-      gap: 18px;
+    #page-bridge .bridge-simple-select,
+    #page-bridge .bridge-recipient-wrap input,
+    #page-bridge .bridge-simple-recipient-toggle {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      box-shadow: none;
     }
 
     #page-bridge .bridge-token-chip {
-      padding: 12px 16px;
+      padding: 11px 14px;
     }
 
     #page-bridge .bridge-token-icon {
-      background: linear-gradient(135deg, #39c8ff 0%, #2775ca 52%, #245cff 100%);
-      box-shadow:
-        0 10px 22px rgba(45,137,255,0.34),
-        inset 0 1px 0 rgba(255,255,255,0.34);
-      height: 38px;
-      width: 38px;
+      box-shadow: none;
+      height: 36px;
+      width: 36px;
+    }
+
+    #page-bridge .bridge-simple-panel-body {
+      align-items: flex-end;
+      gap: 16px;
+    }
+
+    #page-bridge .bridge-simple-amount-input,
+    #page-bridge .bridge-simple-output {
+      font-size: clamp(28px, 4vw, 34px);
+    }
+
+    #page-bridge .bridge-simple-select-row {
+      align-items: flex-start;
+      flex-direction: column;
+      gap: 8px;
     }
 
     #page-bridge .bridge-simple-select {
-      padding: 13px 16px;
+      max-width: none;
+      width: 100%;
+    }
+
+    #page-bridge .bridge-simple-center {
+      justify-content: flex-start;
+    }
+
+    #page-bridge .bridge-simple-arrow-static:hover {
+      background: var(--surface2);
+      border-color: var(--border);
+      color: var(--text);
     }
 
     #page-bridge .bridge-simple-recipient-toggle {
-      border-color: rgba(112,197,255,0.16);
-      background: rgba(10,18,30,0.46);
-      padding: 15px 18px;
+      border-radius: 12px;
+      color: var(--text);
+      font-size: 14px;
+      padding: 12px 14px;
     }
 
     #page-bridge .bridge-simple-recipient-toggle:hover {
-      background: rgba(15,31,53,0.7);
-      border-color: rgba(129,224,255,0.28);
-      color: #9cefff;
-    }
-
-    #page-bridge .bridge-simple-summary-row span {
-      color: rgba(168,207,241,0.74);
-    }
-
-    #page-bridge .bridge-simple-summary-row strong {
-      color: #f4fbff;
+      border-color: var(--border-hover);
+      color: var(--text);
     }
 
     #page-bridge .bridge-simple-summary {
-      gap: 12px;
-      margin-top: 2px;
+      gap: 0;
+      padding: 6px 14px;
+    }
+
+    #page-bridge .bridge-simple-summary-row {
+      align-items: center;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 10px 0;
+    }
+
+    #page-bridge .bridge-simple-summary-row:first-child {
+      border-top: 0;
+    }
+
+    #page-bridge .bridge-simple-summary-row span {
+      color: var(--muted);
+    }
+
+    #page-bridge .bridge-simple-summary-row strong {
+      color: var(--text);
     }
 
     #page-bridge .bridge-simple-submit {
-      background: linear-gradient(135deg, #b2f7ff 0%, #6ed0ff 40%, #788dff 100%);
-      border-color: rgba(255,255,255,0.08);
-      box-shadow: 0 20px 38px rgba(60,164,255,0.24);
-      color: #071420;
-      font-size: 19px;
-      min-height: 72px;
+      background: var(--text);
+      border-color: var(--text);
+      border-radius: 12px;
+      box-shadow: none;
+      color: #0b1220;
+      font-size: 16px;
+      min-height: 56px;
     }
 
     #page-bridge .bridge-simple-submit:hover {
-      background: linear-gradient(135deg, #c7fbff 0%, #86d8ff 40%, #8e9cff 100%);
-      color: #071420;
+      background: var(--text);
+      color: #0b1220;
+      filter: brightness(0.98);
+    }
+
+    #page-bridge .bridge-status {
+      min-height: 0;
     }
 
     #page-bridge .bridge-mode-pill {
-      background: rgba(79,212,255,0.12);
-      border-color: rgba(109,227,255,0.22);
-      color: #9aeeff;
+      background: var(--surface);
+      border-color: var(--border);
+      color: var(--muted);
     }
 
     .checkout-topup-row {
@@ -2826,6 +2935,25 @@
       letter-spacing: -0.02em;
     }
 
+    .pulse-ranking-chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .pulse-ranking-chip {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 999px;
+      color: rgba(232,232,240,0.68);
+      display: inline-flex;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      padding: 6px 9px;
+      text-transform: uppercase;
+    }
+
     .pulse-growth {
       border-radius: 999px;
       font-family: var(--font-mono);
@@ -2857,6 +2985,12 @@
       display: grid;
       gap: 10px;
       grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .pulse-ranking-attribution {
+      color: rgba(232,232,240,0.56);
+      font-size: 12px;
+      line-height: 1.6;
     }
 
     .pulse-ranking-stat {
@@ -3532,6 +3666,8 @@
     html[data-theme="light"] .pulse-identity-stat-label,
     html[data-theme="light"] .pulse-identity-stat-sub,
     html[data-theme="light"] .pulse-activity-row-meta,
+    html[data-theme="light"] .pulse-ranking-chip,
+    html[data-theme="light"] .pulse-ranking-attribution,
     html[data-theme="light"] .pulse-metric-label,
     html[data-theme="light"] .pulse-metric-sub,
     html[data-theme="light"] .pulse-summary-label,
@@ -3829,6 +3965,7 @@
     html[data-theme="light"] .pulse-identity-stat,
     html[data-theme="light"] .pulse-identity-unlock,
     html[data-theme="light"] .pulse-activity-row,
+    html[data-theme="light"] .pulse-ranking-chip,
     html[data-theme="light"] .pulse-feed-compose,
     html[data-theme="light"] .pulse-feed-card,
     html[data-theme="light"] .pulse-checkin-stat,
@@ -4390,7 +4527,7 @@
             <div class="pulse-card-head">
               <div>
                 <div class="pulse-card-title">What opens next</div>
-              <div class="pulse-note">ArcPulse now has a live event indexer, feed, streaks, rankings, and Arc ID beta. The next layer is widening from one indexed app contract to a hosted multi-app network feed and broader Arc ID wallet scoring.</div>
+              <div class="pulse-note">ArcPulse now has a live event indexer, hosted multi-app overlays, richer cross-app attribution, broader Arc ID wallet scoring, paid Arc detail unlocks, and configurable live multi-contract app slices. The next layer is plugging in more non-AgentMarket Arc apps and turning the app footprint into even deeper wallet trails.</div>
               </div>
             </div>
           <div class="pulse-summary-grid">
@@ -4522,14 +4659,18 @@
     <div class="fund-stack">
       <section class="fund-section" aria-labelledby="fundUnifiedBalanceHeading">
         <div class="fund-section-head">
-          <div class="fund-section-title">Unified Balance Kit</div>
-          <p class="fund-section-copy" id="fundUnifiedBalanceHeading">Primary multichain funding flow. Deposit USDC once, keep it chain-agnostic, then spend only the amount you need onto Arc before checkout.</p>
+          <div class="fund-section-title">Primary Funding Flow</div>
+          <p class="fund-section-copy" id="fundUnifiedBalanceHeading">Deposit USDC once, keep it chain-agnostic, and fund Arc only when you need balance for checkout.</p>
         </div>
         <div class="bridge-card bridge-simple-card">
         <div class="bridge-simple-shell">
           <div class="bridge-simple-head">
-            <div class="bridge-simple-tabs" aria-label="Unified Balance">
-              <button class="bridge-simple-tab active" type="button" aria-current="page">Unified Balance</button>
+            <div class="bridge-classic-title-wrap">
+              <div class="bridge-classic-kicker">Recommended</div>
+              <div class="bridge-simple-tabs" aria-label="Unified Balance">
+                <button class="bridge-simple-tab active" type="button" aria-current="page">Unified Balance</button>
+              </div>
+              <p class="bridge-classic-copy">Keep one confirmed balance, then move only the amount you want onto Arc before the normal escrow flow.</p>
             </div>
             <div class="bridge-simple-head-actions">
               <button class="bridge-icon-btn" type="button" onclick="refreshUnifiedBalance()" id="ubRefreshBtn" aria-label="Refresh unified balance" title="Refresh unified balance" disabled>
@@ -4539,6 +4680,7 @@
                   <path d="M7 10C7.9 7.4 10.3 5.5 13.1 5.5C15 5.5 16.8 6.3 18 7.7L20 10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
                   <path d="M17 14C16.1 16.6 13.7 18.5 10.9 18.5C9 18.5 7.2 17.7 6 16.3L4 14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
+                <span>Refresh</span>
                 <span class="sr-only">Refresh unified balance</span>
               </button>
             </div>
@@ -4594,6 +4736,7 @@
                 <path d="M12 5V19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
                 <path d="M7 14L12 19L17 14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
+              <span>Move to Arc</span>
             </div>
           </div>
 
@@ -4651,14 +4794,18 @@
 
       <section class="fund-section" aria-labelledby="fundBridgeHeading">
         <div class="fund-section-head">
-          <div class="fund-section-title">Direct Bridge Fallback</div>
-          <p class="fund-section-copy" id="fundBridgeHeading">One-off route for moving USDC straight onto Arc. Use this if Unified Balance is still loading, unavailable in your browser, or you prefer the direct bridge path.</p>
+          <div class="fund-section-title">Manual Fallback</div>
+          <p class="fund-section-copy" id="fundBridgeHeading">Use the direct CCTP bridge when you want the classic one-off transfer flow or when Unified Balance is unavailable.</p>
         </div>
         <div class="bridge-card bridge-simple-card">
         <div class="bridge-simple-shell">
           <div class="bridge-simple-head">
-            <div class="bridge-simple-tabs" aria-label="Bridge">
-              <button class="bridge-simple-tab active" type="button" aria-current="page">Bridge</button>
+            <div class="bridge-classic-title-wrap">
+              <div class="bridge-classic-kicker">Fallback</div>
+              <div class="bridge-simple-tabs" aria-label="Bridge">
+                <button class="bridge-simple-tab active" type="button" aria-current="page">Direct Bridge</button>
+              </div>
+              <p class="bridge-classic-copy">Choose a source chain, review the route, and bridge USDC straight onto Arc Testnet.</p>
             </div>
             <div class="bridge-simple-head-actions">
               <button class="bridge-icon-btn" type="button" onclick="estimateArcBridge()" id="bridgeEstimateBtn" aria-label="Estimate bridge" title="Estimate bridge">
@@ -4668,6 +4815,7 @@
                   <path d="M7 10C7.9 7.4 10.3 5.5 13.1 5.5C15 5.5 16.8 6.3 18 7.7L20 10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
                   <path d="M17 14C16.1 16.6 13.7 18.5 10.9 18.5C9 18.5 7.2 17.7 6 16.3L4 14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
+                <span>Estimate</span>
                 <span class="sr-only">Estimate bridge</span>
               </button>
               <button class="bridge-icon-btn" type="button" onclick="toggleBridgeAdvanced()" id="bridgeSettingsBtn" aria-label="Bridge settings" aria-expanded="false" title="Bridge settings">
@@ -4675,6 +4823,7 @@
                   <path d="M12 8.75A3.25 3.25 0 1 0 12 15.25A3.25 3.25 0 1 0 12 8.75Z" stroke="currentColor" stroke-width="1.8"/>
                   <path d="M19.4 13.5L20.2 12L19.4 10.5L17.6 10.2C17.4 9.7 17.1 9.2 16.8 8.8L17.4 7.1L15.9 5.6L14.2 6.2C13.8 5.9 13.3 5.6 12.8 5.4L12.5 3.6H11.5L11.2 5.4C10.7 5.6 10.2 5.9 9.8 6.2L8.1 5.6L6.6 7.1L7.2 8.8C6.9 9.2 6.6 9.7 6.4 10.2L4.6 10.5L3.8 12L4.6 13.5L6.4 13.8C6.6 14.3 6.9 14.8 7.2 15.2L6.6 16.9L8.1 18.4L9.8 17.8C10.2 18.1 10.7 18.4 11.2 18.6L11.5 20.4H12.5L12.8 18.6C13.3 18.4 13.8 18.1 14.2 17.8L15.9 18.4L17.4 16.9L16.8 15.2C17.1 14.8 17.4 14.3 17.6 13.8L19.4 13.5Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
                 </svg>
+                <span>Advanced</span>
                 <span class="sr-only">Bridge settings</span>
               </button>
             </div>
@@ -4721,6 +4870,7 @@
                 <path d="M12 5V19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
                 <path d="M7 14L12 19L17 14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
+              <span>Switch wallet to Arc</span>
             </button>
           </div>
 
@@ -4747,7 +4897,7 @@
               </div>
             </div>
 
-            <button class="bridge-simple-recipient-toggle" type="button" id="bridgeRecipientToggle" onclick="toggleBridgeRecipientRow()">
+            <button class="bridge-simple-recipient-toggle" type="button" id="bridgeRecipientToggle" onclick="toggleBridgeRecipientRow()" aria-expanded="false">
               <span class="bridge-simple-plus" aria-hidden="true">+</span>
               <span id="bridgeRecipientToggleLabel">Add receiving wallet</span>
             </button>
@@ -5908,6 +6058,28 @@ function renderPulseRankings(rankings = []) {
     const growthLabel = item.growthPercent == null
       ? (item.growthDirection === 'up' ? 'New growth' : 'Baseline')
       : `${item.growthPercent > 0 ? '+' : ''}${item.growthPercent}%`;
+    const chips = [
+      item.sourceLabel || '',
+      item.scopeLabel || '',
+      item.chainLabel || '',
+      item.contractsCount ? `${formatCompactNumber(item.contractsCount)} contract${Number(item.contractsCount) === 1 ? '' : 's'}` : '',
+    ].filter(Boolean);
+    const stats = [
+      { label: 'All volume', value: formatPulseUsdc(item.volumeUsdc) },
+      { label: 'This week', value: formatPulseUsdc(item.weeklyVolumeUsdc) },
+      { label: 'Wallets', value: formatCompactNumber(item.activeWallets || item.walletCoverage || 0) },
+      { label: 'Contract events', value: formatCompactNumber((item.jobs || 0) + (item.campaigns || 0)) },
+    ];
+    if (item.networkSharePercent != null) {
+      stats.push({
+        label: 'Network share',
+        value: `${Number(item.networkSharePercent || 0).toFixed(Number(item.networkSharePercent || 0) % 1 ? 1 : 0)}%`,
+      });
+    }
+    const attributionCopy = [
+      item.attributionNote || '',
+      item.contractLabels?.length ? `Coverage: ${item.contractLabels.join(' / ')}` : '',
+    ].filter(Boolean).join(' ');
 
     return `
       <div class="pulse-ranking-row">
@@ -5922,23 +6094,15 @@ function renderPulseRankings(rankings = []) {
           <span class="pulse-growth ${growthClass}">${escapeHtml(growthLabel)}</span>
         </div>
         <div class="pulse-note">${escapeHtml(item.description || '')}</div>
+        ${chips.length ? `<div class="pulse-ranking-chip-row">${chips.map(chip => `<span class="pulse-ranking-chip">${escapeHtml(chip)}</span>`).join('')}</div>` : ''}
+        ${attributionCopy ? `<div class="pulse-ranking-attribution">${escapeHtml(attributionCopy)}</div>` : ''}
         <div class="pulse-ranking-grid">
-          <div class="pulse-ranking-stat">
-            <div class="pulse-ranking-stat-value">${escapeHtml(formatPulseUsdc(item.volumeUsdc))}</div>
-            <div class="pulse-ranking-stat-label">All volume</div>
-          </div>
-          <div class="pulse-ranking-stat">
-            <div class="pulse-ranking-stat-value">${escapeHtml(formatPulseUsdc(item.weeklyVolumeUsdc))}</div>
-            <div class="pulse-ranking-stat-label">This week</div>
-          </div>
-          <div class="pulse-ranking-stat">
-            <div class="pulse-ranking-stat-value">${escapeHtml(String(item.activeWallets || 0))}</div>
-            <div class="pulse-ranking-stat-label">Wallets</div>
-          </div>
-          <div class="pulse-ranking-stat">
-            <div class="pulse-ranking-stat-value">${escapeHtml(String((item.jobs || 0) + (item.campaigns || 0)))}</div>
-            <div class="pulse-ranking-stat-label">Contract events</div>
-          </div>
+          ${stats.map(stat => `
+            <div class="pulse-ranking-stat">
+              <div class="pulse-ranking-stat-value">${escapeHtml(String(stat.value))}</div>
+              <div class="pulse-ranking-stat-label">${escapeHtml(stat.label)}</div>
+            </div>
+          `).join('')}
         </div>
       </div>
     `;
@@ -6093,20 +6257,21 @@ function buildPulseArcIdNftMetadata(payload = {}) {
   const badge = payload?.badge || 'Arc ID beta';
   const indexedArcId = String(payload?.scope || '').includes('indexed');
   const rankLabel = payload?.rank?.label || (indexedArcId ? 'Indexed live' : 'Tracked beta');
+  const activityScore = formatCompactNumber(profile.activityScore || payload?.rank?.score || payload?.teaser?.activityScore || 0);
+  const arcScore = formatCompactNumber(profile.arcActivityScore || payload?.rank?.arcScore || payload?.teaser?.arcActivityScore || 0);
+  const arcSignedTxs = formatCompactNumber(profile.arcTotalSentTransactions || payload?.teaser?.arcSentTransactions || 0);
   const trackedActions = formatCompactNumber(profile.totalTrackedActions || payload?.teaser?.trackedActions || 0);
   const volume = formatPulseUsdc(profile.trackedVolumeUsdc || payload?.teaser?.trackedVolumeUsdc || 0);
-  const points = formatCompactNumber(profile.points || payload?.teaser?.points || 0);
   const streak = `${formatCompactNumber(profile.currentStreak || payload?.teaser?.currentStreak || 0)}d`;
-  const mostUsedLane = profile.mostUsedLane || 'Build';
   const memberSince = profile.memberSinceLabel || 'No activity yet';
   const unlockTx = payment?.txHash ? shortAddr(payment.txHash) : 'Paid unlock verified';
-  const activityLine = `${trackedActions} actions / ${volume} volume / ${points} pts`;
+  const activityLine = `${trackedActions} actions / ${volume} volume / ${arcSignedTxs} Arc txs`;
   const details = [
-    ['Wallet', walletLabel],
     ['Rank', rankLabel],
     ['Badge', badge],
+    ['Score', activityScore],
+    ['Arc score', arcScore],
     ['Streak', streak],
-    ['Lane', mostUsedLane],
     ['Member since', memberSince],
   ];
 
@@ -6154,11 +6319,14 @@ function buildPulseArcIdNftMetadata(payload = {}) {
       { trait_type: 'Wallet', value: walletLabel },
       { trait_type: 'Rank', value: rankLabel },
       { trait_type: 'Badge', value: badge },
+      { trait_type: 'Activity Score', value: Number(profile.activityScore || payload?.rank?.score || payload?.teaser?.activityScore || 0) },
+      { trait_type: 'Arc Wallet Score', value: Number(profile.arcActivityScore || payload?.rank?.arcScore || payload?.teaser?.arcActivityScore || 0) },
+      { trait_type: 'Arc Signed Transactions', value: Number(profile.arcTotalSentTransactions || payload?.teaser?.arcSentTransactions || 0) },
       { trait_type: 'Tracked Actions', value: Number(profile.totalTrackedActions || payload?.teaser?.trackedActions || 0) },
       { trait_type: 'Tracked Volume USDC', value: Number(profile.trackedVolumeUsdc || payload?.teaser?.trackedVolumeUsdc || 0) },
       { trait_type: 'Pulse Points', value: Number(profile.points || payload?.teaser?.points || 0) },
       { trait_type: 'Current Streak', value: Number(profile.currentStreak || payload?.teaser?.currentStreak || 0) },
-      { trait_type: 'Most Used Lane', value: mostUsedLane },
+      { trait_type: 'Most Used Lane', value: profile.mostUsedLane || 'Build' },
       { trait_type: 'Member Since', value: memberSince },
     ],
   };
@@ -6523,6 +6691,16 @@ function renderPulseArcId(payload = null) {
   const walletLabel = payload?.walletLabel || (hasWallet ? shortAddr(currentWallet) : 'Connect wallet');
   const sourceLabel = payload?.sourceLabel || (indexedArcId ? 'Arc RPC event indexer' : 'Tracked contract reads');
   const arcActivity = payload?.arcActivity && typeof payload.arcActivity === 'object' ? payload.arcActivity : {};
+  const appFootprint = Array.isArray(profile.appFootprint) ? profile.appFootprint : [];
+  const topAppFootprint = appFootprint[0] || null;
+  const topAppCoverage = topAppFootprint?.contractLabels?.length
+    ? topAppFootprint.contractLabels.slice(0, 2).join(' / ')
+    : '';
+  const activityScoreValue = formatCompactNumber(profile.activityScore || payload?.rank?.score || teaser.activityScore || 0);
+  const arcWalletScoreValue = formatCompactNumber(profile.arcActivityScore || payload?.rank?.arcScore || teaser.arcActivityScore || 0);
+  const arcSentTransactions = formatCompactNumber(profile.arcTotalSentTransactions || teaser.arcSentTransactions || 0);
+  const arcActiveDays = formatCompactNumber(profile.arcActiveDays || teaser.arcActiveDays || 0);
+  const arcDeployments = formatCompactNumber(profile.arcContractsDeployed || teaser.arcContractsDeployed || 0);
   const paymentTxLink = paidUnlocked && payment.txUrl
     ? `<a class="pulse-inline-link mono" href="${escapeHtml(payment.txUrl)}" target="_blank" rel="noreferrer">View payment tx</a>`
     : '';
@@ -6538,6 +6716,16 @@ function renderPulseArcId(payload = null) {
 
   const previewStats = hasWallet && payload
     ? [
+        {
+          label: 'Activity score',
+          value: activityScoreValue,
+          sub: `Rank #${formatCompactNumber(payload?.rank?.position || 0)} of ${formatCompactNumber(payload?.rank?.total || 0)}`,
+        },
+        {
+          label: 'Arc wallet score',
+          value: arcWalletScoreValue,
+          sub: `${arcSentTransactions} signed txs / ${arcActiveDays} active days / ${arcDeployments} deployments`,
+        },
         {
           label: indexedArcId ? 'Indexed actions' : 'Tracked actions',
           value: formatCompactNumber(profile.totalTrackedActions || teaser.trackedActions || 0),
@@ -6559,9 +6747,16 @@ function renderPulseArcId(payload = null) {
           sub: `Longest ${formatCompactNumber(profile.longestStreak || 0)}d`,
         },
         {
+          label: 'App footprint',
+          value: topAppFootprint?.name || profile.mostUsedApp || 'Awaiting first signal',
+          sub: topAppFootprint
+            ? `${formatCompactNumber(appFootprint.length)} tracked app slice${appFootprint.length === 1 ? '' : 's'} / ${formatCompactNumber(topAppFootprint.trackedActions || 0)} attributed actions`
+            : (profile.mostUsedApp ? `Most used app ${profile.mostUsedApp}` : 'Arc app attribution preview'),
+        },
+        {
           label: 'Most used lane',
           value: profile.mostUsedLane || 'Build',
-          sub: profile.mostUsedApp ? `Most used app ${profile.mostUsedApp}` : 'ArcPulse lane preview',
+          sub: topAppCoverage || (profile.mostUsedApp ? `Most used app ${profile.mostUsedApp}` : 'ArcPulse lane preview'),
         },
         {
           label: 'Member since',
@@ -6570,10 +6765,13 @@ function renderPulseArcId(payload = null) {
         },
       ]
     : [
+        { label: 'Activity score', value: '184', sub: 'Rank #12 of 84' },
+        { label: 'Arc wallet score', value: '58', sub: '16 signed txs / 6 active days / 1 deployment' },
         { label: indexedArcId ? 'Indexed actions' : 'Tracked actions', value: '12', sub: 'Jobs, posts, check-ins' },
         { label: indexedArcId ? 'Indexed USDC' : 'USDC activity', value: '$42.00', sub: 'Marketplace volume preview' },
         { label: 'Pulse points', value: '92', sub: 'Streak and contribution score' },
         { label: 'Streak state', value: '7d', sub: 'Longest 12d' },
+        { label: 'App footprint', value: 'AgentMarket', sub: '1 tracked app slice / 8 attributed actions' },
         { label: 'Most used lane', value: 'Build', sub: 'Pulse lane preview' },
         { label: 'Member since', value: 'Apr 2026', sub: indexedArcId ? sourceLabel : 'Wallet card teaser' },
       ];
@@ -6691,10 +6889,10 @@ function renderPulseArcId(payload = null) {
         <div class="pulse-identity-copy">
           ${hasWallet
             ? (paidUnlocked
-              ? `Your Arc ID now carries a verified Arc USDC unlock receipt on top of the ${indexedArcId ? 'indexed wallet, streak, and community signals' : 'tracked marketplace, streak, and community signals'} already shaping the card.`
+              ? `Your Arc ID now carries a verified Arc USDC unlock receipt on top of the ${indexedArcId ? 'indexed wallet, streak, community, and Arc wallet signals' : 'tracked marketplace, streak, community, and Arc wallet signals'} already shaping the card.`
               : betaUnlocked
                 ? 'Your beta Arc ID access is still valid. Complete the paid Arc unlock whenever you want the permanent onchain receipt attached to this same identity card.'
-                : `Your ${indexedArcId ? 'indexed' : 'tracked'} ArcPulse profile is ready. Pay on Arc to turn this preview into a verified identity card without changing the rest of the model.`)
+                : `Your ${indexedArcId ? 'indexed' : 'tracked'} ArcPulse profile is ready. Arc wallet behavior now feeds the score too, and paying on Arc turns this preview into a verified identity card without changing the rest of the model.`)
             : 'A persistent identity surface for the people actually moving through AgentMarket and ArcPulse.'}
         </div>
       </div>

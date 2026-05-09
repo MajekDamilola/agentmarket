@@ -192,12 +192,18 @@ You need source-chain USDC plus native gas on the selected source chain. After f
 
 ## Pulse indexing
 
-Pulse now ships with a built-in live contract indexer for the active AgentMarket job board on Arc. It incrementally syncs contract events through RPC and powers the Pulse app rankings, category mix, 14-day volume, and top-line marketplace counts.
+Pulse now ships with a built-in live contract indexer for the active AgentMarket job board on Arc. It incrementally syncs contract events through RPC and powers the Pulse app rankings, category mix, 14-day volume, top-line marketplace counts, and Arc ID wallet attribution.
 
 In `backend/.env`, the default live indexer settings are:
 
 - `PULSE_INTERNAL_INDEXER_ENABLED=true`
 - `PULSE_INDEXER_JOB_BOARD_START_BLOCK=37381028`
+
+Optional live multi-contract expansion:
+
+- Set `PULSE_INDEXER_EXTRA_CONTRACTS_JSON` to a JSON array when you want the live Arc RPC indexer to track additional job-board-compatible Arc contracts.
+- Each item can include `address`, `id`, `name`, `category`, `description`, `contractLabel`, and `startBlock`.
+- Pulse will automatically widen live app rankings and wallet-level app attribution across that configured contract set.
 
 You can also override that built-in source with a hosted snapshot feed.
 
@@ -209,6 +215,18 @@ You can also override that built-in source with a hosted snapshot feed.
 3. Restart the backend.
 
 Pulse will keep using live Arc RPC block sampling plus the local community store. The hosted overlay only replaces the analytics side of the page.
+
+Optional hosted wallet overlay:
+
+- Add `walletAnalytics` to the snapshot if you want Arc ID to consume broader multi-app wallet stats from the hosted source.
+- Each wallet item can include `wallet` or `address`, `displayName`, `jobsAsClient`, `jobsAsWorker`, `jobsCompleted`, `jobsSettled`, `campaignsCreated`, `trackedVolumeUsdc`, `settledVolumeUsdc`, `mostUsedApp`, `primaryLane`, `firstSeenAt`, and `appFootprint`.
+- `appFootprint` can list per-app wallet attribution using `name`, `trackedActions`, `trackedVolumeUsdc`, and `contractLabels`.
+- Local Pulse streaks, points, and community posts still stay live in SQLite and layer on top of the hosted wallet activity.
+
+Optional app attribution fields:
+
+- Each `appRankings` item can also include `sourceLabel`, `scopeLabel`, `chainLabel`, `contractsCount`, `contractLabels`, `networkSharePercent`, and `attributionNote`.
+- Pulse will surface those fields in the ranking cards so the hosted overlay can explain where each app slice came from.
 
 ---
 

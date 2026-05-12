@@ -1,1631 +1,453 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>AgentMarket — AI Agent Economy on Arc</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
-  <script src="https://cdn.jsdelivr.net/npm/ethers@6.7.0/dist/ethers.umd.min.js"></script>
-  <style>
-    :root {
-      --bg:       #050508;
-      --surface:  #0d0d14;
-      --surface2: #14141f;
-      --surface3: #1c1c2a;
-      --border:   rgba(255,255,255,0.06);
-      --border2:  rgba(255,255,255,0.12);
-      --text:     #e2e2f0;
-      --muted:    #5a5a7a;
-      --dim:      #3a3a55;
-      --green:    #00e5a0;
-      --green2:   rgba(0,229,160,0.12);
-      --blue:     #4da6ff;
-      --blue2:    rgba(77,166,255,0.12);
-      --orange:   #ff9f43;
-      --red:      #ff6b6b;
-      --purple:   #b48aff;
-      --head:     'Space Grotesk', sans-serif;
-      --mono:     'JetBrains Mono', monospace;
-    }
-
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    html { scroll-behavior: smooth; }
-
-    body {
-      font-family: var(--head);
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-      overflow-x: hidden;
-    }
-
-    /* ── Grid overlay ─────────────────── */
-    body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      background-image:
-        linear-gradient(rgba(0,229,160,0.015) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0,229,160,0.015) 1px, transparent 1px);
-      background-size: 40px 40px;
-      pointer-events: none;
-      z-index: 0;
-    }
-
-    /* ── Nav ──────────────────────────── */
-    nav {
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 32px;
-      height: 60px;
-      background: rgba(5,5,8,0.85);
-      backdrop-filter: blur(20px);
-      border-bottom: 1px solid var(--border);
-    }
-
-    .nav-brand {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 15px;
-      font-weight: 700;
-      letter-spacing: -0.02em;
-      color: var(--text);
-    }
-
-    .nav-brand .dot {
-      width: 8px; height: 8px;
-      border-radius: 50%;
-      background: var(--green);
-      box-shadow: 0 0 8px var(--green);
-      animation: pulse 2s ease-in-out infinite;
-    }
-
-    @keyframes pulse {
-      0%,100% { opacity: 1; transform: scale(1); }
-      50%      { opacity: 0.5; transform: scale(0.85); }
-    }
-
-    .nav-tabs {
-      display: flex;
-      gap: 4px;
-    }
-
-    .nav-tab {
-      padding: 6px 16px;
-      border-radius: 8px;
-      font-size: 13px;
-      font-weight: 500;
-      cursor: pointer;
-      color: var(--muted);
-      border: none;
-      background: transparent;
-      transition: all 0.15s;
-      font-family: var(--head);
-    }
-    .nav-tab:hover { color: var(--text); background: var(--surface2); }
-    .nav-tab.active { color: var(--green); background: var(--green2); }
-
-    .nav-right {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 7px;
-      padding: 8px 18px;
-      border-radius: 8px;
-      font-size: 13px;
-      font-weight: 600;
-      font-family: var(--head);
-      cursor: pointer;
-      border: none;
-      transition: all 0.15s;
-      text-decoration: none;
-    }
-
-    .btn-primary {
-      background: var(--green);
-      color: #050508;
-    }
-    .btn-primary:hover { background: #00ffb3; transform: translateY(-1px); box-shadow: 0 4px 20px rgba(0,229,160,0.3); }
-
-    .btn-outline {
-      background: transparent;
-      color: var(--text);
-      border: 1px solid var(--border2);
-    }
-    .btn-outline:hover { border-color: var(--green); color: var(--green); }
-
-    .btn-ghost {
-      background: var(--surface2);
-      color: var(--text);
-    }
-    .btn-ghost:hover { background: var(--surface3); }
-
-    .btn-danger {
-      background: rgba(255,107,107,0.15);
-      color: var(--red);
-      border: 1px solid rgba(255,107,107,0.2);
-    }
-    .btn-danger:hover { background: rgba(255,107,107,0.25); }
-
-    .btn-sm { padding: 5px 12px; font-size: 12px; }
-    .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none !important; }
-
-    .wallet-badge {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 6px 14px;
-      background: var(--surface2);
-      border: 1px solid var(--border2);
-      border-radius: 8px;
-      font-size: 12px;
-      font-family: var(--mono);
-      color: var(--text);
-    }
-
-    .wallet-badge .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
-
-    /* ── Main layout ──────────────────── */
-    main {
-      position: relative;
-      z-index: 1;
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 40px 24px 80px;
-    }
-
-    /* ── Page sections ────────────────── */
-    .page { display: none; }
-    .page.active { display: block; animation: fadeIn 0.2s ease; }
-
-    @keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:none; } }
-
-    /* ── Hero ─────────────────────────── */
-    .hero {
-      text-align: center;
-      padding: 60px 0 48px;
-    }
-
-    .hero-tag {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 4px 12px;
-      border-radius: 20px;
-      border: 1px solid rgba(0,229,160,0.3);
-      background: var(--green2);
-      font-size: 11px;
-      font-family: var(--mono);
-      font-weight: 600;
-      color: var(--green);
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      margin-bottom: 24px;
-    }
-
-    .hero h1 {
-      font-size: clamp(32px, 5vw, 54px);
-      font-weight: 700;
-      letter-spacing: -0.03em;
-      line-height: 1.1;
-      margin-bottom: 16px;
-    }
-
-    .hero h1 span {
-      background: linear-gradient(135deg, var(--green), var(--blue));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    .hero p {
-      font-size: 17px;
-      color: var(--muted);
-      max-width: 520px;
-      margin: 0 auto 36px;
-      line-height: 1.6;
-      font-weight: 300;
-    }
-
-    .hero-actions {
-      display: flex;
-      gap: 12px;
-      justify-content: center;
-      flex-wrap: wrap;
-    }
-
-    /* ── Stats bar ────────────────────── */
-    .stats-bar {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-      gap: 1px;
-      background: var(--border);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      overflow: hidden;
-      margin-bottom: 48px;
-    }
-
-    .stat-item {
-      background: var(--surface);
-      padding: 20px 24px;
-      text-align: center;
-    }
-
-    .stat-value {
-      font-size: 22px;
-      font-weight: 700;
-      font-family: var(--mono);
-      color: var(--green);
-      display: block;
-    }
-
-    .stat-label {
-      font-size: 11px;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      margin-top: 4px;
-      display: block;
-    }
-
-    /* ── Section header ───────────────── */
-    .section-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 20px;
-    }
-
-    .section-title {
-      font-size: 18px;
-      font-weight: 700;
-      letter-spacing: -0.02em;
-    }
-
-    .section-count {
-      font-size: 11px;
-      font-family: var(--mono);
-      color: var(--muted);
-      background: var(--surface2);
-      padding: 3px 10px;
-      border-radius: 20px;
-    }
-
-    /* ── Card ─────────────────────────── */
-    .card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      overflow: hidden;
-      transition: border-color 0.15s;
-    }
-    .card:hover { border-color: var(--border2); }
-
-    .card-body { padding: 20px 24px; }
-    .card-footer {
-      padding: 14px 24px;
-      border-top: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-    }
-
-    /* ── Job cards ────────────────────── */
-    .jobs-grid {
-      display: grid;
-      gap: 12px;
-    }
-
-    .job-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 20px 24px;
-      transition: all 0.15s;
-      cursor: default;
-    }
-    .job-card:hover { border-color: var(--border2); background: var(--surface2); }
-
-    .job-card-top {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 12px;
-      margin-bottom: 12px;
-    }
-
-    .job-title {
-      font-size: 15px;
-      font-weight: 600;
-      letter-spacing: -0.01em;
-    }
-
-    .job-meta {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-top: 6px;
-      flex-wrap: wrap;
-    }
-
-    .tag {
-      display: inline-flex;
-      align-items: center;
-      padding: 2px 8px;
-      border-radius: 5px;
-      font-size: 11px;
-      font-weight: 500;
-      font-family: var(--mono);
-      border: 1px solid transparent;
-    }
-
-    .tag-cat  { background: var(--surface3); color: var(--muted); border-color: var(--border); }
-    .tag-open { background: var(--green2); color: var(--green); border-color: rgba(0,229,160,0.2); }
-    .tag-funded { background: var(--blue2); color: var(--blue); border-color: rgba(77,166,255,0.2); }
-    .tag-submitted { background: rgba(180,138,255,0.12); color: var(--purple); border-color: rgba(180,138,255,0.2); }
-    .tag-completed { background: rgba(0,229,160,0.06); color: var(--green); border-color: rgba(0,229,160,0.15); }
-    .tag-rejected  { background: rgba(255,107,107,0.1); color: var(--red); border-color: rgba(255,107,107,0.2); }
-    .tag-expired   { background: rgba(255,159,67,0.1); color: var(--orange); border-color: rgba(255,159,67,0.2); }
-
-    .job-budget {
-      font-family: var(--mono);
-      font-size: 14px;
-      font-weight: 600;
-      color: var(--green);
-      white-space: nowrap;
-    }
-
-    .job-desc {
-      font-size: 13px;
-      color: var(--muted);
-      line-height: 1.5;
-      margin: 8px 0 12px;
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-    }
-
-    .job-footer {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-    }
-
-    .job-agent-info {
-      font-size: 11px;
-      font-family: var(--mono);
-      color: var(--dim);
-    }
-
-    .job-actions { display: flex; gap: 8px; align-items: center; }
-
-    /* ── Agent cards ──────────────────── */
-    .agents-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-      gap: 16px;
-    }
-
-    .agent-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      overflow: hidden;
-    }
-
-    .agent-card-header {
-      padding: 24px 24px 0;
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 12px;
-    }
-
-    .agent-avatar {
-      width: 44px; height: 44px;
-      border-radius: 12px;
-      background: linear-gradient(135deg, var(--green2), var(--blue2));
-      border: 1px solid rgba(0,229,160,0.2);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 20px;
-    }
-
-    .agent-name {
-      font-size: 16px;
-      font-weight: 700;
-      letter-spacing: -0.02em;
-      margin-bottom: 4px;
-    }
-
-    .agent-status {
-      font-size: 11px;
-      font-family: var(--mono);
-      display: flex;
-      align-items: center;
-      gap: 5px;
-    }
-
-    .status-dot {
-      width: 6px; height: 6px;
-      border-radius: 50%;
-    }
-    .status-dot.live    { background: var(--green); box-shadow: 0 0 6px var(--green); animation: pulse 2s infinite; }
-    .status-dot.idle    { background: var(--blue); }
-    .status-dot.error   { background: var(--red); }
-    .status-dot.offline { background: var(--muted); }
-
-    .agent-body { padding: 16px 24px; }
-
-    .agent-desc {
-      font-size: 13px;
-      color: var(--muted);
-      line-height: 1.5;
-      margin-bottom: 14px;
-    }
-
-    .agent-caps {
-      display: flex;
-      gap: 6px;
-      flex-wrap: wrap;
-      margin-bottom: 16px;
-    }
-
-    .cap-tag {
-      padding: 3px 9px;
-      border-radius: 5px;
-      font-size: 11px;
-      font-family: var(--mono);
-      background: var(--surface2);
-      color: var(--muted);
-      border: 1px solid var(--border);
-    }
-
-    .agent-stats {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 1px;
-      background: var(--border);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      overflow: hidden;
-      margin-bottom: 16px;
-    }
-
-    .agent-stat {
-      background: var(--surface2);
-      padding: 12px;
-      text-align: center;
-    }
-
-    .agent-stat-value {
-      font-family: var(--mono);
-      font-size: 14px;
-      font-weight: 600;
-      color: var(--text);
-      display: block;
-    }
-
-    .agent-stat-label {
-      font-size: 10px;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      margin-top: 2px;
-      display: block;
-    }
-
-    .agent-identity {
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 10px 12px;
-      font-size: 11px;
-      font-family: var(--mono);
-    }
-
-    .agent-identity-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-      padding: 2px 0;
-    }
-
-    .agent-identity-key   { color: var(--muted); }
-    .agent-identity-value { color: var(--green); }
-
-    .agent-card-footer {
-      padding: 16px 24px;
-      border-top: 1px solid var(--border);
-    }
-
-    /* ── Modal ────────────────────────── */
-    .modal-backdrop {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.8);
-      backdrop-filter: blur(8px);
-      z-index: 200;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.2s;
-    }
-    .modal-backdrop.open { opacity: 1; pointer-events: all; }
-
-    .modal {
-      background: var(--surface);
-      border: 1px solid var(--border2);
-      border-radius: 18px;
-      width: 100%;
-      max-width: 520px;
-      max-height: 90vh;
-      overflow-y: auto;
-      transform: translateY(12px);
-      transition: transform 0.2s;
-    }
-    .modal-backdrop.open .modal { transform: none; }
-
-    .modal-header {
-      padding: 24px 28px 0;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .modal-title {
-      font-size: 18px;
-      font-weight: 700;
-      letter-spacing: -0.02em;
-    }
-
-    .modal-close {
-      width: 32px; height: 32px;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      background: var(--surface2);
-      color: var(--muted);
-      cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 16px;
-      transition: all 0.15s;
-    }
-    .modal-close:hover { color: var(--text); border-color: var(--border2); }
-
-    .modal-body { padding: 20px 28px 28px; }
-
-    /* ── Form ─────────────────────────── */
-    .form-group { margin-bottom: 18px; }
-
-    label {
-      display: block;
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      margin-bottom: 6px;
-    }
-
-    input, textarea, select {
-      width: 100%;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      color: var(--text);
-      font-family: var(--head);
-      font-size: 14px;
-      padding: 10px 14px;
-      outline: none;
-      transition: border-color 0.15s;
-    }
-    input:focus, textarea:focus, select:focus { border-color: var(--green); }
-    input::placeholder, textarea::placeholder { color: var(--dim); }
-
-    textarea { resize: vertical; min-height: 100px; }
-
-    select option { background: var(--surface2); }
-
-    .form-hint {
-      font-size: 11px;
-      color: var(--dim);
-      margin-top: 5px;
-    }
-
-    .agent-select-card {
-      background: var(--surface2);
-      border: 2px solid var(--border);
-      border-radius: 10px;
-      padding: 14px 16px;
-      cursor: pointer;
-      transition: all 0.15s;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-    .agent-select-card:hover { border-color: var(--border2); }
-    .agent-select-card.selected { border-color: var(--green); background: var(--green2); }
-
-    .agent-select-icon { font-size: 22px; }
-
-    .agent-select-name  { font-size: 13px; font-weight: 600; }
-    .agent-select-desc  { font-size: 11px; color: var(--muted); margin-top: 2px; }
-
-    .form-step-indicator {
-      display: flex;
-      gap: 6px;
-      margin-bottom: 24px;
-    }
-
-    .form-step {
-      flex: 1;
-      height: 3px;
-      border-radius: 2px;
-      background: var(--border);
-    }
-    .form-step.done { background: var(--green); }
-    .form-step.active { background: rgba(0,229,160,0.5); }
-
-    /* ── Deliverable viewer ───────────── */
-    .deliverable-box {
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 20px;
-      font-size: 13px;
-      line-height: 1.7;
-      color: var(--text);
-      white-space: pre-wrap;
-      font-family: var(--mono);
-      max-height: 400px;
-      overflow-y: auto;
-    }
-
-    /* ── Toast ────────────────────────── */
-    #toast-container {
-      position: fixed;
-      bottom: 24px;
-      right: 24px;
-      z-index: 999;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      pointer-events: none;
-    }
-
-    .toast {
-      padding: 12px 18px;
-      border-radius: 10px;
-      font-size: 13px;
-      font-weight: 500;
-      max-width: 340px;
-      border: 1px solid transparent;
-      animation: slideIn 0.25s ease;
-      pointer-events: all;
-    }
-
-    @keyframes slideIn {
-      from { opacity: 0; transform: translateX(16px); }
-      to   { opacity: 1; transform: none; }
-    }
-
-    .toast-success { background: rgba(0,229,160,0.15); border-color: rgba(0,229,160,0.3); color: var(--green); }
-    .toast-error   { background: rgba(255,107,107,0.15); border-color: rgba(255,107,107,0.3); color: var(--red); }
-    .toast-info    { background: var(--surface2); border-color: var(--border2); color: var(--text); }
-
-    /* ── Loading ──────────────────────── */
-    .loader {
-      display: inline-block;
-      width: 14px; height: 14px;
-      border: 2px solid rgba(255,255,255,0.1);
-      border-top-color: var(--green);
-      border-radius: 50%;
-      animation: spin 0.7s linear infinite;
-    }
-
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    .skeleton {
-      background: linear-gradient(90deg, var(--surface2) 25%, var(--surface3) 50%, var(--surface2) 75%);
-      background-size: 200% 100%;
-      animation: shimmer 1.5s infinite;
-      border-radius: 6px;
-    }
-
-    @keyframes shimmer { to { background-position: -200% 0; } }
-
-    /* ── Empty state ──────────────────── */
-    .empty {
-      text-align: center;
-      padding: 60px 24px;
-      color: var(--muted);
-    }
-
-    .empty-icon { font-size: 40px; margin-bottom: 12px; }
-    .empty-title { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
-    .empty-text  { font-size: 13px; }
-
-    /* ── Dashboard ────────────────────── */
-    .dash-section { margin-bottom: 36px; }
-
-    .notice {
-      padding: 14px 18px;
-      border-radius: 10px;
-      font-size: 13px;
-      margin-bottom: 20px;
-      display: flex;
-      align-items: flex-start;
-      gap: 10px;
-    }
-    .notice-warn { background: rgba(255,159,67,0.1); border: 1px solid rgba(255,159,67,0.25); color: var(--orange); }
-    .notice-info { background: var(--blue2); border: 1px solid rgba(77,166,255,0.2); color: var(--blue); }
-
-    /* ── Steps ────────────────────────── */
-    .how-steps {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 12px;
-      margin-bottom: 48px;
-    }
-
-    .how-step {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 22px;
-    }
-
-    .how-step-num {
-      font-family: var(--mono);
-      font-size: 11px;
-      color: var(--green);
-      font-weight: 600;
-      margin-bottom: 10px;
-      letter-spacing: 0.1em;
-    }
-
-    .how-step-title {
-      font-size: 14px;
-      font-weight: 700;
-      margin-bottom: 6px;
-    }
-
-    .how-step-text {
-      font-size: 12px;
-      color: var(--muted);
-      line-height: 1.5;
-    }
-
-    /* ── Mono addr ────────────────────── */
-    .addr {
-      font-family: var(--mono);
-      font-size: 11px;
-      color: var(--muted);
-    }
-
-    /* ── Responsive ───────────────────── */
-    @media (max-width: 640px) {
-      nav { padding: 0 16px; }
-      main { padding: 24px 16px 60px; }
-      .nav-tab span { display: none; }
-      .agents-grid { grid-template-columns: 1fr; }
-    }
-  </style>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>AgentMarket — AI Agent Economy on Arc</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/ethers@6.7.0/dist/ethers.umd.min.js"></script>
+<style>
+:root{--paper:#F5F0E8;--cream:#EDE8DC;--warm:#E4DDD0;--ink:#1A1612;--ink2:#3D3830;--ink3:#6B6358;--ink4:#9C9287;--rule:rgba(26,22,18,0.1);--rule2:rgba(26,22,18,0.06);--orange:#E8520A;--orange2:#F26B28;--orange-bg:rgba(232,82,10,0.08);--teal:#0A7E6A;--red:#C0392B;--D:'Syne',sans-serif;--B:'DM Sans',sans-serif;--M:'DM Mono',monospace}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--B);background:var(--paper);color:var(--ink);min-height:100vh;overflow-x:hidden}
+nav{position:fixed;top:0;left:0;right:0;z-index:100;height:58px;display:flex;align-items:center;justify-content:space-between;padding:0 40px;background:rgba(245,240,232,0.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--rule)}
+.logo{font-family:var(--D);font-size:17px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;color:var(--ink);display:flex;align-items:center;gap:10px}
+.logo-mark{width:26px;height:26px;background:var(--orange);border-radius:6px;display:flex;align-items:center;justify-content:center}
+.nav-c{display:flex;align-items:center;gap:2px}
+.nl{padding:5px 14px;border-radius:6px;font-size:13px;font-weight:500;font-family:var(--B);color:var(--ink3);border:none;background:transparent;cursor:pointer;transition:all .15s}
+.nl:hover{color:var(--ink);background:var(--cream)}
+.nl.on{color:var(--orange);background:var(--orange-bg)}
+.nav-r{display:flex;align-items:center;gap:10px}
+.btn{display:inline-flex;align-items:center;gap:7px;border-radius:8px;font-family:var(--B);font-weight:500;font-size:13px;cursor:pointer;border:none;transition:all .15s;text-decoration:none;white-space:nowrap;padding:9px 20px}
+.btn-primary{background:var(--orange);color:white}
+.btn-primary:hover{background:var(--orange2);transform:translateY(-1px);box-shadow:0 6px 20px rgba(232,82,10,0.25)}
+.btn-ink{background:var(--ink);color:var(--paper)}
+.btn-ink:hover{background:var(--ink2)}
+.btn-line{background:transparent;color:var(--ink2);border:1.5px solid var(--rule)}
+.btn-line:hover{border-color:rgba(26,22,18,0.2)}
+.btn-ghost{background:var(--cream);color:var(--ink2)}
+.btn-ghost:hover{background:var(--warm)}
+.btn-danger{background:rgba(192,57,43,0.08);color:var(--red);border:1px solid rgba(192,57,43,0.15)}
+.btn-danger:hover{background:rgba(192,57,43,0.15)}
+.btn-sm{padding:6px 14px;font-size:12px}
+.btn-xs{padding:4px 10px;font-size:11px;border-radius:6px}
+.btn:disabled{opacity:.35;cursor:not-allowed;transform:none!important;box-shadow:none!important}
+.w-chip{display:flex;align-items:center;gap:7px;padding:6px 14px;background:var(--cream);border:1.5px solid var(--rule);border-radius:8px;font-family:var(--M);font-size:11px;color:var(--ink3)}
+main{max-width:1140px;margin:0 auto;padding:82px 32px 100px}
+.page{display:none}
+.page.on{display:block;animation:pi .2s ease}
+@keyframes pi{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.hero{padding:60px 0;display:grid;grid-template-columns:1fr 360px;gap:60px;align-items:start;margin-bottom:64px}
+.hero-tag{display:inline-flex;align-items:center;gap:8px;font-family:var(--M);font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:var(--orange);margin-bottom:24px;padding:5px 12px;border:1.5px solid rgba(232,82,10,0.25);border-radius:20px;background:var(--orange-bg)}
+.hero-dot{width:5px;height:5px;border-radius:50%;background:var(--orange);animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.4}}
+.hero h1{font-family:var(--D);font-size:clamp(48px,6vw,76px);font-weight:800;line-height:1.02;letter-spacing:-0.02em;margin-bottom:20px}
+.hero h1 i{font-style:normal;color:var(--orange)}
+.hero-sub{font-size:16px;color:var(--ink3);line-height:1.65;font-weight:300;margin-bottom:36px;max-width:420px}
+.hero-acts{display:flex;gap:10px;flex-wrap:wrap}
+.hero-acts .btn{font-size:14px;padding:12px 26px}
+.hero-panel{background:var(--cream);border:1.5px solid var(--rule);border-radius:16px;overflow:hidden;margin-top:72px}
+.hp-head{font-family:var(--M);font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink4);padding:16px 18px 12px;border-bottom:1px solid var(--rule)}
+.hp-job{padding:12px 18px;border-bottom:1px solid var(--rule2);display:flex;justify-content:space-between;align-items:center}
+.hp-job:last-child{border-bottom:none}
+.hp-jn{font-size:12px;font-weight:500;color:var(--ink2);margin-bottom:2px}
+.hp-jm{font-size:10px;color:var(--ink4)}
+.hp-amt{font-family:var(--M);font-size:12px;color:var(--orange)}
+.hp-s{display:inline-block;padding:2px 7px;border-radius:4px;font-size:9px;font-family:var(--M);text-transform:uppercase;letter-spacing:.05em}
+.hp-done{background:rgba(10,126,106,0.1);color:var(--teal)}
+.hp-live{background:var(--orange-bg);color:var(--orange)}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);border:1.5px solid var(--rule);border-radius:14px;overflow:hidden;margin-bottom:60px}
+.stat{padding:24px 28px;background:var(--cream);border-right:1px solid var(--rule)}
+.stat:last-child{border-right:none}
+.stat-n{font-family:var(--D);font-size:36px;font-weight:700;color:var(--ink);line-height:1;margin-bottom:5px}
+.stat-l{font-size:11px;color:var(--ink4);text-transform:uppercase;letter-spacing:.1em;font-weight:500}
+.sec-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding-bottom:14px;border-bottom:1.5px solid var(--rule)}
+.sec-title{font-family:var(--D);font-size:20px;font-weight:700;color:var(--ink);letter-spacing:-.01em}
+.sec-ct{font-family:var(--M);font-size:11px;color:var(--ink4);background:var(--cream);border:1px solid var(--rule);padding:3px 10px;border-radius:20px}
+.how{display:grid;grid-template-columns:repeat(4,1fr);border:1.5px solid var(--rule);border-radius:14px;overflow:hidden;margin-bottom:60px}
+.how-step{padding:28px 22px;background:var(--cream);border-right:1px solid var(--rule);transition:background .2s}
+.how-step:last-child{border-right:none}
+.how-step:hover{background:var(--warm)}
+.how-n{font-family:var(--M);font-size:10px;color:var(--orange);font-weight:500;letter-spacing:.1em;margin-bottom:14px}
+.how-t{font-size:13px;font-weight:600;color:var(--ink);margin-bottom:7px}
+.how-d{font-size:12px;color:var(--ink3);line-height:1.6}
+.jt{border:1.5px solid var(--rule);border-radius:14px;overflow:hidden}
+.jr{display:grid;grid-template-columns:1fr 110px 100px 140px;align-items:center;gap:16px;padding:16px 20px;background:var(--cream);border-bottom:1px solid var(--rule);transition:background .15s;position:relative}
+.jr:last-child{border-bottom:none}
+.jr:hover{background:var(--warm)}
+.jr::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--orange);opacity:0;transition:opacity .15s}
+.jr:hover::before{opacity:1}
+.jt-txt{font-size:13px;font-weight:600;color:var(--ink);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.jd-txt{font-size:11px;color:var(--ink4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.jcat{font-family:var(--M);font-size:10px;color:var(--ink4);background:var(--warm);border:1px solid var(--rule);padding:2px 8px;border-radius:4px;display:inline-block;margin-top:4px}
+.jbudget{font-family:var(--M);font-size:14px;font-weight:500;color:var(--orange)}
+.jacts{display:flex;gap:6px;justify-content:flex-end}
+.tag{display:inline-flex;align-items:center;padding:2px 8px;border-radius:4px;font-size:10px;font-family:var(--M);text-transform:uppercase;letter-spacing:.05em;border:1px solid transparent}
+.tag-funded{background:rgba(232,82,10,0.08);color:var(--orange);border-color:rgba(232,82,10,0.2)}
+.tag-submitted{background:rgba(180,120,0,0.08);color:#7a5000;border-color:rgba(180,120,0,0.2)}
+.tag-completed{background:rgba(10,126,106,0.08);color:var(--teal);border-color:rgba(10,126,106,0.2)}
+.tag-rejected{background:rgba(192,57,43,0.08);color:var(--red);border-color:rgba(192,57,43,0.2)}
+.tag-open{background:var(--warm);color:var(--ink4);border-color:var(--rule)}
+.tag-expired{background:rgba(120,80,0,0.08);color:#7a5000;border-color:rgba(120,80,0,0.2)}
+.agents-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:20px}
+.ac{background:var(--cream);border:1.5px solid var(--rule);border-radius:16px;overflow:hidden;transition:transform .2s,border-color .2s}
+.ac:hover{transform:translateY(-3px);border-color:rgba(232,82,10,0.3)}
+.ac-top{padding:24px 24px 0}
+.ac-hdr{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px}
+.ac-icon{width:46px;height:46px;border-radius:12px;background:var(--orange-bg);border:1.5px solid rgba(232,82,10,0.15);display:flex;align-items:center;justify-content:center;font-size:20px}
+.ac-live{font-family:var(--M);font-size:9px;letter-spacing:.1em;text-transform:uppercase;display:flex;align-items:center;gap:5px}
+.pip{width:6px;height:6px;border-radius:50%}
+.pip-live{background:#22c55e;animation:blink 2s infinite}
+.pip-idle{background:var(--teal)}
+.pip-off{background:var(--ink4)}
+.ac-name{font-family:var(--D);font-size:24px;font-weight:800;color:var(--ink);margin-bottom:8px}
+.ac-desc{font-size:13px;color:var(--ink3);line-height:1.6;margin-bottom:14px;font-weight:300}
+.ac-caps{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:18px}
+.cap{padding:4px 10px;background:var(--warm);border:1px solid var(--rule);border-radius:4px;font-size:11px;font-family:var(--M);color:var(--ink3)}
+.ac-stats{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--rule);border-bottom:1px solid var(--rule)}
+.ac-stat{padding:14px;text-align:center}
+.ac-stat+.ac-stat{border-left:1px solid var(--rule)}
+.ac-sv{display:block;font-family:var(--D);font-size:20px;font-weight:700;color:var(--ink);margin-bottom:2px}
+.ac-sk{font-size:10px;color:var(--ink4);text-transform:uppercase;letter-spacing:.08em}
+.ac-id{padding:14px 24px;background:var(--warm);font-family:var(--M);font-size:11px}
+.ac-ir{display:flex;justify-content:space-between;padding:2px 0}
+.ac-ik{color:var(--ink4)}
+.ac-iv{color:var(--orange)}
+.ac-iv.ok{color:var(--teal)}
+.ac-iv.dim{color:var(--ink3)}
+.ac-foot{padding:16px 24px;border-top:1px solid var(--rule)}
+.overlay{position:fixed;inset:0;background:rgba(26,22,18,0.6);backdrop-filter:blur(10px);z-index:500;display:flex;align-items:center;justify-content:center;padding:24px;opacity:0;pointer-events:none;transition:opacity .2s}
+.overlay.on{opacity:1;pointer-events:all}
+.modal{background:var(--paper);border:1.5px solid var(--rule);border-radius:18px;width:100%;max-width:500px;max-height:90vh;overflow-y:auto;transform:scale(.96) translateY(10px);transition:transform .2s}
+.overlay.on .modal{transform:none}
+.m-head{padding:26px 28px 0;display:flex;align-items:center;justify-content:space-between}
+.m-title{font-family:var(--D);font-size:22px;font-weight:800;color:var(--ink)}
+.m-x{width:30px;height:30px;border-radius:8px;background:var(--cream);border:1px solid var(--rule);color:var(--ink3);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px}
+.m-x:hover{background:var(--warm)}
+.m-body{padding:22px 28px 28px}
+.field{margin-bottom:16px}
+.field label{display:block;font-size:11px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px}
+.field input,.field textarea,.field select{width:100%;background:var(--cream);border:1.5px solid var(--rule);border-radius:8px;color:var(--ink);font-family:var(--B);font-size:14px;padding:10px 13px;outline:none;transition:border-color .15s}
+.field input:focus,.field textarea:focus,.field select:focus{border-color:rgba(232,82,10,0.5)}
+.field input::placeholder,.field textarea::placeholder{color:var(--ink4)}
+.field textarea{resize:vertical;min-height:90px}
+.field select option{background:var(--cream)}
+.field-hint{font-size:11px;color:var(--ink4);margin-top:4px}
+.f-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.prog-bar{height:2px;background:var(--warm);border-radius:2px;margin-bottom:22px;overflow:hidden}
+.prog-fill{height:100%;background:var(--orange);border-radius:2px;transition:width .3s}
+.a-pick{display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--cream);border:1.5px solid var(--rule);border-radius:10px;cursor:pointer;transition:all .15s;margin-bottom:8px}
+.a-pick:hover{border-color:rgba(26,22,18,0.2)}
+.a-pick.sel{border-color:rgba(232,82,10,0.5);background:var(--orange-bg)}
+.a-pick-n{font-size:13px;font-weight:600;color:var(--ink)}
+.a-pick-s{font-size:11px;color:var(--ink4);margin-top:1px}
+.cbox{background:var(--cream);border:1.5px solid var(--rule);border-radius:10px;padding:14px;margin-bottom:18px}
+.cr{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--rule2);font-size:13px}
+.cr:last-child{border-bottom:none;padding-bottom:0}
+.ck{color:var(--ink3)}
+.cv{color:var(--ink);font-weight:500}
+.cv.hi{color:var(--orange);font-family:var(--M)}
+.ib{padding:12px 14px;border-radius:8px;font-size:12px;margin-bottom:16px;line-height:1.5}
+.ib-teal{background:rgba(10,126,106,0.07);border:1px solid rgba(10,126,106,0.15);color:var(--teal)}
+.ib-red{background:rgba(192,57,43,0.07);border:1px solid rgba(192,57,43,0.15);color:var(--red)}
+.d-box{background:var(--cream);border:1.5px solid var(--rule);border-radius:10px;padding:18px;font-family:var(--M);font-size:12px;line-height:1.8;color:var(--ink3);white-space:pre-wrap;max-height:400px;overflow-y:auto}
+#toasts{position:fixed;bottom:24px;right:24px;z-index:999;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.toast{padding:12px 18px;border-radius:10px;font-size:13px;font-weight:500;max-width:360px;pointer-events:all;animation:tIn .25s ease;border:1px solid transparent}
+@keyframes tIn{from{opacity:0;transform:translateX(12px)}to{opacity:1;transform:none}}
+.t-ok{background:rgba(10,126,106,0.1);border-color:rgba(10,126,106,0.2);color:var(--teal)}
+.t-err{background:rgba(192,57,43,0.1);border-color:rgba(192,57,43,0.2);color:var(--red)}
+.t-info{background:var(--cream);border-color:var(--rule);color:var(--ink3)}
+.spin{display:inline-block;width:13px;height:13px;border:2px solid rgba(26,22,18,.12);border-top-color:var(--orange);border-radius:50%;animation:sp .7s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.skel{background:linear-gradient(90deg,var(--cream) 25%,var(--warm) 50%,var(--cream) 75%);background-size:200% 100%;animation:sh 1.5s infinite;border-radius:6px}
+@keyframes sh{to{background-position:-200% 0}}
+.empty{text-align:center;padding:56px 24px;color:var(--ink4)}
+.empty-icon{font-size:30px;margin-bottom:12px;opacity:.6}
+.empty-t{font-family:var(--D);font-size:18px;font-weight:700;color:var(--ink3);margin-bottom:5px}
+.empty-d{font-size:13px}
+.fb-bar{display:flex;gap:6px;margin-bottom:14px}
+.fb{padding:5px 14px;border-radius:6px;font-size:12px;font-family:var(--B);font-weight:500;color:var(--ink3);background:transparent;border:1px solid transparent;cursor:pointer;transition:all .15s}
+.fb:hover{color:var(--ink);background:var(--cream)}
+.fb.on{color:var(--orange);background:var(--orange-bg);border-color:rgba(232,82,10,0.2)}
+.notice{padding:14px 18px;border-radius:10px;font-size:13px;color:var(--ink3);background:var(--cream);border:1.5px solid var(--rule);margin-bottom:20px}
+@media(max-width:900px){.hero{grid-template-columns:1fr}.hero-right{display:none}.how{grid-template-columns:1fr 1fr}.stats{grid-template-columns:1fr 1fr}.stat:nth-child(2){border-right:none}.stat:nth-child(3){border-top:1px solid var(--rule)}.jr{grid-template-columns:1fr auto}}
+@media(max-width:600px){nav{padding:0 16px}main{padding:76px 16px 80px}.how{grid-template-columns:1fr}.nav-c{display:none}}
+</style>
 </head>
 <body>
-
-<!-- ── Nav ──────────────────────────── -->
 <nav>
-  <div class="nav-brand">
-    <div class="dot"></div>
+  <div class="logo">
+    <div class="logo-mark"><svg width="14" height="14" viewBox="0 0 16 16" fill="white"><polygon points="8,2 14,12 2,12"/></svg></div>
     AgentMarket
   </div>
-  <div class="nav-tabs">
-    <button class="nav-tab active" onclick="showPage('home')">
-      <span>Home</span>
-    </button>
-    <button class="nav-tab" onclick="showPage('jobs')">
-      <span>Jobs</span>
-    </button>
-    <button class="nav-tab" onclick="showPage('agents')">
-      <span>Agents</span>
-    </button>
-    <button class="nav-tab" onclick="showPage('dashboard')">
-      <span>Dashboard</span>
-    </button>
+  <div class="nav-c">
+    <button class="nl on" onclick="showPage('home')">Home</button>
+    <button class="nl" onclick="showPage('jobs')">Jobs</button>
+    <button class="nl" onclick="showPage('agents')">Agents</button>
+    <button class="nl" onclick="showPage('dashboard')">Dashboard</button>
   </div>
-  <div class="nav-right">
-    <div id="wallet-display" style="display:none"></div>
-    <button class="btn btn-outline" id="connect-btn" onclick="connectWallet()">Connect Wallet</button>
-    <button class="btn btn-primary" onclick="openPostJob()" style="display:none" id="post-btn">
-      + Post Job
-    </button>
+  <div class="nav-r">
+    <div id="wd" style="display:none"></div>
+    <button class="btn btn-line" id="con-btn" onclick="connectWallet()">Connect Wallet</button>
+    <button class="btn btn-primary" id="post-btn" onclick="openPost()" style="display:none">+ Post Job</button>
   </div>
 </nav>
-
-<!-- ── Toast container ──────────────── -->
-<div id="toast-container"></div>
-
-<!-- ── Main ─────────────────────────── -->
+<div id="toasts"></div>
 <main>
 
-  <!-- HOME PAGE -->
-  <div class="page active" id="page-home">
-    <div class="hero">
-      <div class="hero-tag">⚡ Live on Arc Testnet</div>
-      <h1>Hire <span>AI Agents</span><br>That Actually Deliver</h1>
-      <p>Post a job, fund escrow with USDC, and an autonomous AI agent executes it on-chain — no middlemen, no delays.</p>
-      <div class="hero-actions">
-        <button class="btn btn-primary" onclick="openPostJob()">Post a Job</button>
-        <button class="btn btn-outline" onclick="showPage('agents')">View Agents</button>
+<div class="page on" id="page-home">
+  <div class="hero">
+    <div>
+      <div class="hero-tag"><div class="hero-dot"></div> Live on Arc Testnet</div>
+      <h1>Hire <i>AI Agents</i><br>That Actually<br>Deliver.</h1>
+      <p class="hero-sub">Post a task, fund escrow in USDC, and an autonomous AI agent executes it on-chain. Verified. Paid. Reputation tracked.</p>
+      <div class="hero-acts">
+        <button class="btn btn-primary" onclick="openPost()">Post a Job</button>
+        <button class="btn btn-ink" onclick="showPage('agents')">Meet the Agents →</button>
       </div>
     </div>
-
-    <div class="stats-bar" id="stats-bar">
-      <div class="stat-item">
-        <span class="stat-value skeleton" style="width:60px;height:22px;display:inline-block"> </span>
-        <span class="stat-label">Total Jobs</span>
-      </div>
-      <div class="stat-item">
-        <span class="stat-value skeleton" style="width:60px;height:22px;display:inline-block"> </span>
-        <span class="stat-label">Completed</span>
-      </div>
-      <div class="stat-item">
-        <span class="stat-value skeleton" style="width:80px;height:22px;display:inline-block"> </span>
-        <span class="stat-label">Volume (USDC)</span>
-      </div>
-      <div class="stat-item">
-        <span class="stat-value skeleton" style="width:50px;height:22px;display:inline-block"> </span>
-        <span class="stat-label">Active Agents</span>
-      </div>
-    </div>
-
-    <div class="section-header">
-      <div class="section-title">How It Works</div>
-    </div>
-    <div class="how-steps">
-      <div class="how-step">
-        <div class="how-step-num">01</div>
-        <div class="how-step-title">Post a Job</div>
-        <div class="how-step-text">Describe your task, set a budget in USDC, and assign an AI agent. USDC locks into escrow automatically.</div>
-      </div>
-      <div class="how-step">
-        <div class="how-step-num">02</div>
-        <div class="how-step-title">Agent Executes</div>
-        <div class="how-step-text">The agent detects the job, reads your description, fetches any URLs, and produces a deliverable — fully autonomous.</div>
-      </div>
-      <div class="how-step">
-        <div class="how-step-num">03</div>
-        <div class="how-step-title">Review & Approve</div>
-        <div class="how-step-text">Read the deliverable. Click Approve to release USDC to the agent, or Reject for a full refund.</div>
-      </div>
-      <div class="how-step">
-        <div class="how-step-num">04</div>
-        <div class="how-step-title">Reputation Built</div>
-        <div class="how-step-text">After each job, the agent's ERC-8004 reputation score updates on-chain. Better agents, trusted by the network.</div>
-      </div>
-    </div>
-
-    <div class="section-header">
-      <div class="section-title">Recent Jobs</div>
-      <button class="btn btn-ghost btn-sm" onclick="showPage('jobs')">View All →</button>
-    </div>
-    <div class="jobs-grid" id="home-jobs">
-      <div class="job-card skeleton" style="height:100px"></div>
-      <div class="job-card skeleton" style="height:100px"></div>
+    <div class="hero-panel">
+      <div class="hp-head">Live activity</div>
+      <div id="hero-panel"></div>
     </div>
   </div>
 
-  <!-- JOBS PAGE -->
-  <div class="page" id="page-jobs">
-    <div class="section-header">
-      <div>
-        <div class="section-title">All Jobs</div>
-        <div style="font-size:12px;color:var(--muted);margin-top:4px">Live from Arc Testnet</div>
-      </div>
-      <div style="display:flex;gap:10px;align-items:center">
-        <span class="section-count" id="jobs-count">—</span>
-        <button class="btn btn-primary" onclick="openPostJob()">+ Post Job</button>
-      </div>
-    </div>
-
-    <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap">
-      <button class="btn btn-ghost btn-sm filter-btn active" data-filter="all"   onclick="filterJobs('all')">All</button>
-      <button class="btn btn-ghost btn-sm filter-btn"        data-filter="1"    onclick="filterJobs('1')">Active</button>
-      <button class="btn btn-ghost btn-sm filter-btn"        data-filter="2"    onclick="filterJobs('2')">Submitted</button>
-      <button class="btn btn-ghost btn-sm filter-btn"        data-filter="3"    onclick="filterJobs('3')">Completed</button>
-    </div>
-
-    <div class="jobs-grid" id="jobs-list">
-      <div class="job-card skeleton" style="height:120px"></div>
-      <div class="job-card skeleton" style="height:120px"></div>
-      <div class="job-card skeleton" style="height:120px"></div>
-    </div>
+  <div class="stats" id="stats-bar">
+    <div class="stat"><div class="stat-n skel" style="width:50px;height:32px;margin-bottom:6px"></div><div class="stat-l">Total Jobs</div></div>
+    <div class="stat"><div class="stat-n skel" style="width:50px;height:32px;margin-bottom:6px"></div><div class="stat-l">Completed</div></div>
+    <div class="stat"><div class="stat-n skel" style="width:80px;height:32px;margin-bottom:6px"></div><div class="stat-l">Volume USDC</div></div>
+    <div class="stat"><div class="stat-n skel" style="width:40px;height:32px;margin-bottom:6px"></div><div class="stat-l">Active Agents</div></div>
   </div>
 
-  <!-- AGENTS PAGE -->
-  <div class="page" id="page-agents">
-    <div class="section-header">
-      <div>
-        <div class="section-title">AI Agents</div>
-        <div style="font-size:12px;color:var(--muted);margin-top:4px">ERC-8004 registered on Arc Testnet</div>
-      </div>
-    </div>
-    <div class="agents-grid" id="agents-list">
-      <div class="agent-card skeleton" style="height:320px"></div>
-    </div>
+  <div class="how">
+    <div class="how-step"><div class="how-n">01 — Post</div><div class="how-t">Describe your task</div><div class="how-d">Write what you need, set a USDC budget, pick an agent. Funds lock into escrow instantly.</div></div>
+    <div class="how-step"><div class="how-n">02 — Execute</div><div class="how-t">Agent gets to work</div><div class="how-d">The agent reads your job, fetches URLs you include, runs inference, and produces a deliverable.</div></div>
+    <div class="how-step"><div class="how-n">03 — Review</div><div class="how-t">Approve or reject</div><div class="how-d">Read the output. Approve to pay the agent, or reject for a full USDC refund. Your call.</div></div>
+    <div class="how-step"><div class="how-n">04 — Reputation</div><div class="how-t">Trust built on-chain</div><div class="how-d">Every job updates the agent's ERC-8004 reputation on Arc. A track record you can verify.</div></div>
   </div>
 
-  <!-- DASHBOARD PAGE -->
-  <div class="page" id="page-dashboard">
-    <div class="section-title" style="margin-bottom:24px">My Dashboard</div>
-    <div id="dash-no-wallet" class="notice notice-warn">
-      ⚠ Connect your wallet to see your jobs.
-    </div>
-    <div id="dash-content" style="display:none">
-      <div class="dash-section">
-        <div class="section-header">
-          <div class="section-title">Jobs I Posted</div>
-          <span class="section-count" id="my-jobs-count">0</span>
-        </div>
-        <div class="jobs-grid" id="my-jobs-list">
-          <div class="empty">
-            <div class="empty-icon">📋</div>
-            <div class="empty-title">No jobs posted yet</div>
-            <div class="empty-text">Post your first job and an agent will pick it up automatically.</div>
-          </div>
-        </div>
-      </div>
-    </div>
+  <div class="sec-h"><div class="sec-title">Recent Jobs</div><button class="btn btn-ghost btn-sm" onclick="showPage('jobs')">View all →</button></div>
+  <div class="jt" id="home-jobs">
+    <div class="jr"><div class="skel" style="height:13px;width:200px"></div><div></div><div></div><div></div></div>
+    <div class="jr"><div class="skel" style="height:13px;width:160px"></div><div></div><div></div><div></div></div>
   </div>
+</div>
+
+<div class="page" id="page-jobs">
+  <div class="sec-h" style="margin-bottom:16px">
+    <div><div class="sec-title">All Jobs</div><div style="font-size:12px;color:var(--ink4);margin-top:3px;font-family:var(--M)">Arc Testnet · Live</div></div>
+    <div style="display:flex;gap:10px;align-items:center"><span class="sec-ct" id="jobs-count">—</span><button class="btn btn-primary" onclick="openPost()">+ Post Job</button></div>
+  </div>
+  <div class="fb-bar">
+    <button class="fb on" data-f="all" onclick="fj('all')">All</button>
+    <button class="fb" data-f="1" onclick="fj('1')">Active</button>
+    <button class="fb" data-f="2" onclick="fj('2')">Submitted</button>
+    <button class="fb" data-f="3" onclick="fj('3')">Completed</button>
+  </div>
+  <div class="jt" id="jobs-list">
+    <div class="jr"><div class="skel" style="height:13px;width:220px"></div><div></div><div></div><div></div></div>
+    <div class="jr"><div class="skel" style="height:13px;width:180px"></div><div></div><div></div><div></div></div>
+  </div>
+</div>
+
+<div class="page" id="page-agents">
+  <div class="sec-h" style="margin-bottom:24px">
+    <div><div class="sec-title">AI Agents</div><div style="font-size:12px;color:var(--ink4);margin-top:3px;font-family:var(--M)">ERC-8004 registered · Arc Testnet</div></div>
+  </div>
+  <div class="agents-grid" id="agents-list"><div class="ac skel" style="height:360px"></div></div>
+</div>
+
+<div class="page" id="page-dashboard">
+  <div class="sec-title" style="margin-bottom:24px">Dashboard</div>
+  <div id="d-nw" class="notice">Connect your wallet to see your jobs.</div>
+  <div id="d-con" style="display:none">
+    <div class="sec-h" style="margin-bottom:14px"><div class="sec-title" style="font-size:18px">My Jobs</div><span class="sec-ct" id="my-ct">0</span></div>
+    <div class="jt" id="my-jobs"></div>
+  </div>
+</div>
 
 </main>
 
-<!-- ── Post Job Modal ─────────────────── -->
-<div class="modal-backdrop" id="post-modal">
-  <div class="modal">
-    <div class="modal-header">
-      <div class="modal-title">Post a Job</div>
-      <button class="modal-close" onclick="closeModal('post-modal')">✕</button>
+<div class="overlay" id="post-modal">
+<div class="modal">
+  <div class="m-head"><div class="m-title">Post a Job</div><div class="m-x" onclick="cM('post-modal')">✕</div></div>
+  <div class="m-body">
+    <div class="prog-bar"><div class="prog-fill" id="prog" style="width:50%"></div></div>
+    <div id="s1">
+      <div class="field"><label>Select Agent</label><div id="a-picker"></div></div>
+      <div class="field"><label>Job Title</label><input id="f-title" type="text" placeholder="e.g. Summarize this research paper"/></div>
+      <div class="field"><label>Category</label><select id="f-cat"><option>Research</option><option>Analysis</option><option>Summary</option><option>Writing</option><option>Other</option></select></div>
+      <div class="field"><label>Description</label><textarea id="f-desc" placeholder="Describe the task. Paste URLs and the agent will read them."></textarea></div>
+      <div class="f-row">
+        <div class="field"><label>Budget (USDC)</label><input id="f-budget" type="number" min="1" step="0.5" value="5"/></div>
+        <div class="field"><label>Deadline (Hours)</label><input id="f-dead" type="number" min="1" max="720" value="24"/></div>
+      </div>
+      <button class="btn btn-primary" style="width:100%" onclick="gS2()">Continue →</button>
     </div>
-    <div class="modal-body">
-      <div class="form-step-indicator">
-        <div class="form-step done" id="fstep-1"></div>
-        <div class="form-step" id="fstep-2"></div>
+    <div id="s2" style="display:none">
+      <div class="ib ib-teal">Two MetaMask prompts — approve USDC, then post the job.</div>
+      <div class="cbox" id="crows"></div>
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-ghost" style="flex:1" onclick="gS1()">← Back</button>
+        <button class="btn btn-primary" style="flex:2" id="sub-btn" onclick="submitJob()">Approve USDC & Post</button>
       </div>
-
-      <!-- Step 1: Job details -->
-      <div id="form-step-1">
-        <div class="form-group">
-          <label>Select AI Agent</label>
-          <div id="agent-picker" style="display:flex;flex-direction:column;gap:8px"></div>
-          <input type="hidden" id="selected-agent-addr"/>
-        </div>
-        <div class="form-group">
-          <label>Job Title</label>
-          <input id="job-title" type="text" placeholder="e.g. Summarize this research paper"/>
-        </div>
-        <div class="form-group">
-          <label>Category</label>
-          <select id="job-category">
-            <option value="Research">Research</option>
-            <option value="Analysis">Analysis</option>
-            <option value="Writing">Writing</option>
-            <option value="Summary">Summary</option>
-            <option value="Other">Other</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Description</label>
-          <textarea id="job-desc" rows="4" placeholder="Describe what you need. You can include public URLs and the agent will read them."></textarea>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-          <div class="form-group">
-            <label>Budget (USDC)</label>
-            <input id="job-budget" type="number" min="1" step="0.5" value="5" placeholder="5"/>
-          </div>
-          <div class="form-group">
-            <label>Deadline (Hours)</label>
-            <input id="job-deadline" type="number" min="1" max="720" value="24" placeholder="24"/>
-          </div>
-        </div>
-        <button class="btn btn-primary" style="width:100%" onclick="goToStep2()">Continue →</button>
-      </div>
-
-      <!-- Step 2: Confirm & fund -->
-      <div id="form-step-2" style="display:none">
-        <div class="notice notice-info" style="margin-bottom:20px">
-          ℹ Two MetaMask prompts: first to approve USDC, then to post the job.
-        </div>
-        <div id="job-summary" style="margin-bottom:20px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:16px;font-size:13px;display:flex;flex-direction:column;gap:8px"></div>
-        <div style="display:flex;gap:10px">
-          <button class="btn btn-ghost" style="flex:1" onclick="goToStep1()">← Back</button>
-          <button class="btn btn-primary" style="flex:2" id="submit-job-btn" onclick="submitJob()">
-            Approve USDC & Post Job
-          </button>
-        </div>
-        <div class="form-hint" style="margin-top:10px;text-align:center">USDC will lock in escrow until you approve the deliverable</div>
-      </div>
+      <div class="field-hint" style="text-align:center;margin-top:10px">USDC locks in escrow until you approve the deliverable</div>
     </div>
   </div>
 </div>
+</div>
 
-<!-- ── Deliverable Modal ───────────────── -->
-<div class="modal-backdrop" id="deliverable-modal">
-  <div class="modal">
-    <div class="modal-header">
-      <div class="modal-title">Agent Deliverable</div>
-      <button class="modal-close" onclick="closeModal('deliverable-modal')">✕</button>
-    </div>
-    <div class="modal-body">
-      <div id="deliverable-content"></div>
-    </div>
-  </div>
+<div class="overlay" id="d-modal">
+<div class="modal" style="max-width:600px">
+  <div class="m-head"><div class="m-title">Deliverable</div><div class="m-x" onclick="cM('d-modal')">✕</div></div>
+  <div class="m-body" id="d-body"></div>
+</div>
 </div>
 
 <script>
-// ─── Config ───────────────────────────────────────────
-const API_BASE  = 'http://localhost:3001';
-const ARC_RPC   = 'https://rpc.testnet.arc.network';
-const ARC_CHAIN = 5042002; // Arc Testnet chain ID
-const EXPLORER  = 'https://testnet.arcscan.app';
+const API='http://localhost:3001',RPC='https://rpc.testnet.arc.network',CHAIN=5042002,EXP='https://testnet.arcscan.app';
+let JOB_BOARD='',USDC_ADDR='';
+const BABI=['function postAndFundJob(address,string,string,string,uint256,uint256) returns (uint256)','function approveJob(uint256)','function rejectJob(uint256)','function claimExpiredJob(uint256)'];
+const EABI=['function approve(address,uint256) returns (bool)'];
+let wallet=null,signer=null,allJobs=[],allAgents=[],jFlt='all',selA=null;
 
-let JOB_BOARD   = '';
-let USDC_ADDR   = '';
+async function init(){try{const c=await g('/api/config');JOB_BOARD=c.jobBoardAddress;USDC_ADDR=c.usdcAddress;}catch(e){}ref();setInterval(ref,30000);}
+async function ref(){lStats();lJobs();lAgents();}
+async function g(p){const r=await fetch(API+p);if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.error||r.statusText);}return r.json();}
 
-const JOB_BOARD_ABI = [
-  'function postAndFundJob(address agent, string title, string description, string category, uint256 budget, uint256 deadlineHours) returns (uint256)',
-  'function approveJob(uint256 jobId)',
-  'function rejectJob(uint256 jobId)',
-  'function claimExpiredJob(uint256 jobId)',
-];
-
-const ERC20_ABI = [
-  'function approve(address spender, uint256 amount) returns (bool)',
-  'function allowance(address owner, address spender) view returns (uint256)',
-];
-
-// ─── State ───────────────────────────────────────────
-let wallet       = null;
-let signer       = null;
-let allJobs      = [];
-let allAgents    = [];
-let jobFilter    = 'all';
-let selectedAgent = null;
-
-// ─── Init ────────────────────────────────────────────
-async function init() {
-  try {
-    const cfg = await apiFetch('/api/config');
-    JOB_BOARD = cfg.jobBoardAddress;
-    USDC_ADDR = cfg.usdcAddress;
-  } catch {}
-  await loadAll();
-  setInterval(loadAll, 30_000);
+function showPage(n){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.nl').forEach(l=>l.classList.remove('on'));
+  document.getElementById('page-'+n).classList.add('on');
+  ['home','jobs','agents','dashboard'].forEach((x,i)=>{if(x===n)document.querySelectorAll('.nl')[i]?.classList.add('on');});
+  if(n==='dashboard')lDash();
 }
 
-async function loadAll() {
-  loadStats();
-  loadJobs();
-  loadAgents();
+async function lStats(){
+  try{const s=await g('/api/stats');document.getElementById('stats-bar').innerHTML=`<div class="stat"><div class="stat-n">${s.totalJobs}</div><div class="stat-l">Total Jobs</div></div><div class="stat"><div class="stat-n">${s.completedJobs}</div><div class="stat-l">Completed</div></div><div class="stat"><div class="stat-n">$${s.totalVolumeUsdc}</div><div class="stat-l">Volume USDC</div></div><div class="stat"><div class="stat-n">1</div><div class="stat-l">Active Agents</div></div>`;}catch(e){}
 }
 
-// ─── Pages ───────────────────────────────────────────
-function showPage(name) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-  document.getElementById(`page-${name}`).classList.add('active');
-  const tabs = document.querySelectorAll('.nav-tab');
-  const names = ['home','jobs','agents','dashboard'];
-  tabs[names.indexOf(name)]?.classList.add('active');
-
-  if (name === 'dashboard') loadDashboard();
+async function lJobs(){
+  try{allJobs=await g('/api/jobs');rJobs();rHome();rHero();}
+  catch(e){document.getElementById('jobs-list').innerHTML=eH('⚠','Could not load jobs',e.message);}
 }
 
-// ─── API ─────────────────────────────────────────────
-async function apiFetch(path) {
-  const r = await fetch(API_BASE + path);
-  if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(e.error || r.statusText); }
-  return r.json();
+function stag(j){
+  if(j.isExpired)return'<span class="tag tag-expired">Expired</span>';
+  const m={0:'tag-open Open',1:'tag-funded Active',2:'tag-submitted Submitted',3:'tag-completed Completed',4:'tag-rejected Rejected'};
+  const[c,l]=(m[j.status]||'tag-open ?').split(' ');return`<span class="tag ${c}">${l}</span>`;
+}
+function sh(a){return a?`${a.slice(0,6)}…${a.slice(-4)}`:'—';}
+
+function jrH(j,acts=''){return`<div class="jr"><div><div class="jt-txt">${esc(j.title)}</div><div class="jd-txt">${esc(j.description)}</div><span class="jcat">${esc(j.category)}</span></div><div>${stag(j)}</div><div class="jbudget">$${j.budget}</div><div class="jacts">${acts}</div></div>`;}
+
+function jActs(j){
+  if(j.status===2&&wallet&&j.client.toLowerCase()===wallet.toLowerCase())return`<button class="btn btn-ghost btn-xs" onclick="vDel(${j.id})">View</button><button class="btn btn-primary btn-xs" onclick="appJ(${j.id})">Approve</button><button class="btn btn-danger btn-xs" onclick="rejJ(${j.id})">Reject</button>`;
+  if(j.deliverableUrl)return`<button class="btn btn-ghost btn-xs" onclick="vDel(${j.id})">View</button>`;
+  if(j.isExpired&&wallet&&j.client.toLowerCase()===wallet.toLowerCase())return`<button class="btn btn-danger btn-xs" onclick="clmJ(${j.id})">Reclaim</button>`;
+  return'';
 }
 
-// ─── Stats ───────────────────────────────────────────
-async function loadStats() {
-  try {
-    const s = await apiFetch('/api/stats');
-    document.getElementById('stats-bar').innerHTML = `
-      <div class="stat-item"><span class="stat-value">${s.totalJobs}</span><span class="stat-label">Total Jobs</span></div>
-      <div class="stat-item"><span class="stat-value">${s.completedJobs}</span><span class="stat-label">Completed</span></div>
-      <div class="stat-item"><span class="stat-value">$${s.totalVolumeUsdc}</span><span class="stat-label">Volume (USDC)</span></div>
-      <div class="stat-item"><span class="stat-value">1</span><span class="stat-label">Active Agents</span></div>
-    `;
-  } catch {}
+function fj(f){jFlt=f;document.querySelectorAll('.fb').forEach(b=>b.classList.toggle('on',b.dataset.f===f));rJobs();}
+
+function rJobs(){
+  const fl=jFlt==='all'?allJobs:allJobs.filter(j=>String(j.status)===jFlt);
+  const el=document.getElementById('jobs-list');
+  document.getElementById('jobs-count').textContent=fl.length;
+  el.innerHTML=fl.length?fl.map(j=>jrH(j)).join(''):eH('📋','No jobs yet','Post the first one!');
 }
 
-// ─── Jobs ─────────────────────────────────────────────
-async function loadJobs() {
-  try {
-    allJobs = await apiFetch('/api/jobs');
-    renderJobs();
-    renderHomeJobs();
-  } catch (err) {
-    document.getElementById('jobs-list').innerHTML = `<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-title">Could not load jobs</div><div class="empty-text">${err.message}</div></div>`;
-  }
+function rHome(){
+  const r=[...allJobs].slice(-5).reverse();
+  document.getElementById('home-jobs').innerHTML=r.length?r.map(j=>jrH(j)).join(''):eH('🚀','No jobs yet','Be the first to post.');
 }
 
-function statusTag(job) {
-  if (job.isExpired) return `<span class="tag tag-expired">Expired</span>`;
-  const map = { 0:'tag-open Open', 1:'tag-funded Active', 2:'tag-submitted Submitted', 3:'tag-completed Completed', 4:'tag-rejected Rejected' };
-  const v = map[job.status] || 'tag-cat Unknown';
-  const [cls, label] = v.split(' ');
-  return `<span class="tag ${cls}">${label}</span>`;
+function rHero(){
+  const r=[...allJobs].slice(-4).reverse();
+  if(!r.length)return;
+  const sc={0:'hp-live',1:'hp-live',2:'hp-live',3:'hp-done',4:''};
+  const sl={0:'Open',1:'Active',2:'Submitted',3:'Done',4:'Rejected'};
+  document.getElementById('hero-panel').innerHTML=r.map(j=>`<div class="hp-job"><div><div class="hp-jn">${esc(j.title)}</div><div class="hp-jm"><span class="hp-s ${sc[j.status]||''}">${sl[j.status]||'—'}</span></div></div><span class="hp-amt">$${j.budget}</span></div>`).join('');
 }
 
-function shortAddr(a) { return a ? `${a.slice(0,6)}…${a.slice(-4)}` : '—'; }
-
-function jobCard(job, showActions = false) {
-  const actions = showActions ? buildJobActions(job) : '';
-  return `
-    <div class="job-card" id="job-card-${job.id}">
-      <div class="job-card-top">
-        <div>
-          <div class="job-title">${esc(job.title)}</div>
-          <div class="job-meta">
-            ${statusTag(job)}
-            <span class="tag tag-cat">${esc(job.category)}</span>
-          </div>
-        </div>
-        <div class="job-budget">$${job.budget} USDC</div>
-      </div>
-      <div class="job-desc">${esc(job.description)}</div>
-      <div class="job-footer">
-        <div class="job-agent-info">Agent: ${shortAddr(job.agent)} · Job #${job.id}</div>
-        <div class="job-actions">${actions}</div>
-      </div>
-    </div>
-  `;
+async function lAgents(){
+  try{allAgents=await g('/api/agents');document.getElementById('agents-list').innerHTML=allAgents.map(aH).join('');}catch(e){}
 }
 
-function buildJobActions(job) {
-  if (job.status === 2 && wallet && job.client.toLowerCase() === wallet.toLowerCase()) {
-    return `
-      <button class="btn btn-ghost btn-sm" onclick="viewDeliverable(${job.id})">View Work</button>
-      <button class="btn btn-primary btn-sm" onclick="approveJob(${job.id})">Approve ✓</button>
-      <button class="btn btn-danger btn-sm" onclick="rejectJob(${job.id})">Reject</button>
-    `;
-  }
-  if (job.deliverableUrl) {
-    return `<button class="btn btn-ghost btn-sm" onclick="viewDeliverable(${job.id})">View Work</button>`;
-  }
-  if (job.isExpired && wallet && job.client.toLowerCase() === wallet.toLowerCase()) {
-    return `<button class="btn btn-danger btn-sm" onclick="claimExpired(${job.id})">Reclaim USDC</button>`;
-  }
-  return '';
+function aH(a){
+  const sc=a.liveStatus==='running'?'pip-live':a.isLive?'pip-idle':'pip-off';
+  const sl=a.liveStatus==='running'?'Running':a.isLive?'Idle':'Offline';
+  return`<div class="ac"><div class="ac-top"><div class="ac-hdr"><div class="ac-icon">🤖</div><div class="ac-live"><div class="pip ${sc}"></div><span style="color:var(--ink4)">${sl}</span></div></div><div class="ac-name">${esc(a.name)}</div><div class="ac-desc">${esc(a.description)}</div><div class="ac-caps">${(a.capabilities||[]).map(c=>`<span class="cap">${esc(c)}</span>`).join('')}</div></div><div class="ac-stats"><div class="ac-stat"><span class="ac-sv">${a.completedJobs??0}</span><span class="ac-sk">Completed</span></div><div class="ac-stat"><span class="ac-sv">${a.isVerified?'✓':'—'}</span><span class="ac-sk">Verified</span></div><div class="ac-stat"><span class="ac-sv">2.5%</span><span class="ac-sk">Fee</span></div></div><div class="ac-id"><div class="ac-ir"><span class="ac-ik">ERC-8004 ID</span><span class="ac-iv ${a.identityTokenId?'':'dim'}">${a.identityTokenId?'#'+a.identityTokenId:'Pending'}</span></div><div class="ac-ir"><span class="ac-ik">Verified</span><span class="ac-iv ${a.isVerified?'ok':'dim'}">${a.isVerified?'Yes':'Pending'}</span></div><div class="ac-ir"><span class="ac-ik">Wallet</span><span class="ac-iv">${sh(a.walletAddress)}</span></div><div class="ac-ir"><span class="ac-ik">Budget</span><span class="ac-iv">$${a.minBudget}–$${a.maxBudget}</span></div></div>${a.lastError?`<div class="ib ib-red" style="margin:12px 16px">⚠ ${esc(a.lastError)}</div>`:''}<div class="ac-foot"><button class="btn btn-primary" style="width:100%" onclick="openPostFor('${esc(a.walletAddress)}','${esc(a.name)}')">Hire ${esc(a.name)} →</button></div></div>`;
 }
 
-function filterJobs(f) {
-  jobFilter = f;
-  document.querySelectorAll('.filter-btn').forEach(b => b.classList.toggle('active', b.dataset.filter === f));
-  renderJobs();
+async function lDash(){
+  if(!wallet){document.getElementById('d-nw').style.display='';document.getElementById('d-con').style.display='none';return;}
+  document.getElementById('d-nw').style.display='none';document.getElementById('d-con').style.display='';
+  try{const jobs=await g(`/api/client/${wallet}/jobs`);document.getElementById('my-ct').textContent=jobs.length;const el=document.getElementById('my-jobs');el.innerHTML=jobs.length?jobs.map(j=>jrH(j,jActs(j))).join(''):eH('📋','No jobs posted','Post your first job to get started.');}
+  catch(e){document.getElementById('my-jobs').innerHTML=eH('⚠','Error',e.message);}
 }
 
-function renderJobs() {
-  let filtered = jobFilter === 'all' ? allJobs : allJobs.filter(j => String(j.status) === jobFilter);
-  const el = document.getElementById('jobs-list');
-  const ct = document.getElementById('jobs-count');
-  ct.textContent = filtered.length;
-  if (!filtered.length) {
-    el.innerHTML = `<div class="empty"><div class="empty-icon">📋</div><div class="empty-title">No jobs found</div><div class="empty-text">Be the first to post a job!</div></div>`;
-    return;
-  }
-  el.innerHTML = filtered.map(j => jobCard(j)).join('');
+function openPost(){if(!wallet)return toast('Connect your wallet first','err');gS1();bPicker('');oM('post-modal');}
+function openPostFor(addr,name){if(!wallet)return toast('Connect your wallet first','err');gS1();bPicker(addr);oM('post-modal');}
+
+function bPicker(pre){
+  const el=document.getElementById('a-picker');
+  if(!allAgents.length){el.innerHTML='<div class="field-hint">No agents available</div>';return;}
+  el.innerHTML=allAgents.map(a=>`<div class="a-pick ${a.walletAddress===pre?'sel':''}" onclick="pA('${a.walletAddress}','${a.name}',this)"><div style="font-size:18px">🤖</div><div><div class="a-pick-n">${esc(a.name)} ${a.isVerified?'✓':''}</div><div class="a-pick-s">${(a.capabilities||[]).slice(0,3).join(' · ')}</div></div></div>`).join('');
+  if(pre){const a=allAgents.find(a=>a.walletAddress===pre);if(a)pA(a.walletAddress,a.name,null);}
+  else if(allAgents.length===1){pA(allAgents[0].walletAddress,allAgents[0].name,null);document.querySelector('.a-pick')?.classList.add('sel');}
 }
 
-function renderHomeJobs() {
-  const recent = [...allJobs].slice(-6).reverse();
-  const el = document.getElementById('home-jobs');
-  if (!recent.length) {
-    el.innerHTML = `<div class="empty"><div class="empty-icon">🚀</div><div class="empty-title">No jobs yet — post the first one!</div></div>`;
-    return;
-  }
-  el.innerHTML = recent.map(j => jobCard(j)).join('');
+function pA(addr,name,el){document.querySelectorAll('.a-pick').forEach(c=>c.classList.remove('sel'));el?.classList.add('sel');selA={addr,name};}
+
+function gS1(){document.getElementById('s1').style.display='';document.getElementById('s2').style.display='none';document.getElementById('prog').style.width='50%';}
+
+function gS2(){
+  const t=document.getElementById('f-title').value.trim(),d=document.getElementById('f-desc').value.trim(),b=parseFloat(document.getElementById('f-budget').value),dl=parseInt(document.getElementById('f-dead').value),cat=document.getElementById('f-cat').value,addr=selA?.addr||'';
+  if(!addr)return toast('Select an agent','err');
+  if(!t)return toast('Title required','err');
+  if(!d)return toast('Description required','err');
+  if(!b||b<=0)return toast('Budget > 0 required','err');
+  if(!dl||dl<1||dl>720)return toast('Deadline 1-720 hours','err');
+  document.getElementById('s1').style.display='none';document.getElementById('s2').style.display='';document.getElementById('prog').style.width='100%';
+  document.getElementById('crows').innerHTML=`<div class="cr"><span class="ck">Agent</span><span class="cv">${esc(selA?.name||sh(addr))}</span></div><div class="cr"><span class="ck">Title</span><span class="cv">${esc(t)}</span></div><div class="cr"><span class="ck">Category</span><span class="cv">${esc(cat)}</span></div><div class="cr"><span class="ck">Budget</span><span class="cv hi">$${b.toFixed(2)} USDC</span></div><div class="cr"><span class="ck">Deadline</span><span class="cv">${dl} hours</span></div><div class="cr"><span class="ck">Platform fee</span><span class="cv">2.5% on approval</span></div>`;
 }
 
-// ─── Agents ───────────────────────────────────────────
-async function loadAgents() {
-  try {
-    allAgents = await apiFetch('/api/agents');
-    renderAgents();
-  } catch {}
+async function submitJob(){
+  const btn=document.getElementById('sub-btn'),t=document.getElementById('f-title').value.trim(),d=document.getElementById('f-desc').value.trim(),cat=document.getElementById('f-cat').value,b=parseFloat(document.getElementById('f-budget').value),dl=parseInt(document.getElementById('f-dead').value),addr=selA?.addr||'';
+  if(!signer||!JOB_BOARD)return toast('Wallet or contract not ready','err');
+  const wei=BigInt(Math.round(b*1_000_000));
+  try{btn.disabled=true;btn.innerHTML='<span class="spin"></span> Approving USDC…';const usdc=new ethers.Contract(USDC_ADDR,EABI,signer);await(await usdc.approve(JOB_BOARD,wei)).wait();toast('USDC approved ✓','ok');btn.innerHTML='<span class="spin"></span> Posting job…';const board=new ethers.Contract(JOB_BOARD,BABI,signer);const tx=await board.postAndFundJob(addr,t,d,cat,wei,dl);const rc=await tx.wait();toast(`Job posted! Tx: ${rc.hash.slice(0,10)}…`,'ok');cM('post-modal');ref();setTimeout(()=>{showPage('dashboard');lDash();},800);}
+  catch(e){toast(e.reason||e.message?.slice(0,80)||'Failed','err');}
+  finally{btn.disabled=false;btn.innerHTML='Approve USDC & Post';}
 }
 
-function renderAgents() {
-  const el = document.getElementById('agents-list');
-  if (!allAgents.length) {
-    el.innerHTML = `<div class="empty"><div class="empty-icon">🤖</div><div class="empty-title">No agents registered yet</div></div>`;
-    return;
-  }
-  el.innerHTML = allAgents.map(agentCard).join('');
+async function appJ(id){if(!signer)return toast('Connect wallet','err');if(!confirm('Approve and release USDC?'))return;try{const b=new ethers.Contract(JOB_BOARD,BABI,signer);toast('Approving…','info');await(await b.approveJob(id)).wait();toast('Approved! USDC released ✓','ok');ref();lDash();}catch(e){toast(e.reason||e.message?.slice(0,80),'err');}}
+async function rejJ(id){if(!signer)return toast('Connect wallet','err');if(!confirm('Reject and refund USDC?'))return;try{const b=new ethers.Contract(JOB_BOARD,BABI,signer);toast('Rejecting…','info');await(await b.rejectJob(id)).wait();toast('Rejected. Refunded ✓','ok');ref();lDash();}catch(e){toast(e.reason||e.message?.slice(0,80),'err');}}
+async function clmJ(id){if(!signer)return toast('Connect wallet','err');if(!confirm('Reclaim USDC?'))return;try{const b=new ethers.Contract(JOB_BOARD,BABI,signer);await(await b.claimExpiredJob(id)).wait();toast('USDC reclaimed ✓','ok');ref();lDash();}catch(e){toast(e.reason||e.message?.slice(0,80),'err');}}
+
+async function vDel(id){
+  const job=allJobs.find(j=>j.id===id);if(!job?.deliverableUrl)return toast('No deliverable yet','info');
+  document.getElementById('d-body').innerHTML='<div style="text-align:center;padding:40px"><span class="spin"></span></div>';oM('d-modal');
+  try{const r=await fetch(job.deliverableUrl,{headers:{Accept:'application/json'}});if(!r.ok)throw new Error('Could not fetch');const d=await r.json();document.getElementById('d-body').innerHTML=`<div style="font-family:var(--M);font-size:11px;color:var(--ink4);margin-bottom:14px;display:flex;justify-content:space-between"><span>Job #${id} · ${esc(d.jobTitle||job.title)}</span>${d.submitTxHash?`<a href="${EXP}/tx/${d.submitTxHash}" target="_blank" style="color:var(--orange);text-decoration:none">Arc tx ↗</a>`:''}</div><div class="d-box">${esc(d.text||d.summary||'(empty)')}</div><div style="margin-top:14px;display:flex;justify-content:flex-end"><a href="${esc(job.deliverableUrl)}" target="_blank" class="btn btn-ghost btn-sm">Open full page ↗</a></div>`;}
+  catch(e){document.getElementById('d-body').innerHTML=`<div class="ib ib-red">${esc(e.message)}</div><a href="${esc(job.deliverableUrl)}" target="_blank" class="btn btn-primary" style="margin-top:12px">Open Deliverable ↗</a>`;}
 }
 
-function agentCard(a) {
-  const statusCls  = a.isLive ? (a.liveStatus === 'running' ? 'live' : 'idle') : 'offline';
-  const statusText = a.liveStatus === 'running' ? 'Running' : a.isLive ? 'Idle — ready' : 'Offline';
-  const caps       = (a.capabilities || []).map(c => `<span class="cap-tag">${esc(c)}</span>`).join('');
-  const idRow      = a.identityTokenId ? `<div class="agent-identity-row"><span class="agent-identity-key">ERC-8004 ID</span><span class="agent-identity-value">#${esc(a.identityTokenId)}</span></div>` : '';
-  const verRow     = `<div class="agent-identity-row"><span class="agent-identity-key">Verified</span><span class="agent-identity-value">${a.isVerified ? '✓ Yes' : '⏳ Pending'}</span></div>`;
-  const budgetRow  = `<div class="agent-identity-row"><span class="agent-identity-key">Budget range</span><span class="agent-identity-value">$${a.minBudget}–$${a.maxBudget} USDC</span></div>`;
-
-  return `
-    <div class="agent-card">
-      <div class="agent-card-header">
-        <div>
-          <div style="display:flex;align-items:center;gap:10px">
-            <div class="agent-avatar">🤖</div>
-            <div>
-              <div class="agent-name">${esc(a.name)}</div>
-              <div class="agent-status">
-                <div class="status-dot ${statusCls}"></div>
-                <span style="color:var(--muted)">${statusText}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="agent-body">
-        <div class="agent-desc">${esc(a.description)}</div>
-        <div class="agent-caps">${caps}</div>
-        <div class="agent-stats">
-          <div class="agent-stat">
-            <span class="agent-stat-value">${a.completedJobs ?? 0}</span>
-            <span class="agent-stat-label">Completed</span>
-          </div>
-          <div class="agent-stat">
-            <span class="agent-stat-value">${a.validationStatus === 100 ? '✓' : '—'}</span>
-            <span class="agent-stat-label">Validated</span>
-          </div>
-          <div class="agent-stat">
-            <span class="agent-stat-value">2.5%</span>
-            <span class="agent-stat-label">Platform fee</span>
-          </div>
-        </div>
-        <div class="agent-identity">
-          ${idRow}
-          ${verRow}
-          ${budgetRow}
-          <div class="agent-identity-row"><span class="agent-identity-key">Wallet</span><span class="agent-identity-value">${shortAddr(a.walletAddress)}</span></div>
-        </div>
-        ${a.lastError ? `<div class="notice notice-warn" style="margin-top:12px;font-size:11px;font-family:var(--mono)">⚠ ${esc(a.lastError)}</div>` : ''}
-      </div>
-      <div class="agent-card-footer">
-        <button class="btn btn-primary" style="width:100%" onclick="openPostJobForAgent('${esc(a.walletAddress)}', '${esc(a.name)}')">
-          Hire ${esc(a.name)} →
-        </button>
-      </div>
-    </div>
-  `;
+async function connectWallet(){
+  if(!window.ethereum)return toast('MetaMask not found','err');
+  try{await window.ethereum.request({method:'eth_requestAccounts'});const p=new ethers.BrowserProvider(window.ethereum);const net=await p.getNetwork();if(Number(net.chainId)!==CHAIN){try{await window.ethereum.request({method:'wallet_switchEthereumChain',params:[{chainId:'0x'+CHAIN.toString(16)}]});}catch{await window.ethereum.request({method:'wallet_addEthereumChain',params:[{chainId:'0x'+CHAIN.toString(16),chainName:'Arc Testnet',rpcUrls:[RPC],nativeCurrency:{name:'USDC',symbol:'USDC',decimals:6},blockExplorerUrls:[EXP]}]});}}signer=await p.getSigner();wallet=await signer.getAddress();document.getElementById('con-btn').style.display='none';document.getElementById('post-btn').style.display='';document.getElementById('wd').style.display='';document.getElementById('wd').innerHTML=`<div class="w-chip"><div class="pip" style="background:var(--teal)"></div>${sh(wallet)}</div>`;toast(`Connected: ${sh(wallet)}`,'ok');if(document.getElementById('page-dashboard').classList.contains('on'))lDash();}
+  catch(e){toast(e.message?.slice(0,80)||'Failed','err');}
 }
 
-// ─── Dashboard ────────────────────────────────────────
-async function loadDashboard() {
-  if (!wallet) {
-    document.getElementById('dash-no-wallet').style.display = '';
-    document.getElementById('dash-content').style.display = 'none';
-    return;
-  }
-  document.getElementById('dash-no-wallet').style.display = 'none';
-  document.getElementById('dash-content').style.display = '';
+function oM(id){document.getElementById(id).classList.add('on');}
+function cM(id){document.getElementById(id).classList.remove('on');}
+document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('on');}));
 
-  try {
-    const myJobs = await apiFetch(`/api/client/${wallet}/jobs`);
-    const ct     = document.getElementById('my-jobs-count');
-    const el     = document.getElementById('my-jobs-list');
-    ct.textContent = myJobs.length;
+function toast(msg,type='info'){const el=document.createElement('div');el.className=`toast ${type==='err'?'t-err':type==='ok'?'t-ok':'t-info'}`;el.textContent=msg;document.getElementById('toasts').appendChild(el);setTimeout(()=>el.remove(),4000);}
+function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function eH(icon,t,d){return`<div class="jr"><div class="empty"><div class="empty-icon">${icon}</div><div class="empty-t">${t}</div><div class="empty-d">${d}</div></div><div></div><div></div><div></div></div>`;}
 
-    if (!myJobs.length) {
-      el.innerHTML = `<div class="empty"><div class="empty-icon">📋</div><div class="empty-title">No jobs posted yet</div><div class="empty-text">Post your first job and an agent will pick it up automatically.</div></div>`;
-      return;
-    }
-    el.innerHTML = myJobs.map(j => jobCard(j, true)).join('');
-  } catch (err) {
-    document.getElementById('my-jobs-list').innerHTML = `<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-title">Error</div><div class="empty-text">${err.message}</div></div>`;
-  }
-}
-
-// ─── Post Job ─────────────────────────────────────────
-function openPostJob() {
-  if (!wallet) { toast('Connect your wallet first', 'error'); return; }
-  goToStep1();
-  buildAgentPicker();
-  openModal('post-modal');
-}
-
-function openPostJobForAgent(addr, name) {
-  if (!wallet) { toast('Connect your wallet first', 'error'); return; }
-  goToStep1();
-  buildAgentPicker(addr);
-  openModal('post-modal');
-}
-
-function buildAgentPicker(preselect = '') {
-  const el = document.getElementById('agent-picker');
-  if (!allAgents.length) {
-    el.innerHTML = '<div class="form-hint">Loading agents…</div>';
-    return;
-  }
-  el.innerHTML = allAgents.map(a => `
-    <div class="agent-select-card ${a.walletAddress === preselect ? 'selected' : ''}"
-         onclick="selectAgent('${a.walletAddress}', '${a.name}', this)">
-      <div class="agent-select-icon">🤖</div>
-      <div>
-        <div class="agent-select-name">${esc(a.name)} ${a.isVerified ? '✓' : ''}</div>
-        <div class="agent-select-desc">${esc(a.capabilities?.slice(0,3).join(' · ') || '')}</div>
-      </div>
-    </div>
-  `).join('');
-
-  if (preselect) {
-    const found = allAgents.find(a => a.walletAddress === preselect);
-    if (found) selectAgent(found.walletAddress, found.name, null);
-  } else if (allAgents.length === 1) {
-    selectAgent(allAgents[0].walletAddress, allAgents[0].name, null);
-    document.querySelector('.agent-select-card')?.classList.add('selected');
-  }
-}
-
-function selectAgent(addr, name, el) {
-  document.querySelectorAll('.agent-select-card').forEach(c => c.classList.remove('selected'));
-  el?.classList.add('selected');
-  selectedAgent = { addr, name };
-  document.getElementById('selected-agent-addr').value = addr;
-}
-
-function goToStep2() {
-  const title    = document.getElementById('job-title').value.trim();
-  const desc     = document.getElementById('job-desc').value.trim();
-  const budget   = parseFloat(document.getElementById('job-budget').value);
-  const deadline = parseInt(document.getElementById('job-deadline').value);
-  const agentAddr = document.getElementById('selected-agent-addr').value;
-
-  if (!agentAddr)           return toast('Select an agent', 'error');
-  if (!title)               return toast('Job title required', 'error');
-  if (!desc)                return toast('Description required', 'error');
-  if (!budget || budget<=0) return toast('Budget must be > 0', 'error');
-  if (!deadline || deadline<1 || deadline>720) return toast('Deadline must be 1–720 hours', 'error');
-
-  document.getElementById('form-step-1').style.display = 'none';
-  document.getElementById('form-step-2').style.display = '';
-  document.getElementById('fstep-2').classList.add('active');
-
-  const agentName = selectedAgent?.name || shortAddr(agentAddr);
-  document.getElementById('job-summary').innerHTML = `
-    <div style="display:flex;justify-content:space-between"><span style="color:var(--muted)">Agent</span><strong>${esc(agentName)}</strong></div>
-    <div style="display:flex;justify-content:space-between"><span style="color:var(--muted)">Title</span><strong>${esc(title)}</strong></div>
-    <div style="display:flex;justify-content:space-between"><span style="color:var(--muted)">Category</span><strong>${esc(document.getElementById('job-category').value)}</strong></div>
-    <div style="display:flex;justify-content:space-between"><span style="color:var(--muted)">Budget</span><strong style="color:var(--green)">$${budget.toFixed(2)} USDC</strong></div>
-    <div style="display:flex;justify-content:space-between"><span style="color:var(--muted)">Deadline</span><strong>${deadline}h</strong></div>
-    <div style="display:flex;justify-content:space-between"><span style="color:var(--muted)">Platform fee</span><strong>2.5% on approval</strong></div>
-  `;
-}
-
-function goToStep1() {
-  document.getElementById('form-step-1').style.display = '';
-  document.getElementById('form-step-2').style.display = 'none';
-  document.getElementById('fstep-1').classList.add('done');
-  document.getElementById('fstep-2').classList.remove('active', 'done');
-}
-
-async function submitJob() {
-  const btn     = document.getElementById('submit-job-btn');
-  const title   = document.getElementById('job-title').value.trim();
-  const desc    = document.getElementById('job-desc').value.trim();
-  const cat     = document.getElementById('job-category').value;
-  const budget  = parseFloat(document.getElementById('job-budget').value);
-  const deadline= parseInt(document.getElementById('job-deadline').value);
-  const agentAddr = document.getElementById('selected-agent-addr').value;
-
-  if (!signer || !JOB_BOARD) return toast('Wallet or contract not ready', 'error');
-
-  const budgetWei = BigInt(Math.round(budget * 1_000_000)); // USDC 6 decimals
-
-  try {
-    btn.disabled = true;
-    btn.innerHTML = '<span class="loader"></span> Approving USDC…';
-
-    const usdc = new ethers.Contract(USDC_ADDR, ERC20_ABI, signer);
-    const approveTx = await usdc.approve(JOB_BOARD, budgetWei);
-    await approveTx.wait();
-    toast('USDC approved ✓', 'success');
-
-    btn.innerHTML = '<span class="loader"></span> Posting job…';
-
-    const board = new ethers.Contract(JOB_BOARD, JOB_BOARD_ABI, signer);
-    const tx = await board.postAndFundJob(agentAddr, title, desc, cat, budgetWei, deadline);
-    const receipt = await tx.wait();
-
-    toast(`Job posted! Tx: ${receipt.hash.slice(0,10)}…`, 'success');
-    closeModal('post-modal');
-    loadJobs();
-    loadStats();
-    setTimeout(() => { showPage('dashboard'); loadDashboard(); }, 800);
-  } catch (err) {
-    toast(err.reason || err.message?.slice(0,80) || 'Transaction failed', 'error');
-  } finally {
-    btn.disabled = false;
-    btn.innerHTML = 'Approve USDC & Post Job';
-  }
-}
-
-// ─── Job Actions ─────────────────────────────────────
-async function approveJob(jobId) {
-  if (!signer) return toast('Connect wallet', 'error');
-  if (!confirm('Approve this deliverable and release USDC to the agent?')) return;
-  try {
-    const board = new ethers.Contract(JOB_BOARD, JOB_BOARD_ABI, signer);
-    const tx = await board.approveJob(jobId);
-    toast('Approving…', 'info');
-    await tx.wait();
-    toast('Job approved! USDC released ✓', 'success');
-    loadJobs(); loadDashboard();
-  } catch (err) { toast(err.reason || err.message?.slice(0,80), 'error'); }
-}
-
-async function rejectJob(jobId) {
-  if (!signer) return toast('Connect wallet', 'error');
-  if (!confirm('Reject this deliverable? USDC will be returned to you.')) return;
-  try {
-    const board = new ethers.Contract(JOB_BOARD, JOB_BOARD_ABI, signer);
-    const tx = await board.rejectJob(jobId);
-    toast('Rejecting…', 'info');
-    await tx.wait();
-    toast('Job rejected. USDC refunded ✓', 'success');
-    loadJobs(); loadDashboard();
-  } catch (err) { toast(err.reason || err.message?.slice(0,80), 'error'); }
-}
-
-async function claimExpired(jobId) {
-  if (!signer) return toast('Connect wallet', 'error');
-  if (!confirm('Reclaim USDC from expired job?')) return;
-  try {
-    const board = new ethers.Contract(JOB_BOARD, JOB_BOARD_ABI, signer);
-    const tx = await board.claimExpiredJob(jobId);
-    toast('Reclaiming…', 'info');
-    await tx.wait();
-    toast('USDC reclaimed ✓', 'success');
-    loadJobs(); loadDashboard();
-  } catch (err) { toast(err.reason || err.message?.slice(0,80), 'error'); }
-}
-
-// ─── Deliverable viewer ───────────────────────────────
-async function viewDeliverable(jobId) {
-  const job = allJobs.find(j => j.id === jobId);
-  if (!job?.deliverableUrl) return toast('No deliverable URL yet', 'info');
-
-  const el = document.getElementById('deliverable-content');
-  el.innerHTML = `<div style="text-align:center;padding:40px"><span class="loader"></span></div>`;
-  openModal('deliverable-modal');
-
-  try {
-    const res = await fetch(job.deliverableUrl, { headers: { Accept: 'application/json' } });
-    if (!res.ok) throw new Error('Could not fetch deliverable');
-    const data = await res.json();
-
-    el.innerHTML = `
-      <div style="margin-bottom:16px">
-        <div style="font-size:12px;color:var(--muted);font-family:var(--mono);margin-bottom:8px">
-          Job #${jobId} · ${data.jobTitle || job.title}
-          ${data.submitTxHash ? `· <a href="${EXPLORER}/tx/${data.submitTxHash}" target="_blank" style="color:var(--green);text-decoration:none">View Arc tx ↗</a>` : ''}
-        </div>
-      </div>
-      <div class="deliverable-box">${esc(data.text || data.summary || '(empty)')}</div>
-      <div style="margin-top:16px;display:flex;gap:10px;justify-content:flex-end">
-        <a href="${esc(job.deliverableUrl)}" target="_blank" class="btn btn-ghost btn-sm">Open Full Page ↗</a>
-      </div>
-    `;
-  } catch (err) {
-    el.innerHTML = `
-      <div class="notice notice-warn">${esc(err.message)}</div>
-      <div style="margin-top:12px">
-        <a href="${esc(job.deliverableUrl)}" target="_blank" class="btn btn-primary">Open Deliverable Page ↗</a>
-      </div>
-    `;
-  }
-}
-
-// ─── Wallet ───────────────────────────────────────────
-async function connectWallet() {
-  if (!window.ethereum) return toast('MetaMask not found — install it first', 'error');
-  try {
-    await window.ethereum.request({ method: 'eth_requestAccounts' });
-    const provider = new ethers.BrowserProvider(window.ethereum);
-    const network  = await provider.getNetwork();
-    if (Number(network.chainId) !== ARC_CHAIN) {
-      try {
-        await window.ethereum.request({
-          method: 'wallet_switchEthereumChain',
-          params: [{ chainId: '0x' + ARC_CHAIN.toString(16) }],
-        });
-      } catch {
-        await window.ethereum.request({
-          method: 'wallet_addEthereumChain',
-          params: [{
-            chainId: '0x' + ARC_CHAIN.toString(16),
-            chainName: 'Arc Testnet',
-            rpcUrls: [ARC_RPC],
-            nativeCurrency: { name: 'USDC', symbol: 'USDC', decimals: 6 },
-            blockExplorerUrls: [EXPLORER],
-          }],
-        });
-      }
-    }
-    signer = await provider.getSigner();
-    wallet = await signer.getAddress();
-    onWalletConnected();
-  } catch (err) {
-    toast(err.message?.slice(0,80) || 'Connection failed', 'error');
-  }
-}
-
-function onWalletConnected() {
-  document.getElementById('connect-btn').style.display = 'none';
-  document.getElementById('post-btn').style.display = '';
-  document.getElementById('wallet-display').style.display = '';
-  document.getElementById('wallet-display').innerHTML = `
-    <div class="wallet-badge">
-      <div class="dot"></div>
-      ${shortAddr(wallet)}
-    </div>
-  `;
-  toast(`Connected: ${shortAddr(wallet)}`, 'success');
-  if (document.getElementById('page-dashboard').classList.contains('active')) {
-    loadDashboard();
-  }
-}
-
-// ─── Modal ────────────────────────────────────────────
-function openModal(id) { document.getElementById(id).classList.add('open'); }
-function closeModal(id) { document.getElementById(id).classList.remove('open'); }
-
-document.querySelectorAll('.modal-backdrop').forEach(m => {
-  m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
-});
-
-// ─── Toast ────────────────────────────────────────────
-function toast(msg, type = 'info') {
-  const el = document.createElement('div');
-  el.className = `toast toast-${type}`;
-  el.textContent = msg;
-  document.getElementById('toast-container').appendChild(el);
-  setTimeout(() => el.remove(), 4000);
-}
-
-// ─── Utils ────────────────────────────────────────────
-function esc(s) {
-  return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
-// ─── Boot ─────────────────────────────────────────────
 init();
 </script>
 </body>

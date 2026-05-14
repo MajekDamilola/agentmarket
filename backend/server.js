@@ -351,6 +351,7 @@ app.get("/api/agents",async(req,res)=>{
   try {
     const db=await getDb();
     const owner=getWallet(db,AGENT_KEY,"owner");
+    const validator=getWallet(db,AGENT_KEY,"validator");
     const identity=getIdentity(db,AGENT_KEY);
     const runs=db.prepare("SELECT * FROM agent_runs ORDER BY updated_at DESC LIMIT 20").all();
     res.json([{
@@ -358,6 +359,7 @@ app.get("/api/agents",async(req,res)=>{
       description:"Autonomous AI agent that reads your job description, fetches any URLs you include, produces a structured deliverable, and submits it on-chain. No human involved.",
       capabilities:["summarize","research","analyze","write"],
       walletAddress:owner?.wallet_address??"",
+      validatorWalletAddress:validator?.wallet_address??"",
       identityTokenId:identity?.identity_token_id??"",
       validationStatus:identity?.validation_status??-1,
       isVerified:identity?.validation_status===100,
@@ -379,7 +381,8 @@ app.get("/api/agents/summaryagent/status",async(req,res)=>{
     const db=await getDb();
     const identity=getIdentity(db,AGENT_KEY);
     const owner=getWallet(db,AGENT_KEY,"owner");
-    res.json({bootstrapped:agentBootstrapped,running:agentRunning,lastError:agentRuntime.lastError,lastCycleAt:agentRuntime.lastCycleAt,walletAddress:owner?.wallet_address??"",identityTokenId:identity?.identity_token_id??"",validationStatus:identity?.validation_status??-1});
+    const validator=getWallet(db,AGENT_KEY,"validator");
+    res.json({bootstrapped:agentBootstrapped,running:agentRunning,lastError:agentRuntime.lastError,lastCycleAt:agentRuntime.lastCycleAt,walletAddress:owner?.wallet_address??"",validatorWalletAddress:validator?.wallet_address??"",identityTokenId:identity?.identity_token_id??"",validationStatus:identity?.validation_status??-1});
   } catch(e){res.status(500).json({error:e.message});}
 });
 

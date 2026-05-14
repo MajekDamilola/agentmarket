@@ -58,6 +58,19 @@ const STATUS_LABELS = ["Open","Funded","Submitted","Completed","Rejected"];
 function sameAddr(a,b) { return a?.toLowerCase()===b?.toLowerCase(); }
 function sleep(ms)     { return new Promise(r=>setTimeout(r,ms)); }
 function fmt6(v)       { return parseFloat(formatUnits(BigInt(v||0),6)).toFixed(2); }
+const UUID_V4_RE       = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+function circleIdempotencyKey(value="") {
+  const key=String(value||"").trim();
+  return UUID_V4_RE.test(key) ? key : randomUUID();
+}
+
+function formatError(err) {
+  const message=err?.response?.data?.message||err?.response?.data?.error||err?.message;
+  if(message) return String(message);
+  try { return JSON.stringify(err?.response?.data||err); }
+  catch { return String(err); }
+}
 
 function formatJob(j) {
   const status   = Number(j.status);
@@ -149,7 +162,7 @@ async function waitForCircleTx(txId,{timeoutMs=120000,pollMs=2500}={}) {
 }
 
 async function circleCall(walletId,contractAddress,sig,params,idempotencyKey) {
-  const res=await getCircle().createContractExecutionTransaction({walletId,blockchain:ARC_BLOCKCHAIN_ID,contractAddress,abiFunctionSignature:sig,abiParameters:params,fee:{type:"level",config:{feeLevel:"MEDIUM"}},...(idempotencyKey?{idempotencyKey}:{})});
+  const res=await getCircle().createContractExecutionTransaction({walletId,blockchain:ARC_BLOCKCHAIN_ID,contractAddress,abiFunctionSignature:sig,abiParameters:params,fee:{type:"level",config:{feeLevel:"MEDIUM"}},idempotencyKey:circleIdempotencyKey(idempotencyKey)});
   const txId=res?.data?.id;
   if(!txId) throw new Error("No tx id from Circle");
   return waitForCircleTx(txId);
@@ -174,11 +187,11 @@ async function ensureWallets(db) {
   if(eo?.wallet_id&&ev?.wallet_id) return {owner:eo,validator:ev};
   let wsId=eo?.wallet_set_id||ev?.wallet_set_id||"";
   if(!wsId) {
-    const r=await circle.createWalletSet({name:"AgentMarket SummaryAgent",idempotencyKey:"agentmarket-summaryagent-walletset-v1"});
+    const r=await circle.createWalletSet({name:"AgentMarket SummaryAgent",idempotencyKey:circleIdempotencyKey()});
     wsId=r?.data?.walletSet?.id;
     if(!wsId) throw new Error("No walletSetId from Circle");
   }
-  const wr=await circle.createWallets({blockchains:[ARC_BLOCKCHAIN_ID],count:2,walletSetId:wsId,accountType:"SCA",idempotencyKey:"agentmarket-summaryagent-wallets-v1"});
+  const wr=await circle.createWallets({blockchains:[ARC_BLOCKCHAIN_ID],count:2,walletSetId:wsId,accountType:"EOA",idempotencyKey:circleIdempotencyKey()});
   const [or,vr]=wr?.data?.wallets??[];
   if(!or?.id||!vr?.id) throw new Error("Circle did not return 2 wallets");
   const owner=saveWallet(db,AGENT_KEY,"owner",{walletId:or.id,walletAddress:or.address,walletSetId:wsId});
@@ -302,16 +315,17 @@ async function runAgentCycle() {
         await submitDeliverable(db,job,text);
         console.log(`[SummaryAgent] Delivered job #${job.id}`);
       } catch(err) {
-        console.error(`[SummaryAgent] Failed job #${job.id}:`,err.message);
+        const message=formatError(err);
+        console.error(`[SummaryAgent] Failed job #${job.id}:`,message);
         const run=getRun(db,job.id);
-        saveRun(db,{id:run?.id,job_id:job.id,status:"failed",error:err.message});
+        saveRun(db,{id:run?.id,job_id:job.id,status:"failed",error:message});
       }
     }
     agentRuntime.lastError="";
     agentRuntime.lastCycleAt=Date.now();
   } catch(err) {
-    agentRuntime.lastError=err.message;
-    console.warn("[SummaryAgent] Cycle error:",err.message);
+    agentRuntime.lastError=formatError(err);
+    console.warn("[SummaryAgent] Cycle error:",agentRuntime.lastError);
   } finally { agentRunning=false; }
 }
 

@@ -24,6 +24,7 @@ const VALIDATION_REGISTRY = "0x8004Cb1BF31DAf7788923b405b754f57acEB4272";
 const ZERO_ADDRESS        = "0x0000000000000000000000000000000000000000";
 const EXPLORER            = "https://testnet.arcscan.app";
 const ARC_BLOCKCHAIN_ID   = "ARC-TESTNET";
+const LOG_SCAN_FROM_BLOCK = 0n;
 
 const CIRCLE_API_KEY      = (process.env.CIRCLE_API_KEY || "").trim();
 const CIRCLE_ENTITY_SECRET= (process.env.CIRCLE_ENTITY_SECRET || "").trim();
@@ -54,6 +55,12 @@ const IDENTITY_ABI = [
 ];
 
 const STATUS_LABELS = ["Open","Funded","Submitted","Completed","Rejected"];
+const AGENT_WALLET_SET_NAME = "AgentMarket SummaryAgent";
+const AGENT_OWNER_NAME = "SummaryAgent Owner";
+const AGENT_OWNER_REF = "agentmarket-summaryagent-owner";
+const AGENT_VALIDATOR_NAME = "SummaryAgent Validator";
+const AGENT_VALIDATOR_REF = "agentmarket-summaryagent-validator";
+const VALIDATION_RESPONSE_EVENT = parseAbiItem("event ValidationResponse(address indexed validatorAddress, uint256 indexed agentId, bytes32 indexed requestHash, uint8 response, string responseURI, bytes32 responseHash, string tag)");
 
 function sameAddr(a,b) { return a?.toLowerCase()===b?.toLowerCase(); }
 function sleep(ms)     { return new Promise(r=>setTimeout(r,ms)); }
@@ -70,6 +77,30 @@ function formatError(err) {
   if(message) return String(message);
   try { return JSON.stringify(err?.response?.data||err); }
   catch { return String(err); }
+}
+
+function agentWalletMeta(role) {
+  return role==="owner"
+    ? {name:AGENT_OWNER_NAME,refId:AGENT_OWNER_REF}
+    : {name:AGENT_VALIDATOR_NAME,refId:AGENT_VALIDATOR_REF};
+}
+
+function toEpochMs(value) {
+  const time=Date.parse(value||"");
+  return Number.isFinite(time) ? time : 0;
+}
+
+function normalizeCircleWallet(wallet) {
+  if(!wallet?.id||!wallet?.address||!wallet?.walletSetId) return null;
+  return {
+    id:String(wallet.id),
+    address:String(wallet.address).toLowerCase(),
+    walletSetId:String(wallet.walletSetId),
+    name:String(wallet.name||""),
+    refId:String(wallet.refId||""),
+    createDateMs:toEpochMs(wallet.createDate),
+    updateDateMs:toEpochMs(wallet.updateDate),
+  };
 }
 
 function formatJob(j) {
@@ -171,12 +202,96 @@ async function circleCall(walletId,contractAddress,sig,params,idempotencyKey) {
 const AGENT_KEY="summaryagent";
 
 function getMetadataUri() { return PUBLIC_API_BASE_URL?`${PUBLIC_API_BASE_URL}/api/agents/summaryagent/metadata`:""; }
+function getValidationRequestHash(tokenId) { return keccak256(toBytes(`summaryagent_validation_${tokenId}`)); }
 
 async function resolveTokenId(ownerAddress) {
   const latest=await publicClient.getBlockNumber();
-  const from=latest>10000n?latest-10000n:0n;
-  const logs=await publicClient.getLogs({address:IDENTITY_REGISTRY,event:parseAbiItem("event Transfer(address indexed from, address indexed to, uint256 indexed tokenId)"),args:{to:ownerAddress},fromBlock:from,toBlock:latest});
+  const logs=await publicClient.getLogs({address:IDENTITY_REGISTRY,event:parseAbiItem("event Transfer(address indexed from, address indexed to, uint256 indexed tokenId)"),args:{to:ownerAddress},fromBlock:LOG_SCAN_FROM_BLOCK,toBlock:latest});
   return logs.length?String(logs[logs.length-1].args.tokenId):"";
+}
+
+async function resolveValidationStatus(tokenId) {
+  const requestHash=getValidationRequestHash(tokenId);
+  const latest=await publicClient.getBlockNumber();
+  const logs=await publicClient.getLogs({address:VALIDATION_REGISTRY,event:VALIDATION_RESPONSE_EVENT,args:{agentId:BigInt(tokenId),requestHash},fromBlock:LOG_SCAN_FROM_BLOCK,toBlock:latest});
+  const status=logs.length?Number(logs[logs.length-1].args.response??-1):-1;
+  return {requestHash,status};
+}
+
+async function updateCircleWalletRole(circle,wallet,role) {
+  const meta=agentWalletMeta(role);
+  if(wallet.name===meta.name&&wallet.refId===meta.refId) return wallet;
+  try {
+    const res=await circle.updateWallet({id:wallet.id,...meta});
+    return normalizeCircleWallet(res?.data?.wallet)||{...wallet,...meta};
+  } catch(err) {
+    console.warn(`[SummaryAgent] Could not tag ${role} wallet ${wallet.address}:`,formatError(err));
+    return {...wallet,...meta};
+  }
+}
+
+async function scoreWalletPair(pair) {
+  const tokenId=await resolveTokenId(pair.owner.address).catch(()=>"");
+  return {pair,tokenId,score:(tokenId?1_000_000_000_000:0)+Math.max(pair.owner.updateDateMs,pair.validator.updateDateMs,pair.owner.createDateMs,pair.validator.createDateMs)};
+}
+
+async function findTaggedWalletPair(circle) {
+  const [ownerRes,validatorRes]=await Promise.all([
+    circle.listWallets({blockchain:ARC_BLOCKCHAIN_ID,refId:AGENT_OWNER_REF,order:"DESC",pageSize:100}),
+    circle.listWallets({blockchain:ARC_BLOCKCHAIN_ID,refId:AGENT_VALIDATOR_REF,order:"DESC",pageSize:100}),
+  ]);
+  const owners=(ownerRes?.data?.wallets??[]).map(normalizeCircleWallet).filter(Boolean);
+  const validators=(validatorRes?.data?.wallets??[]).map(normalizeCircleWallet).filter(Boolean);
+  const pairs=owners.map(owner=>({owner,validator:validators.find(v=>v.walletSetId===owner.walletSetId)})).filter(pair=>pair.validator);
+  if(!pairs.length) return null;
+  const scored=await Promise.all(pairs.map(scoreWalletPair));
+  return scored.sort((a,b)=>b.score-a.score)[0]??null;
+}
+
+async function findLegacyWalletPair(circle) {
+  const sets=(await circle.listWalletSets({order:"DESC",pageSize:100}))?.data?.walletSets??[];
+  const candidates=[];
+  for(const set of sets.filter(s=>s?.name===AGENT_WALLET_SET_NAME)) {
+    const walletRes=await circle.listWallets({blockchain:ARC_BLOCKCHAIN_ID,walletSetId:set.id,order:"ASC",pageSize:100});
+    const wallets=(walletRes?.data?.wallets??[]).map(normalizeCircleWallet).filter(Boolean).sort((a,b)=>a.createDateMs-b.createDateMs);
+    if(wallets.length<2) continue;
+    candidates.push({owner:wallets[0],validator:wallets[1]});
+  }
+  if(!candidates.length) return null;
+  const scored=await Promise.all(candidates.map(scoreWalletPair));
+  return scored.sort((a,b)=>b.score-a.score)[0]??null;
+}
+
+async function recoverWalletsFromCircle(db,circle) {
+  const match=await findTaggedWalletPair(circle) || await findLegacyWalletPair(circle);
+  if(!match?.pair?.owner||!match?.pair?.validator) return null;
+  const owner=await updateCircleWalletRole(circle,match.pair.owner,"owner");
+  const validator=await updateCircleWalletRole(circle,match.pair.validator,"validator");
+  return {
+    owner:saveWallet(db,AGENT_KEY,"owner",{walletId:owner.id,walletAddress:owner.address,walletSetId:owner.walletSetId}),
+    validator:saveWallet(db,AGENT_KEY,"validator",{walletId:validator.id,walletAddress:validator.address,walletSetId:validator.walletSetId}),
+  };
+}
+
+async function hydrateIdentityFromChain(db,ownerWalletAddress) {
+  const existing=getIdentity(db,AGENT_KEY);
+  const tokenId=existing?.identity_token_id||await resolveTokenId(ownerWalletAddress);
+  if(!tokenId) return existing??null;
+  let requestHash=existing?.validation_request_hash||getValidationRequestHash(tokenId);
+  let validationStatus=existing?.validation_status??-1;
+  try {
+    const resolved=await resolveValidationStatus(tokenId);
+    requestHash=resolved.requestHash;
+    validationStatus=resolved.status;
+  } catch {}
+  return saveIdentity(db,AGENT_KEY,{
+    identity_token_id:String(tokenId),
+    metadata_uri:getMetadataUri(),
+    validation_request_hash:requestHash,
+    validation_status:validationStatus,
+    registered_at:existing?.registered_at??0,
+    validated_at:validationStatus===100?(existing?.validated_at||Date.now()):(existing?.validated_at??0),
+  });
 }
 
 async function ensureWallets(db) {
@@ -184,14 +299,26 @@ async function ensureWallets(db) {
   if(!circle) throw new Error("Circle not configured");
   const eo=getWallet(db,AGENT_KEY,"owner");
   const ev=getWallet(db,AGENT_KEY,"validator");
+  const existingIdentity=getIdentity(db,AGENT_KEY);
+  if((!eo?.wallet_id||!ev?.wallet_id||!existingIdentity?.identity_token_id)) {
+    const recovered=await recoverWalletsFromCircle(db,circle);
+    if(recovered?.owner?.wallet_id&&recovered?.validator?.wallet_id) return recovered;
+  }
   if(eo?.wallet_id&&ev?.wallet_id) return {owner:eo,validator:ev};
   let wsId=eo?.wallet_set_id||ev?.wallet_set_id||"";
   if(!wsId) {
-    const r=await circle.createWalletSet({name:"AgentMarket SummaryAgent",idempotencyKey:circleIdempotencyKey()});
+    const r=await circle.createWalletSet({name:AGENT_WALLET_SET_NAME,idempotencyKey:circleIdempotencyKey()});
     wsId=r?.data?.walletSet?.id;
     if(!wsId) throw new Error("No walletSetId from Circle");
   }
-  const wr=await circle.createWallets({blockchains:[ARC_BLOCKCHAIN_ID],count:2,walletSetId:wsId,accountType:"EOA",idempotencyKey:circleIdempotencyKey()});
+  const wr=await circle.createWallets({
+    blockchains:[ARC_BLOCKCHAIN_ID],
+    count:2,
+    walletSetId:wsId,
+    accountType:"EOA",
+    idempotencyKey:circleIdempotencyKey(),
+    metadata:[agentWalletMeta("owner"),agentWalletMeta("validator")],
+  });
   const [or,vr]=wr?.data?.wallets??[];
   if(!or?.id||!vr?.id) throw new Error("Circle did not return 2 wallets");
   const owner=saveWallet(db,AGENT_KEY,"owner",{walletId:or.id,walletAddress:or.address,walletSetId:wsId});
@@ -200,8 +327,8 @@ async function ensureWallets(db) {
 }
 
 async function ensureIdentity(db) {
-  const {owner,validator}=await ensureWallets(db);
-  const existing=getIdentity(db,AGENT_KEY);
+  const {owner}=await ensureWallets(db);
+  const existing=await hydrateIdentityFromChain(db,owner.wallet_address);
   if(existing?.identity_token_id) return existing;
   const metadataUri=getMetadataUri();
   if(!metadataUri) throw new Error("Set AGENTMARKET_PUBLIC_API_BASE_URL");
@@ -217,7 +344,7 @@ async function ensureValidation(db) {
   const identity=await ensureIdentity(db);
   if(identity.validation_status===100) return identity;
   const {owner,validator}=await ensureWallets(db);
-  const reqHash=identity.validation_request_hash||keccak256(toBytes(`summaryagent_validation_${identity.identity_token_id}`));
+  const reqHash=identity.validation_request_hash||getValidationRequestHash(identity.identity_token_id);
   console.log("[SummaryAgent] Requesting ERC-8004 validation...");
   await circleCall(owner.wallet_id,VALIDATION_REGISTRY,"validationRequest(address,uint256,string,bytes32)",[validator.wallet_address,identity.identity_token_id,identity.metadata_uri,reqHash],"agentmarket-summaryagent-valrequest-v1");
   const resTx=await circleCall(validator.wallet_id,VALIDATION_REGISTRY,"validationResponse(bytes32,uint8,string,bytes32,string)",[reqHash,100,identity.metadata_uri,`0x${"0".repeat(64)}`,"platform_verified"],"agentmarket-summaryagent-valresponse-v1");

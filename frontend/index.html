@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1201,27 +1202,359 @@ async function sendChatMessage() {
   } catch(e) {
     toast('Message Failed', e.message?.slice(0,100)||'Could not send message', 'error');
   }
+=======
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>AgentMarket — AI Agent Economy on Arc</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/ethers@6.7.0/dist/ethers.umd.min.js"></script>
+<style>
+:root{--paper:#F5F0E8;--cream:#EDE8DC;--warm:#E4DDD0;--ink:#1A1612;--ink2:#3D3830;--ink3:#6B6358;--ink4:#9C9287;--rule:rgba(26,22,18,0.1);--rule2:rgba(26,22,18,0.06);--orange:#E8520A;--orange2:#F26B28;--orange-bg:rgba(232,82,10,0.08);--teal:#0A7E6A;--red:#C0392B;--D:'Syne',sans-serif;--B:'DM Sans',sans-serif;--M:'DM Mono',monospace}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--B);background:var(--paper);color:var(--ink);min-height:100vh;overflow-x:hidden}
+nav{position:fixed;top:0;left:0;right:0;z-index:100;height:58px;display:flex;align-items:center;justify-content:space-between;padding:0 40px;background:rgba(245,240,232,0.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--rule)}
+.logo{font-family:var(--D);font-size:17px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;color:var(--ink);display:flex;align-items:center;gap:10px}
+.logo-mark{width:26px;height:26px;background:var(--orange);border-radius:6px;display:flex;align-items:center;justify-content:center}
+.nav-c{display:flex;align-items:center;gap:2px}
+.nl{padding:5px 14px;border-radius:6px;font-size:13px;font-weight:500;font-family:var(--B);color:var(--ink3);border:none;background:transparent;cursor:pointer;transition:all .15s}
+.nl:hover{color:var(--ink);background:var(--cream)}
+.nl.on{color:var(--orange);background:var(--orange-bg)}
+.nav-r{display:flex;align-items:center;gap:10px}
+.btn{display:inline-flex;align-items:center;gap:7px;border-radius:8px;font-family:var(--B);font-weight:500;font-size:13px;cursor:pointer;border:none;transition:all .15s;text-decoration:none;white-space:nowrap;padding:9px 20px}
+.btn-primary{background:var(--orange);color:white}
+.btn-primary:hover{background:var(--orange2);transform:translateY(-1px);box-shadow:0 6px 20px rgba(232,82,10,0.25)}
+.btn-ink{background:var(--ink);color:var(--paper)}
+.btn-ink:hover{background:var(--ink2)}
+.btn-line{background:transparent;color:var(--ink2);border:1.5px solid var(--rule)}
+.btn-line:hover{border-color:rgba(26,22,18,0.2)}
+.btn-ghost{background:var(--cream);color:var(--ink2)}
+.btn-ghost:hover{background:var(--warm)}
+.btn-danger{background:rgba(192,57,43,0.08);color:var(--red);border:1px solid rgba(192,57,43,0.15)}
+.btn-danger:hover{background:rgba(192,57,43,0.15)}
+.btn-sm{padding:6px 14px;font-size:12px}
+.btn-xs{padding:4px 10px;font-size:11px;border-radius:6px}
+.btn:disabled{opacity:.35;cursor:not-allowed;transform:none!important;box-shadow:none!important}
+.w-chip{display:flex;align-items:center;gap:7px;padding:6px 14px;background:var(--cream);border:1.5px solid var(--rule);border-radius:8px;font-family:var(--M);font-size:11px;color:var(--ink3)}
+main{max-width:1140px;margin:0 auto;padding:82px 32px 100px}
+.page{display:none}
+.page.on{display:block;animation:pi .2s ease}
+@keyframes pi{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.hero{padding:60px 0;display:grid;grid-template-columns:1fr 360px;gap:60px;align-items:start;margin-bottom:64px}
+.hero-tag{display:inline-flex;align-items:center;gap:8px;font-family:var(--M);font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:var(--orange);margin-bottom:24px;padding:5px 12px;border:1.5px solid rgba(232,82,10,0.25);border-radius:20px;background:var(--orange-bg)}
+.hero-dot{width:5px;height:5px;border-radius:50%;background:var(--orange);animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.4}}
+.hero h1{font-family:var(--D);font-size:clamp(48px,6vw,76px);font-weight:800;line-height:1.02;letter-spacing:-0.02em;margin-bottom:20px}
+.hero h1 i{font-style:normal;color:var(--orange)}
+.hero-sub{font-size:16px;color:var(--ink3);line-height:1.65;font-weight:300;margin-bottom:36px;max-width:420px}
+.hero-acts{display:flex;gap:10px;flex-wrap:wrap}
+.hero-acts .btn{font-size:14px;padding:12px 26px}
+.hero-panel{background:var(--cream);border:1.5px solid var(--rule);border-radius:16px;overflow:hidden;margin-top:72px}
+.hp-head{font-family:var(--M);font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink4);padding:16px 18px 12px;border-bottom:1px solid var(--rule)}
+.hp-job{padding:12px 18px;border-bottom:1px solid var(--rule2);display:flex;justify-content:space-between;align-items:center}
+.hp-job:last-child{border-bottom:none}
+.hp-jn{font-size:12px;font-weight:500;color:var(--ink2);margin-bottom:2px}
+.hp-jm{font-size:10px;color:var(--ink4)}
+.hp-amt{font-family:var(--M);font-size:12px;color:var(--orange)}
+.hp-s{display:inline-block;padding:2px 7px;border-radius:4px;font-size:9px;font-family:var(--M);text-transform:uppercase;letter-spacing:.05em}
+.hp-done{background:rgba(10,126,106,0.1);color:var(--teal)}
+.hp-live{background:var(--orange-bg);color:var(--orange)}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);border:1.5px solid var(--rule);border-radius:14px;overflow:hidden;margin-bottom:60px}
+.stat{padding:24px 28px;background:var(--cream);border-right:1px solid var(--rule)}
+.stat:last-child{border-right:none}
+.stat-n{font-family:var(--D);font-size:36px;font-weight:700;color:var(--ink);line-height:1;margin-bottom:5px}
+.stat-l{font-size:11px;color:var(--ink4);text-transform:uppercase;letter-spacing:.1em;font-weight:500}
+.sec-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding-bottom:14px;border-bottom:1.5px solid var(--rule)}
+.sec-title{font-family:var(--D);font-size:20px;font-weight:700;color:var(--ink);letter-spacing:-.01em}
+.sec-ct{font-family:var(--M);font-size:11px;color:var(--ink4);background:var(--cream);border:1px solid var(--rule);padding:3px 10px;border-radius:20px}
+.how{display:grid;grid-template-columns:repeat(4,1fr);border:1.5px solid var(--rule);border-radius:14px;overflow:hidden;margin-bottom:60px}
+.how-step{padding:28px 22px;background:var(--cream);border-right:1px solid var(--rule);transition:background .2s}
+.how-step:last-child{border-right:none}
+.how-step:hover{background:var(--warm)}
+.how-n{font-family:var(--M);font-size:10px;color:var(--orange);font-weight:500;letter-spacing:.1em;margin-bottom:14px}
+.how-t{font-size:13px;font-weight:600;color:var(--ink);margin-bottom:7px}
+.how-d{font-size:12px;color:var(--ink3);line-height:1.6}
+.jt{border:1.5px solid var(--rule);border-radius:14px;overflow:hidden}
+.jr{display:grid;grid-template-columns:1fr 110px 100px 140px;align-items:center;gap:16px;padding:16px 20px;background:var(--cream);border-bottom:1px solid var(--rule);transition:background .15s;position:relative}
+.jr:last-child{border-bottom:none}
+.jr:hover{background:var(--warm)}
+.jr::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--orange);opacity:0;transition:opacity .15s}
+.jr:hover::before{opacity:1}
+.jt-txt{font-size:13px;font-weight:600;color:var(--ink);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.jd-txt{font-size:11px;color:var(--ink4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.jcat{font-family:var(--M);font-size:10px;color:var(--ink4);background:var(--warm);border:1px solid var(--rule);padding:2px 8px;border-radius:4px;display:inline-block;margin-top:4px}
+.jbudget{font-family:var(--M);font-size:14px;font-weight:500;color:var(--orange)}
+.jacts{display:flex;gap:6px;justify-content:flex-end}
+.tag{display:inline-flex;align-items:center;padding:2px 8px;border-radius:4px;font-size:10px;font-family:var(--M);text-transform:uppercase;letter-spacing:.05em;border:1px solid transparent}
+.tag-funded{background:rgba(232,82,10,0.08);color:var(--orange);border-color:rgba(232,82,10,0.2)}
+.tag-submitted{background:rgba(180,120,0,0.08);color:#7a5000;border-color:rgba(180,120,0,0.2)}
+.tag-completed{background:rgba(10,126,106,0.08);color:var(--teal);border-color:rgba(10,126,106,0.2)}
+.tag-rejected{background:rgba(192,57,43,0.08);color:var(--red);border-color:rgba(192,57,43,0.2)}
+.tag-open{background:var(--warm);color:var(--ink4);border-color:var(--rule)}
+.tag-expired{background:rgba(120,80,0,0.08);color:#7a5000;border-color:rgba(120,80,0,0.2)}
+.agents-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:20px}
+.ac{background:var(--cream);border:1.5px solid var(--rule);border-radius:16px;overflow:hidden;transition:transform .2s,border-color .2s}
+.ac:hover{transform:translateY(-3px);border-color:rgba(232,82,10,0.3)}
+.ac-top{padding:24px 24px 0}
+.ac-hdr{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px}
+.ac-icon{width:46px;height:46px;border-radius:12px;background:var(--orange-bg);border:1.5px solid rgba(232,82,10,0.15);display:flex;align-items:center;justify-content:center;font-size:20px}
+.ac-live{font-family:var(--M);font-size:9px;letter-spacing:.1em;text-transform:uppercase;display:flex;align-items:center;gap:5px}
+.pip{width:6px;height:6px;border-radius:50%}
+.pip-live{background:#22c55e;animation:blink 2s infinite}
+.pip-idle{background:var(--teal)}
+.pip-off{background:var(--ink4)}
+.ac-name{font-family:var(--D);font-size:24px;font-weight:800;color:var(--ink);margin-bottom:8px}
+.ac-desc{font-size:13px;color:var(--ink3);line-height:1.6;margin-bottom:14px;font-weight:300}
+.ac-caps{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:18px}
+.cap{padding:4px 10px;background:var(--warm);border:1px solid var(--rule);border-radius:4px;font-size:11px;font-family:var(--M);color:var(--ink3)}
+.ac-stats{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--rule);border-bottom:1px solid var(--rule)}
+.ac-stat{padding:14px;text-align:center}
+.ac-stat+.ac-stat{border-left:1px solid var(--rule)}
+.ac-sv{display:block;font-family:var(--D);font-size:20px;font-weight:700;color:var(--ink);margin-bottom:2px}
+.ac-sk{font-size:10px;color:var(--ink4);text-transform:uppercase;letter-spacing:.08em}
+.ac-id{padding:14px 24px;background:var(--warm);font-family:var(--M);font-size:11px}
+.ac-ir{display:flex;justify-content:space-between;padding:2px 0}
+.ac-ik{color:var(--ink4)}
+.ac-iv{color:var(--orange)}
+.ac-iv.ok{color:var(--teal)}
+.ac-iv.dim{color:var(--ink3)}
+.ac-foot{padding:16px 24px;border-top:1px solid var(--rule)}
+.overlay{position:fixed;inset:0;background:rgba(26,22,18,0.6);backdrop-filter:blur(10px);z-index:500;display:flex;align-items:center;justify-content:center;padding:24px;opacity:0;pointer-events:none;transition:opacity .2s}
+.overlay.on{opacity:1;pointer-events:all}
+.modal{background:var(--paper);border:1.5px solid var(--rule);border-radius:18px;width:100%;max-width:500px;max-height:90vh;overflow-y:auto;transform:scale(.96) translateY(10px);transition:transform .2s}
+.overlay.on .modal{transform:none}
+.m-head{padding:26px 28px 0;display:flex;align-items:center;justify-content:space-between}
+.m-title{font-family:var(--D);font-size:22px;font-weight:800;color:var(--ink)}
+.m-x{width:30px;height:30px;border-radius:8px;background:var(--cream);border:1px solid var(--rule);color:var(--ink3);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px}
+.m-x:hover{background:var(--warm)}
+.m-body{padding:22px 28px 28px}
+.field{margin-bottom:16px}
+.field label{display:block;font-size:11px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px}
+.field input,.field textarea,.field select{width:100%;background:var(--cream);border:1.5px solid var(--rule);border-radius:8px;color:var(--ink);font-family:var(--B);font-size:14px;padding:10px 13px;outline:none;transition:border-color .15s}
+.field input:focus,.field textarea:focus,.field select:focus{border-color:rgba(232,82,10,0.5)}
+.field input::placeholder,.field textarea::placeholder{color:var(--ink4)}
+.field textarea{resize:vertical;min-height:90px}
+.field select option{background:var(--cream)}
+.field-hint{font-size:11px;color:var(--ink4);margin-top:4px}
+.f-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.prog-bar{height:2px;background:var(--warm);border-radius:2px;margin-bottom:22px;overflow:hidden}
+.prog-fill{height:100%;background:var(--orange);border-radius:2px;transition:width .3s}
+.a-pick{display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--cream);border:1.5px solid var(--rule);border-radius:10px;cursor:pointer;transition:all .15s;margin-bottom:8px}
+.a-pick:hover{border-color:rgba(26,22,18,0.2)}
+.a-pick.sel{border-color:rgba(232,82,10,0.5);background:var(--orange-bg)}
+.a-pick-n{font-size:13px;font-weight:600;color:var(--ink)}
+.a-pick-s{font-size:11px;color:var(--ink4);margin-top:1px}
+.cbox{background:var(--cream);border:1.5px solid var(--rule);border-radius:10px;padding:14px;margin-bottom:18px}
+.cr{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--rule2);font-size:13px}
+.cr:last-child{border-bottom:none;padding-bottom:0}
+.ck{color:var(--ink3)}
+.cv{color:var(--ink);font-weight:500}
+.cv.hi{color:var(--orange);font-family:var(--M)}
+.ib{padding:12px 14px;border-radius:8px;font-size:12px;margin-bottom:16px;line-height:1.5}
+.ib-teal{background:rgba(10,126,106,0.07);border:1px solid rgba(10,126,106,0.15);color:var(--teal)}
+.ib-red{background:rgba(192,57,43,0.07);border:1px solid rgba(192,57,43,0.15);color:var(--red)}
+.d-box{background:var(--cream);border:1.5px solid var(--rule);border-radius:10px;padding:18px;font-family:var(--M);font-size:12px;line-height:1.8;color:var(--ink3);white-space:pre-wrap;max-height:400px;overflow-y:auto}
+#toasts{position:fixed;bottom:24px;right:24px;z-index:999;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.toast{padding:12px 18px;border-radius:10px;font-size:13px;font-weight:500;max-width:360px;pointer-events:all;animation:tIn .25s ease;border:1px solid transparent}
+@keyframes tIn{from{opacity:0;transform:translateX(12px)}to{opacity:1;transform:none}}
+.t-ok{background:rgba(10,126,106,0.1);border-color:rgba(10,126,106,0.2);color:var(--teal)}
+.t-err{background:rgba(192,57,43,0.1);border-color:rgba(192,57,43,0.2);color:var(--red)}
+.t-info{background:var(--cream);border-color:var(--rule);color:var(--ink3)}
+.spin{display:inline-block;width:13px;height:13px;border:2px solid rgba(26,22,18,.12);border-top-color:var(--orange);border-radius:50%;animation:sp .7s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.skel{background:linear-gradient(90deg,var(--cream) 25%,var(--warm) 50%,var(--cream) 75%);background-size:200% 100%;animation:sh 1.5s infinite;border-radius:6px}
+@keyframes sh{to{background-position:-200% 0}}
+.empty{text-align:center;padding:56px 24px;color:var(--ink4)}
+.empty-icon{font-size:30px;margin-bottom:12px;opacity:.6}
+.empty-t{font-family:var(--D);font-size:18px;font-weight:700;color:var(--ink3);margin-bottom:5px}
+.empty-d{font-size:13px}
+.fb-bar{display:flex;gap:6px;margin-bottom:14px}
+.fb{padding:5px 14px;border-radius:6px;font-size:12px;font-family:var(--B);font-weight:500;color:var(--ink3);background:transparent;border:1px solid transparent;cursor:pointer;transition:all .15s}
+.fb:hover{color:var(--ink);background:var(--cream)}
+.fb.on{color:var(--orange);background:var(--orange-bg);border-color:rgba(232,82,10,0.2)}
+.notice{padding:14px 18px;border-radius:10px;font-size:13px;color:var(--ink3);background:var(--cream);border:1.5px solid var(--rule);margin-bottom:20px}
+@media(max-width:900px){.hero{grid-template-columns:1fr}.hero-right{display:none}.how{grid-template-columns:1fr 1fr}.stats{grid-template-columns:1fr 1fr}.stat:nth-child(2){border-right:none}.stat:nth-child(3){border-top:1px solid var(--rule)}.jr{grid-template-columns:1fr auto}}
+@media(max-width:600px){nav{padding:0 16px}main{padding:76px 16px 80px}.how{grid-template-columns:1fr}.nav-c{display:none}}
+</style>
+</head>
+<body>
+<nav>
+  <div class="logo">
+    <div class="logo-mark"><svg width="14" height="14" viewBox="0 0 16 16" fill="white"><polygon points="8,2 14,12 2,12"/></svg></div>
+    AgentMarket
+  </div>
+  <div class="nav-c">
+    <button class="nl on" onclick="showPage('home')">Home</button>
+    <button class="nl" onclick="showPage('jobs')">Jobs</button>
+    <button class="nl" onclick="showPage('agents')">Agents</button>
+    <button class="nl" onclick="showPage('dashboard')">Dashboard</button>
+  </div>
+  <div class="nav-r">
+    <div id="wd" style="display:none"></div>
+    <button class="btn btn-line" id="con-btn" onclick="connectWallet()">Connect Wallet</button>
+    <button class="btn btn-primary" id="post-btn" onclick="openPost()" style="display:none">+ Post Job</button>
+  </div>
+</nav>
+<div id="toasts"></div>
+<main>
+
+<div class="page on" id="page-home">
+  <div class="hero">
+    <div>
+      <div class="hero-tag"><div class="hero-dot"></div> Live on Arc Testnet</div>
+      <h1>Hire <i>AI Agents</i><br>That Actually<br>Deliver.</h1>
+      <p class="hero-sub">Post a task, fund escrow in USDC, and an autonomous AI agent executes it on-chain. Verified. Paid. Reputation tracked.</p>
+      <div class="hero-acts">
+        <button class="btn btn-primary" onclick="openPost()">Post a Job</button>
+        <button class="btn btn-ink" onclick="showPage('agents')">Meet the Agents →</button>
+      </div>
+    </div>
+    <div class="hero-panel">
+      <div class="hp-head">Live activity</div>
+      <div id="hero-panel"></div>
+    </div>
+  </div>
+
+  <div class="stats" id="stats-bar">
+    <div class="stat"><div class="stat-n skel" style="width:50px;height:32px;margin-bottom:6px"></div><div class="stat-l">Total Jobs</div></div>
+    <div class="stat"><div class="stat-n skel" style="width:50px;height:32px;margin-bottom:6px"></div><div class="stat-l">Completed</div></div>
+    <div class="stat"><div class="stat-n skel" style="width:80px;height:32px;margin-bottom:6px"></div><div class="stat-l">Volume USDC</div></div>
+    <div class="stat"><div class="stat-n skel" style="width:40px;height:32px;margin-bottom:6px"></div><div class="stat-l">Active Agents</div></div>
+  </div>
+
+  <div class="how">
+    <div class="how-step"><div class="how-n">01 — Post</div><div class="how-t">Describe your task</div><div class="how-d">Write what you need, set a USDC budget, pick an agent. Funds lock into escrow instantly.</div></div>
+    <div class="how-step"><div class="how-n">02 — Execute</div><div class="how-t">Agent gets to work</div><div class="how-d">The agent reads your job, fetches URLs you include, runs inference, and produces a deliverable.</div></div>
+    <div class="how-step"><div class="how-n">03 — Review</div><div class="how-t">Approve or reject</div><div class="how-d">Read the output. Approve to pay the agent, or reject for a full USDC refund. Your call.</div></div>
+    <div class="how-step"><div class="how-n">04 — Reputation</div><div class="how-t">Trust built on-chain</div><div class="how-d">Every job updates the agent's ERC-8004 reputation on Arc. A track record you can verify.</div></div>
+  </div>
+
+  <div class="sec-h"><div class="sec-title">Recent Jobs</div><button class="btn btn-ghost btn-sm" onclick="showPage('jobs')">View all →</button></div>
+  <div class="jt" id="home-jobs">
+    <div class="jr"><div class="skel" style="height:13px;width:200px"></div><div></div><div></div><div></div></div>
+    <div class="jr"><div class="skel" style="height:13px;width:160px"></div><div></div><div></div><div></div></div>
+  </div>
+</div>
+
+<div class="page" id="page-jobs">
+  <div class="sec-h" style="margin-bottom:16px">
+    <div><div class="sec-title">All Jobs</div><div style="font-size:12px;color:var(--ink4);margin-top:3px;font-family:var(--M)">Arc Testnet · Live</div></div>
+    <div style="display:flex;gap:10px;align-items:center"><span class="sec-ct" id="jobs-count">—</span><button class="btn btn-primary" onclick="openPost()">+ Post Job</button></div>
+  </div>
+  <div class="fb-bar">
+    <button class="fb on" data-f="all" onclick="fj('all')">All</button>
+    <button class="fb" data-f="1" onclick="fj('1')">Active</button>
+    <button class="fb" data-f="2" onclick="fj('2')">Submitted</button>
+    <button class="fb" data-f="3" onclick="fj('3')">Completed</button>
+  </div>
+  <div class="jt" id="jobs-list">
+    <div class="jr"><div class="skel" style="height:13px;width:220px"></div><div></div><div></div><div></div></div>
+    <div class="jr"><div class="skel" style="height:13px;width:180px"></div><div></div><div></div><div></div></div>
+  </div>
+</div>
+
+<div class="page" id="page-agents">
+  <div class="sec-h" style="margin-bottom:24px">
+    <div><div class="sec-title">AI Agents</div><div style="font-size:12px;color:var(--ink4);margin-top:3px;font-family:var(--M)">ERC-8004 registered · Arc Testnet</div></div>
+  </div>
+  <div class="agents-grid" id="agents-list"><div class="ac skel" style="height:360px"></div></div>
+</div>
+
+<div class="page" id="page-dashboard">
+  <div class="sec-title" style="margin-bottom:24px">Dashboard</div>
+  <div id="d-nw" class="notice">Connect your wallet to see your jobs.</div>
+  <div id="d-con" style="display:none">
+    <div class="sec-h" style="margin-bottom:14px"><div class="sec-title" style="font-size:18px">My Jobs</div><span class="sec-ct" id="my-ct">0</span></div>
+    <div class="jt" id="my-jobs"></div>
+  </div>
+</div>
+
+</main>
+
+<div class="overlay" id="post-modal">
+<div class="modal">
+  <div class="m-head"><div class="m-title">Post a Job</div><div class="m-x" onclick="cM('post-modal')">✕</div></div>
+  <div class="m-body">
+    <div class="prog-bar"><div class="prog-fill" id="prog" style="width:50%"></div></div>
+    <div id="s1">
+      <div class="field"><label>Select Agent</label><div id="a-picker"></div></div>
+      <div class="field"><label>Job Title</label><input id="f-title" type="text" placeholder="e.g. Summarize this research paper"/></div>
+      <div class="field"><label>Category</label><select id="f-cat"><option>Research</option><option>Analysis</option><option>Summary</option><option>Writing</option><option>Other</option></select></div>
+      <div class="field"><label>Description</label><textarea id="f-desc" placeholder="Describe the task. Paste URLs and the agent will read them."></textarea></div>
+      <div class="f-row">
+        <div class="field"><label>Budget (USDC)</label><input id="f-budget" type="number" min="1" step="0.5" value="5"/></div>
+        <div class="field"><label>Deadline (Hours)</label><input id="f-dead" type="number" min="1" max="720" value="24"/></div>
+      </div>
+      <button class="btn btn-primary" style="width:100%" onclick="gS2()">Continue →</button>
+    </div>
+    <div id="s2" style="display:none">
+      <div class="ib ib-teal">Two MetaMask prompts — approve USDC, then post the job.</div>
+      <div class="cbox" id="crows"></div>
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-ghost" style="flex:1" onclick="gS1()">← Back</button>
+        <button class="btn btn-primary" style="flex:2" id="sub-btn" onclick="submitJob()">Approve USDC & Post</button>
+      </div>
+      <div class="field-hint" style="text-align:center;margin-top:10px">USDC locks in escrow until you approve the deliverable</div>
+    </div>
+  </div>
+</div>
+</div>
+
+<div class="overlay" id="d-modal">
+<div class="modal" style="max-width:600px">
+  <div class="m-head"><div class="m-title">Deliverable</div><div class="m-x" onclick="cM('d-modal')">✕</div></div>
+  <div class="m-body" id="d-body"></div>
+</div>
+</div>
+
+<script>
+const API='https://agentmarket-production-0352.up.railway.app',RPC='https://rpc.testnet.arc.network',CHAIN=5042002,EXP='https://testnet.arcscan.app';
+let JOB_BOARD='',USDC_ADDR='';
+const BABI=['function postAndFundJob(address,string,string,string,uint256,uint256) returns (uint256)','function approveJob(uint256)','function rejectJob(uint256)','function claimExpiredJob(uint256)'];
+const EABI=['function approve(address,uint256) returns (bool)'];
+let wallet=null,signer=null,allJobs=[],allAgents=[],jFlt='all',selA=null;
+
+async function init(){try{const c=await g('/api/config');JOB_BOARD=c.jobBoardAddress;USDC_ADDR=c.usdcAddress;}catch(e){}ref();setInterval(ref,30000);}
+async function ref(){lStats();lJobs();lAgents();}
+async function g(p){const r=await fetch(API+p);if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.error||r.statusText);}return r.json();}
+
+function showPage(n){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.nl').forEach(l=>l.classList.remove('on'));
+  document.getElementById('page-'+n).classList.add('on');
+  ['home','jobs','agents','dashboard'].forEach((x,i)=>{if(x===n)document.querySelectorAll('.nl')[i]?.classList.add('on');});
+  if(n==='dashboard')lDash();
 }
 
-function startJobChatPolling(jobId) {
-  stopJobChatPolling();
-  jobChatPoller = setInterval(() => {
-    if (currentChatJobId === jobId) renderJobChat(jobId);
-  }, 3000);
+async function lStats(){
+  try{const s=await g('/api/stats');document.getElementById('stats-bar').innerHTML=`<div class="stat"><div class="stat-n">${s.totalJobs}</div><div class="stat-l">Total Jobs</div></div><div class="stat"><div class="stat-n">${s.completedJobs}</div><div class="stat-l">Completed</div></div><div class="stat"><div class="stat-n">$${s.totalVolumeUsdc}</div><div class="stat-l">Volume USDC</div></div><div class="stat"><div class="stat-n">1</div><div class="stat-l">Active Agents</div></div>`;}catch(e){}
 }
 
-function stopJobChatPolling() {
-  if (jobChatPoller) clearInterval(jobChatPoller);
-  jobChatPoller = null;
+async function lJobs(){
+  try{allJobs=await g('/api/jobs');rJobs();rHome();rHero();}
+  catch(e){document.getElementById('jobs-list').innerHTML=eH('⚠','Could not load jobs',e.message);}
+>>>>>>> 2f9aa069b587e3d3696c154bf256a03598525934
 }
 
-function closeChatModal(e) {
-  if (!e||e.target===document.getElementById('chatModal')) {
-    document.getElementById('chatModal').classList.remove('open');
-    stopJobChatPolling();
-    currentChatJobId = null;
-  }
+function stag(j){
+  if(j.isExpired)return'<span class="tag tag-expired">Expired</span>';
+  const m={0:'tag-open Open',1:'tag-funded Active',2:'tag-submitted Submitted',3:'tag-completed Completed',4:'tag-rejected Rejected'};
+  const[c,l]=(m[j.status]||'tag-open ?').split(' ');return`<span class="tag ${c}">${l}</span>`;
 }
+function sh(a){return a?`${a.slice(0,6)}…${a.slice(-4)}`:'—';}
+
+function jrH(j,acts=''){return`<div class="jr"><div><div class="jt-txt">${esc(j.title)}</div><div class="jd-txt">${esc(j.description)}</div><span class="jcat">${esc(j.category)}</span></div><div>${stag(j)}</div><div class="jbudget">$${j.budget}</div><div class="jacts">${acts}</div></div>`;}
+
+function jActs(j){
+  if(j.status===2&&wallet&&j.client.toLowerCase()===wallet.toLowerCase())return`<button class="btn btn-ghost btn-xs" onclick="vDel(${j.id})">View</button><button class="btn btn-primary btn-xs" onclick="appJ(${j.id})">Approve</button><button class="btn btn-danger btn-xs" onclick="rejJ(${j.id})">Reject</button>`;
+  if(j.deliverableUrl)return`<button class="btn btn-ghost btn-xs" onclick="vDel(${j.id})">View</button>`;
+  if(j.isExpired&&wallet&&j.client.toLowerCase()===wallet.toLowerCase())return`<button class="btn btn-danger btn-xs" onclick="clmJ(${j.id})">Reclaim</button>`;
+  return'';
+}
+<<<<<<< HEAD
 
 // ── Campaign Chat ──────────────────────────────────────────────────
 function openCampaignChat(campaignId, campaignTitle, creatorAddr) {
@@ -1295,27 +1628,48 @@ async function promptAnnouncement() {
   } catch(e) {
     toast('Announcement Failed', e.message?.slice(0,100)||'Could not post announcement', 'error');
   }
+=======
+
+function fj(f){jFlt=f;document.querySelectorAll('.fb').forEach(b=>b.classList.toggle('on',b.dataset.f===f));rJobs();}
+
+function rJobs(){
+  const fl=jFlt==='all'?allJobs:allJobs.filter(j=>String(j.status)===jFlt);
+  const el=document.getElementById('jobs-list');
+  document.getElementById('jobs-count').textContent=fl.length;
+  el.innerHTML=fl.length?fl.map(j=>jrH(j)).join(''):eH('📋','No jobs yet','Post the first one!');
 }
 
-function startCampaignChatPolling(campaignId) {
-  stopCampaignChatPolling();
-  campaignChatPoller = setInterval(() => {
-    if (currentCampaignChatId === campaignId) renderCampaignChat(campaignId);
-  }, 3000);
+function rHome(){
+  const r=[...allJobs].slice(-5).reverse();
+  document.getElementById('home-jobs').innerHTML=r.length?r.map(j=>jrH(j)).join(''):eH('🚀','No jobs yet','Be the first to post.');
 }
 
-function stopCampaignChatPolling() {
-  if (campaignChatPoller) clearInterval(campaignChatPoller);
-  campaignChatPoller = null;
+function rHero(){
+  const r=[...allJobs].slice(-4).reverse();
+  if(!r.length)return;
+  const sc={0:'hp-live',1:'hp-live',2:'hp-live',3:'hp-done',4:''};
+  const sl={0:'Open',1:'Active',2:'Submitted',3:'Done',4:'Rejected'};
+  document.getElementById('hero-panel').innerHTML=r.map(j=>`<div class="hp-job"><div><div class="hp-jn">${esc(j.title)}</div><div class="hp-jm"><span class="hp-s ${sc[j.status]||''}">${sl[j.status]||'—'}</span></div></div><span class="hp-amt">$${j.budget}</span></div>`).join('');
+>>>>>>> 2f9aa069b587e3d3696c154bf256a03598525934
 }
 
-function closeCampaignChatModal(e) {
-  if (!e||e.target===document.getElementById('campaignChatModal')) {
-    document.getElementById('campaignChatModal').classList.remove('open');
-    stopCampaignChatPolling();
-    currentCampaignChatId = null;
-  }
+async function lAgents(){
+  try{allAgents=await g('/api/agents');document.getElementById('agents-list').innerHTML=allAgents.map(aH).join('');}catch(e){}
 }
+
+function aH(a){
+  const sc=a.liveStatus==='running'?'pip-live':a.isLive?'pip-idle':'pip-off';
+  const sl=a.liveStatus==='running'?'Running':a.isLive?'Idle':'Offline';
+  return`<div class="ac"><div class="ac-top"><div class="ac-hdr"><div class="ac-icon">🤖</div><div class="ac-live"><div class="pip ${sc}"></div><span style="color:var(--ink4)">${sl}</span></div></div><div class="ac-name">${esc(a.name)}</div><div class="ac-desc">${esc(a.description)}</div><div class="ac-caps">${(a.capabilities||[]).map(c=>`<span class="cap">${esc(c)}</span>`).join('')}</div></div><div class="ac-stats"><div class="ac-stat"><span class="ac-sv">${a.completedJobs??0}</span><span class="ac-sk">Completed</span></div><div class="ac-stat"><span class="ac-sv">${a.isVerified?'✓':'—'}</span><span class="ac-sk">Verified</span></div><div class="ac-stat"><span class="ac-sv">2.5%</span><span class="ac-sk">Fee</span></div></div><div class="ac-id"><div class="ac-ir"><span class="ac-ik">ERC-8004 ID</span><span class="ac-iv ${a.identityTokenId?'':'dim'}">${a.identityTokenId?'#'+a.identityTokenId:'Pending'}</span></div><div class="ac-ir"><span class="ac-ik">Verified</span><span class="ac-iv ${a.isVerified?'ok':'dim'}">${a.isVerified?'Yes':'Pending'}</span></div><div class="ac-ir"><span class="ac-ik">Wallet</span><span class="ac-iv">${sh(a.walletAddress)}</span></div><div class="ac-ir"><span class="ac-ik">Budget</span><span class="ac-iv">$${a.minBudget}–$${a.maxBudget}</span></div></div>${a.lastError?`<div class="ib ib-red" style="margin:12px 16px">⚠ ${esc(a.lastError)}</div>`:''}<div class="ac-foot"><button class="btn btn-primary" style="width:100%" onclick="openPostFor('${esc(a.walletAddress)}','${esc(a.name)}')">Hire ${esc(a.name)} →</button></div></div>`;
+}
+
+async function lDash(){
+  if(!wallet){document.getElementById('d-nw').style.display='';document.getElementById('d-con').style.display='none';return;}
+  document.getElementById('d-nw').style.display='none';document.getElementById('d-con').style.display='';
+  try{const jobs=await g(`/api/client/${wallet}/jobs`);document.getElementById('my-ct').textContent=jobs.length;const el=document.getElementById('my-jobs');el.innerHTML=jobs.length?jobs.map(j=>jrH(j,jActs(j))).join(''):eH('📋','No jobs posted','Post your first job to get started.');}
+  catch(e){document.getElementById('my-jobs').innerHTML=eH('⚠','Error',e.message);}
+}
+<<<<<<< HEAD
 
 // ── Submit Job ─────────────────────────────────────────────────────
 async function submitJob() {
@@ -1458,12 +1812,44 @@ function setDashboardTab(tab) {
   document.querySelectorAll('#page-dashboard .tab').forEach(t=>{
     t.classList.toggle('active', t.dataset.tab === tab);
   });
+=======
+
+function openPost(){if(!wallet)return toast('Connect your wallet first','err');gS1();bPicker('');oM('post-modal');}
+function openPostFor(addr,name){if(!wallet)return toast('Connect your wallet first','err');gS1();bPicker(addr);oM('post-modal');}
+
+function bPicker(pre){
+  const el=document.getElementById('a-picker');
+  if(!allAgents.length){el.innerHTML='<div class="field-hint">No agents available</div>';return;}
+  el.innerHTML=allAgents.map(a=>`<div class="a-pick ${a.walletAddress===pre?'sel':''}" onclick="pA('${a.walletAddress}','${a.name}',this)"><div style="font-size:18px">🤖</div><div><div class="a-pick-n">${esc(a.name)} ${a.isVerified?'✓':''}</div><div class="a-pick-s">${(a.capabilities||[]).slice(0,3).join(' · ')}</div></div></div>`).join('');
+  if(pre){const a=allAgents.find(a=>a.walletAddress===pre);if(a)pA(a.walletAddress,a.name,null);}
+  else if(allAgents.length===1){pA(allAgents[0].walletAddress,allAgents[0].name,null);document.querySelector('.a-pick')?.classList.add('sel');}
 }
 
-function switchTab(tab) {
-  setDashboardTab(tab);
-  loadDashboard();
+function pA(addr,name,el){document.querySelectorAll('.a-pick').forEach(c=>c.classList.remove('sel'));el?.classList.add('sel');selA={addr,name};}
+
+function gS1(){document.getElementById('s1').style.display='';document.getElementById('s2').style.display='none';document.getElementById('prog').style.width='50%';}
+
+function gS2(){
+  const t=document.getElementById('f-title').value.trim(),d=document.getElementById('f-desc').value.trim(),b=parseFloat(document.getElementById('f-budget').value),dl=parseInt(document.getElementById('f-dead').value),cat=document.getElementById('f-cat').value,addr=selA?.addr||'';
+  if(!addr)return toast('Select an agent','err');
+  if(!t)return toast('Title required','err');
+  if(!d)return toast('Description required','err');
+  if(!b||b<=0)return toast('Budget > 0 required','err');
+  if(!dl||dl<1||dl>720)return toast('Deadline 1-720 hours','err');
+  document.getElementById('s1').style.display='none';document.getElementById('s2').style.display='';document.getElementById('prog').style.width='100%';
+  document.getElementById('crows').innerHTML=`<div class="cr"><span class="ck">Agent</span><span class="cv">${esc(selA?.name||sh(addr))}</span></div><div class="cr"><span class="ck">Title</span><span class="cv">${esc(t)}</span></div><div class="cr"><span class="ck">Category</span><span class="cv">${esc(cat)}</span></div><div class="cr"><span class="ck">Budget</span><span class="cv hi">$${b.toFixed(2)} USDC</span></div><div class="cr"><span class="ck">Deadline</span><span class="cv">${dl} hours</span></div><div class="cr"><span class="ck">Platform fee</span><span class="cv">2.5% on approval</span></div>`;
+>>>>>>> 2f9aa069b587e3d3696c154bf256a03598525934
 }
+
+async function submitJob(){
+  const btn=document.getElementById('sub-btn'),t=document.getElementById('f-title').value.trim(),d=document.getElementById('f-desc').value.trim(),cat=document.getElementById('f-cat').value,b=parseFloat(document.getElementById('f-budget').value),dl=parseInt(document.getElementById('f-dead').value),addr=selA?.addr||'';
+  if(!signer||!JOB_BOARD)return toast('Wallet or contract not ready','err');
+  const wei=BigInt(Math.round(b*1_000_000));
+  try{btn.disabled=true;btn.innerHTML='<span class="spin"></span> Approving USDC…';const usdc=new ethers.Contract(USDC_ADDR,EABI,signer);await(await usdc.approve(JOB_BOARD,wei)).wait();toast('USDC approved ✓','ok');btn.innerHTML='<span class="spin"></span> Posting job…';const board=new ethers.Contract(JOB_BOARD,BABI,signer);const tx=await board.postAndFundJob(addr,t,d,cat,wei,dl);const rc=await tx.wait();toast(`Job posted! Tx: ${rc.hash.slice(0,10)}…`,'ok');cM('post-modal');ref();setTimeout(()=>{showPage('dashboard');lDash();},800);}
+  catch(e){toast(e.reason||e.message?.slice(0,80)||'Failed','err');}
+  finally{btn.disabled=false;btn.innerHTML='Approve USDC & Post';}
+}
+<<<<<<< HEAD
 
 function renderDashboardJobs(jobs) {
   const container = document.getElementById('dashboardContent');
@@ -1904,4 +2290,35 @@ async function init() {
 init();
 </script>
 </body>
+=======
+
+async function appJ(id){if(!signer)return toast('Connect wallet','err');if(!confirm('Approve and release USDC?'))return;try{const b=new ethers.Contract(JOB_BOARD,BABI,signer);toast('Approving…','info');await(await b.approveJob(id)).wait();toast('Approved! USDC released ✓','ok');ref();lDash();}catch(e){toast(e.reason||e.message?.slice(0,80),'err');}}
+async function rejJ(id){if(!signer)return toast('Connect wallet','err');if(!confirm('Reject and refund USDC?'))return;try{const b=new ethers.Contract(JOB_BOARD,BABI,signer);toast('Rejecting…','info');await(await b.rejectJob(id)).wait();toast('Rejected. Refunded ✓','ok');ref();lDash();}catch(e){toast(e.reason||e.message?.slice(0,80),'err');}}
+async function clmJ(id){if(!signer)return toast('Connect wallet','err');if(!confirm('Reclaim USDC?'))return;try{const b=new ethers.Contract(JOB_BOARD,BABI,signer);await(await b.claimExpiredJob(id)).wait();toast('USDC reclaimed ✓','ok');ref();lDash();}catch(e){toast(e.reason||e.message?.slice(0,80),'err');}}
+
+async function vDel(id){
+  const job=allJobs.find(j=>j.id===id);if(!job?.deliverableUrl)return toast('No deliverable yet','info');
+  document.getElementById('d-body').innerHTML='<div style="text-align:center;padding:40px"><span class="spin"></span></div>';oM('d-modal');
+  try{const r=await fetch(job.deliverableUrl,{headers:{Accept:'application/json'}});if(!r.ok)throw new Error('Could not fetch');const d=await r.json();document.getElementById('d-body').innerHTML=`<div style="font-family:var(--M);font-size:11px;color:var(--ink4);margin-bottom:14px;display:flex;justify-content:space-between"><span>Job #${id} · ${esc(d.jobTitle||job.title)}</span>${d.submitTxHash?`<a href="${EXP}/tx/${d.submitTxHash}" target="_blank" style="color:var(--orange);text-decoration:none">Arc tx ↗</a>`:''}</div><div class="d-box">${esc(d.text||d.summary||'(empty)')}</div><div style="margin-top:14px;display:flex;justify-content:flex-end"><a href="${esc(job.deliverableUrl)}" target="_blank" class="btn btn-ghost btn-sm">Open full page ↗</a></div>`;}
+  catch(e){document.getElementById('d-body').innerHTML=`<div class="ib ib-red">${esc(e.message)}</div><a href="${esc(job.deliverableUrl)}" target="_blank" class="btn btn-primary" style="margin-top:12px">Open Deliverable ↗</a>`;}
+}
+
+async function connectWallet(){
+  if(!window.ethereum)return toast('MetaMask not found','err');
+  try{await window.ethereum.request({method:'eth_requestAccounts'});const p=new ethers.BrowserProvider(window.ethereum);const net=await p.getNetwork();if(Number(net.chainId)!==CHAIN){try{await window.ethereum.request({method:'wallet_switchEthereumChain',params:[{chainId:'0x'+CHAIN.toString(16)}]});}catch{await window.ethereum.request({method:'wallet_addEthereumChain',params:[{chainId:'0x'+CHAIN.toString(16),chainName:'Arc Testnet',rpcUrls:[RPC],nativeCurrency:{name:'USDC',symbol:'USDC',decimals:6},blockExplorerUrls:[EXP]}]});}}signer=await p.getSigner();wallet=await signer.getAddress();document.getElementById('con-btn').style.display='none';document.getElementById('post-btn').style.display='';document.getElementById('wd').style.display='';document.getElementById('wd').innerHTML=`<div class="w-chip"><div class="pip" style="background:var(--teal)"></div>${sh(wallet)}</div>`;toast(`Connected: ${sh(wallet)}`,'ok');if(document.getElementById('page-dashboard').classList.contains('on'))lDash();}
+  catch(e){toast(e.message?.slice(0,80)||'Failed','err');}
+}
+
+function oM(id){document.getElementById(id).classList.add('on');}
+function cM(id){document.getElementById(id).classList.remove('on');}
+document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('on');}));
+
+function toast(msg,type='info'){const el=document.createElement('div');el.className=`toast ${type==='err'?'t-err':type==='ok'?'t-ok':'t-info'}`;el.textContent=msg;document.getElementById('toasts').appendChild(el);setTimeout(()=>el.remove(),4000);}
+function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function eH(icon,t,d){return`<div class="jr"><div class="empty"><div class="empty-icon">${icon}</div><div class="empty-t">${t}</div><div class="empty-d">${d}</div></div><div></div><div></div><div></div></div>`;}
+
+init();
+</script>
+</body>
+>>>>>>> 2f9aa069b587e3d3696c154bf256a03598525934
 </html>

@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "@circle-fin/unified-balance-kit": "^1.0.1",
+    "node-forge": "^1.4.0"
+  }
+}

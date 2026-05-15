@@ -411,44 +411,6 @@ async function resolveIdentityTokenId(ownerAddress) {
 }
 
 async function ensureAgentWallets(db) {
-  const circle = getCircle();
-  if (!circle) throw new Error("Circle credentials not configured (CIRCLE_API_KEY, CIRCLE_ENTITY_SECRET)");
-
-  const existingOwner = getWallet(db, AGENT_KEY, "owner");
-  const existingValidator = getWallet(db, AGENT_KEY, "validator");
-  if (existingOwner?.wallet_id && existingValidator?.wallet_id) {
-    return { owner: existingOwner, validator: existingValidator };
-  }
-
-  let walletSetId = existingOwner?.wallet_set_id || existingValidator?.wallet_set_id || "";
-  if (!walletSetId) {
-    const wsRes = await circle.createWalletSet({
-      name: "AgentMarket SummaryBot",
-      idempotencyKey: "agentmarket-summarybot-walletset-v2",
-    });
-    walletSetId = wsRes?.data?.walletSet?.id;
-    if (!walletSetId) throw new Error("Circle did not return walletSetId");
-  }
-
-  const walletsRes = await circle.createWallets({
-    blockchains: [ARC_BLOCKCHAIN_ID],
-    count: 2,
-    walletSetId,
-    accountType: "SCA",
-    idempotencyKey: "agentmarket-summarybot-wallets-v2",
-  });
-  const [ownerRaw, validatorRaw] = walletsRes?.data?.wallets ?? [];
-  if (!ownerRaw?.id || !validatorRaw?.id) throw new Error("Circle did not return 2 wallets");
-
-  const owner = saveWallet(db, AGENT_KEY, "owner", { walletId: ownerRaw.id, walletAddress: ownerRaw.address, walletSetId });
-  const validator = saveWallet(db, AGENT_KEY, "validator", { walletId: validatorRaw.id, walletAddress: validatorRaw.address, walletSetId });
-  return { owner, validator };
-}
-
-async function ensureWallets(db) {
-  const circle = getCircle();
-  if (!circle) throw new Error("Circle not configured");
-
   // Use pre-created wallets from environment variables
   const ownerWalletId = process.env.AGENT_OWNER_WALLET_ID;
   const ownerWalletAddress = process.env.AGENT_OWNER_WALLET_ADDRESS;
@@ -457,34 +419,41 @@ async function ensureWallets(db) {
   const walletSetId = process.env.AGENT_WALLET_SET_ID;
 
   if (!ownerWalletId || !validatorWalletId) {
-    throw new Error("Agent wallet IDs not configured in environment");
+    throw new Error("Agent wallet IDs not configured — set AGENT_OWNER_WALLET_ID and AGENT_VALIDATOR_WALLET_ID");
   }
 
-  const owner = saveWallet(db, AGENT_KEY, "owner", {
-    walletId: ownerWalletId,
-    walletAddress: ownerWalletAddress,
-    walletSetId: walletSetId,
-  });
-
-  const validator = saveWallet(db, AGENT_KEY, "validator", {
-    walletId: validatorWalletId,
-    walletAddress: validatorWalletAddress,
-    walletSetId: walletSetId,
-  });
-
+  const owner = saveWallet(db, AGENT_KEY, "owner", { walletId: ownerWalletId, walletAddress: ownerWalletAddress, walletSetId });
+  const validator = saveWallet(db, AGENT_KEY, "validator", { walletId: validatorWalletId, walletAddress: validatorWalletAddress, walletSetId });
   return { owner, validator };
 }
 
-const tokenId = await resolveIdentityTokenId(owner.wallet_address);
-if (!tokenId) throw new Error("Could not find ERC-8004 token after registration");
+async function ensureAgentIdentity(db) {
+  const { owner, validator } = await ensureAgentWallets(db);
+  const existing = getIdentity(db, AGENT_KEY);
+  if (existing?.identity_token_id) return existing;
 
-console.log(`[SummaryBot] Identity registered. Token ID: ${tokenId}`);
-return saveIdentity(db, AGENT_KEY, {
-  identity_token_id: tokenId,
-  identity_tx_hash: tx.txHash ?? "",
-  metadata_uri: metadataUri,
-  registered_at: Date.now(),
-});
+  const metadataUri = getSummaryBotMetadataUri();
+  if (!metadataUri) throw new Error("Set AGENTMARKET_PUBLIC_API_BASE_URL to register agent identity");
+
+  console.log("[SummaryBot] Registering ERC-8004 identity…");
+  const tx = await circleContractCall(
+    owner.wallet_id,
+    IDENTITY_REGISTRY,
+    "register(string)",
+    [metadataUri],
+    "agentmarket-summarybot-erc8004-register-v2",
+  );
+
+  const tokenId = await resolveIdentityTokenId(owner.wallet_address);
+  if (!tokenId) throw new Error("Could not find ERC-8004 token after registration");
+
+  console.log(`[SummaryBot] Identity registered. Token ID: ${tokenId}`);
+  return saveIdentity(db, AGENT_KEY, {
+    identity_token_id: tokenId,
+    identity_tx_hash: tx.txHash ?? "",
+    metadata_uri: metadataUri,
+    registered_at: Date.now(),
+  });
 }
 
 async function ensureAgentValidation(db) {

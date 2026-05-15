@@ -445,33 +445,46 @@ async function ensureAgentWallets(db) {
   return { owner, validator };
 }
 
-async function ensureAgentIdentity(db) {
-  const { owner, validator } = await ensureAgentWallets(db);
-  const existing = getIdentity(db, AGENT_KEY);
-  if (existing?.identity_token_id) return existing;
+async function ensureWallets(db) {
+  const circle = getCircle();
+  if (!circle) throw new Error("Circle not configured");
 
-  const metadataUri = getSummaryBotMetadataUri();
-  if (!metadataUri) throw new Error("Set AGENTMARKET_PUBLIC_API_BASE_URL to register agent identity");
+  // Use pre-created wallets from environment variables
+  const ownerWalletId = process.env.AGENT_OWNER_WALLET_ID;
+  const ownerWalletAddress = process.env.AGENT_OWNER_WALLET_ADDRESS;
+  const validatorWalletId = process.env.AGENT_VALIDATOR_WALLET_ID;
+  const validatorWalletAddress = process.env.AGENT_VALIDATOR_WALLET_ADDRESS;
+  const walletSetId = process.env.AGENT_WALLET_SET_ID;
 
-  console.log("[SummaryBot] Registering ERC-8004 identity…");
-  const tx = await circleContractCall(
-    owner.wallet_id,
-    IDENTITY_REGISTRY,
-    "register(string)",
-    [metadataUri],
-    "agentmarket-summarybot-erc8004-register-v2",
-  );
+  if (!ownerWalletId || !validatorWalletId) {
+    throw new Error("Agent wallet IDs not configured in environment");
+  }
 
-  const tokenId = await resolveIdentityTokenId(owner.wallet_address);
-  if (!tokenId) throw new Error("Could not find ERC-8004 token after registration");
-
-  console.log(`[SummaryBot] Identity registered. Token ID: ${tokenId}`);
-  return saveIdentity(db, AGENT_KEY, {
-    identity_token_id: tokenId,
-    identity_tx_hash: tx.txHash ?? "",
-    metadata_uri: metadataUri,
-    registered_at: Date.now(),
+  const owner = saveWallet(db, AGENT_KEY, "owner", {
+    walletId: ownerWalletId,
+    walletAddress: ownerWalletAddress,
+    walletSetId: walletSetId,
   });
+
+  const validator = saveWallet(db, AGENT_KEY, "validator", {
+    walletId: validatorWalletId,
+    walletAddress: validatorWalletAddress,
+    walletSetId: walletSetId,
+  });
+
+  return { owner, validator };
+}
+
+const tokenId = await resolveIdentityTokenId(owner.wallet_address);
+if (!tokenId) throw new Error("Could not find ERC-8004 token after registration");
+
+console.log(`[SummaryBot] Identity registered. Token ID: ${tokenId}`);
+return saveIdentity(db, AGENT_KEY, {
+  identity_token_id: tokenId,
+  identity_tx_hash: tx.txHash ?? "",
+  metadata_uri: metadataUri,
+  registered_at: Date.now(),
+});
 }
 
 async function ensureAgentValidation(db) {

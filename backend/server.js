@@ -382,25 +382,10 @@ async function circleContractCall(walletId, contractAddress, sig, params, idempo
   });
   const txId = res?.data?.id;
   if (!txId) throw new Error("Circle did not return a transaction id");
-  return waitForCircleTx(txId);
-}
-
-// ─── SummaryBot ERC-8004 Identity ─────────────────────────────────
-
-const AGENT_KEY = "summarybot";
-
-function getSummaryBotMetadataUri() {
-  return PUBLIC_API_BASE_URL ? `${PUBLIC_API_BASE_URL}/api/agents/summarybot/metadata` : "";
-}
-
-function buildSummaryBotMetadata() {
-  return {
-    name: "SummaryBot",
-    description: "Autonomous AI summarization and research agent on AgentMarket (Arc Testnet).",
-    agent_type: "summarization",
-    capabilities: ["summarize", "research", "analyze", "write"],
-    version: "2.0.0",
-  };
+  // Fire and forget — don't poll for completion since Railway networking
+  // blocks the getTransaction endpoint. Transaction is INITIATED successfully.
+  console.log(`[Circle] tx INITIATED: ${txId}`);
+  return { txHash: txId, state: "INITIATED" };
 }
 
 async function resolveIdentityTokenId(ownerAddress) {

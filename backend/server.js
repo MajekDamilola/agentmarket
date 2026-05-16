@@ -434,25 +434,35 @@ async function ensureAgentWallets(db) {
 }
 
 async function ensureAgentIdentity(db) {
-  const { owner, validator } = await ensureAgentWallets(db);
   const existing = getIdentity(db, AGENT_KEY);
   if (existing?.identity_token_id) return existing;
 
+  const envTokenId = process.env.AGENT_IDENTITY_TOKEN_ID;
+  const envTxHash = process.env.AGENT_IDENTITY_TX_HASH;
+  const envSkip = process.env.AGENT_IDENTITY_SKIP;
+
+  if (envTokenId || envSkip) {
+    console.log("[SummaryBot] Using pre-registered ERC-8004 identity from env vars");
+    const metadataUri = getSummaryBotMetadataUri();
+    return saveIdentity(db, AGENT_KEY, {
+      identity_token_id: envTokenId || "1",
+      identity_tx_hash: envTxHash || "0xf2ebcfef504554d8e5c127aeada8d2304cc2c4c00ba66eeb3ae0e52f382f2053",
+      metadata_uri: metadataUri,
+      registered_at: Date.now(),
+    });
+  }
+
+  const { owner } = await ensureAgentWallets(db);
   const metadataUri = getSummaryBotMetadataUri();
   if (!metadataUri) throw new Error("Set AGENTMARKET_PUBLIC_API_BASE_URL to register agent identity");
 
-  console.log("[SummaryBot] Registering ERC-8004 identity…");
+  console.log("[SummaryBot] Registering ERC-8004 identity...");
   const tx = await circleContractCall(
-    owner.wallet_id,
-    IDENTITY_REGISTRY,
-    "register(string)",
-    [metadataUri],
-    "agentmarket-summarybot-erc8004-register-v2",
+    owner.wallet_id, IDENTITY_REGISTRY, "register(string)",
+    [metadataUri], "agentmarket-summarybot-erc8004-register-v2",
   );
-
   const tokenId = await resolveIdentityTokenId(owner.wallet_address);
   if (!tokenId) throw new Error("Could not find ERC-8004 token after registration");
-
   console.log(`[SummaryBot] Identity registered. Token ID: ${tokenId}`);
   return saveIdentity(db, AGENT_KEY, {
     identity_token_id: tokenId,

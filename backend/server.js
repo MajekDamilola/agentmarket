@@ -45,6 +45,7 @@ const PUBLIC_API_BASE_URL = (process.env.AGENTMARKET_PUBLIC_API_BASE_URL || "").
 const AGENT_LOOP_MS = Math.max(15_000, parseInt(process.env.AGENT_LOOP_MS || "20000", 10));
 const AGENT_MAX_BUDGET_USDC = Math.max(1, parseFloat(process.env.AGENT_MAX_BUDGET_USDC || "50"));
 const ARC_BLOCKCHAIN_ID = "ARC-TESTNET";
+const AGENT_KEY = "summarybot";
 
 // ─── Arc RPC ──────────────────────────────────────────────────────
 

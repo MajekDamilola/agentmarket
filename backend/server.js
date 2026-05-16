@@ -348,16 +348,22 @@ function getCircle() {
   return _circleClient;
 }
 
-async function waitForCircleTx(txId, { timeoutMs = 120_000, pollMs = 2_500 } = {}) {
+async function waitForCircleTx(txId, { timeoutMs = 120_000, pollMs = 3_000 } = {}) {
   const start = Date.now();
   while (Date.now() - start < timeoutMs) {
     await sleep(pollMs);
-    const { data } = await getCircle().getTransaction({ id: txId });
-    const tx = data?.transaction;
-    const state = String(tx?.state || "").toUpperCase();
-    if (state === "COMPLETE") return tx;
-    if (["FAILED", "CANCELLED", "DENIED"].includes(state)) {
-      throw new Error(tx?.errorReason || `Circle tx ${state}`);
+    try {
+      const { data } = await getCircle().getTransaction({ id: txId });
+      const tx = data?.transaction;
+      const state = String(tx?.state || "").toUpperCase();
+      console.log(`[Circle] tx ${txId} state: ${state}`);
+      if (["COMPLETE", "CONFIRMED"].includes(state)) return tx;
+      if (["FAILED", "CANCELLED", "DENIED"].includes(state)) {
+        throw new Error(tx?.errorReason || `Circle tx ${state}: ${JSON.stringify(tx)}`);
+      }
+    } catch (err) {
+      if (err.message.includes("Circle tx")) throw err;
+      console.warn(`[Circle] Poll error for ${txId}:`, err.message);
     }
   }
   throw new Error(`Timed out waiting for Circle tx ${txId}`);
@@ -651,7 +657,8 @@ async function runAgentCycle() {
 
     // Bootstrap: ensure wallets, identity, validation
     if (!agentBootstrapped) {
-      await ensureAgentValidation(db);
+      // Skip ERC-8004 for now
+      await ensureAgentWallets(db);
       agentBootstrapped = true;
       console.log("[SummaryBot] Bootstrap complete. Ready to take jobs.");
     }

@@ -47,6 +47,10 @@ const AGENT_MAX_BUDGET_USDC = Math.max(1, parseFloat(process.env.AGENT_MAX_BUDGE
 const ARC_BLOCKCHAIN_ID = "ARC-TESTNET";
 const AGENT_KEY = "summarybot";
 
+function getSummaryBotMetadataUri() {
+  return PUBLIC_API_BASE_URL ? `${PUBLIC_API_BASE_URL}/api/agents/summarybot/metadata` : "";
+}
+
 // ─── Arc RPC ──────────────────────────────────────────────────────
 
 const publicClient = createPublicClient({

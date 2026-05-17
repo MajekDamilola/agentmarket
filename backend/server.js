@@ -597,7 +597,7 @@ async function submitDeliverable(db, job, text) {
     JOB_BOARD_ADDRESS,
     "submitDeliverable(uint256,string)",
     [Number(job.id), deliverableUrl],
-    `agentmarket-summarybot-submit-job-${job.id}`,
+    randomUUID(),
   );
 
   return saveRun(db, {
